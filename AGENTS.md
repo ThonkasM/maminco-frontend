@@ -6,7 +6,7 @@ Next.js 16 (App Router) + React 19 + Tailwind v4 + TypeScript.
 
 - Marketing landing at `/` (`app/(marketing)`).
 - Admin back-office at `/dashboard, /areas, /categories, /products, /tables, /orders, /payments,
-  /users` (`app/(admin)`).
+  /users, /ai, /settings` (`app/(admin)`).
 - POS terminal at `/pos/tables` and `/pos/orders/[tableId]` (`app/(pos)`).
 
 ## Commands
@@ -37,7 +37,8 @@ lib/utils/              cn, currency, errors, ...
 lib/realtime/           socket.io client
 ```
 
-Full rules: `docs/FRONTEND-CONVENTIONS.md`. Read it before adding a feature.
+Full rules: `docs/FRONTEND-CONVENTIONS.md`. Read it before adding a feature. Charts use **recharts**
+(see `docs/CHARTING.md`; mobile uses Victory Native).
 
 ## Conventions
 
