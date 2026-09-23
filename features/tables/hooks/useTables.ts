@@ -1,118 +1,139 @@
-import { useState, useEffect } from 'react'
-import { getTables, createTable, updateTable, deleteTable, changeTableStatus, PaginatedTablesResponse, TableResponse, CreateTablePayload, TableStatus } from '@/features/tables/api'
-import { getActiveAreas, AreaResponse } from '@/features/areas/api'
+'use client'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import {
+    changeTableStatus,
+    createTable,
+    deleteTable,
+    getTables,
+    updateTable,
+    type CreateTablePayload,
+    type TableStatus,
+} from '../api'
+import { getActiveAreas } from '@/features/areas/api'
 
 interface TableFilters {
     areaId: string
     status: TableStatus | ''
 }
 
+const KEYS = {
+    all: ['tables'] as const,
+    activeAreas: ['areas', 'active'] as const,
+}
+
+const statusLabels: Record<TableStatus, string> = {
+    AVAILABLE: 'disponible',
+    OCCUPIED: 'ocupada',
+    RESERVED: 'reservada',
+}
+
 export function useTables() {
-    const [tables, setTables] = useState<PaginatedTablesResponse | null>(null)
-    const [areas, setAreas] = useState<AreaResponse[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
     const [page, setPage] = useState(1)
     const [filters, setFilters] = useState<TableFilters>({ areaId: '', status: '' })
+    const queryClient = useQueryClient()
 
-    // Auto-load on page or filters change
-    useEffect(() => {
-        loadAreas()
-        loadTables()
-    }, [page, filters])
+    const query = useQuery({
+        queryKey: [...KEYS.all, { page, ...filters }],
+        queryFn: ({ signal }) =>
+            getTables(
+                page,
+                10,
+                {
+                    areaId: filters.areaId || undefined,
+                    status: filters.status || undefined,
+                },
+                signal,
+            ),
+    })
 
-    const loadAreas = async () => {
-        try {
-            const data = await getActiveAreas()
-            setAreas(data)
-        } catch (err: any) {
-            console.error('Error loading areas:', err)
-        }
-    }
+    const areasQuery = useQuery({
+        queryKey: KEYS.activeAreas,
+        queryFn: ({ signal }) => getActiveAreas(signal),
+    })
 
-    const loadTables = async () => {
-        setLoading(true)
-        setError(null)
-        try {
-            const filterPayload: any = {}
-            if (filters.areaId) filterPayload.areaId = filters.areaId
-            if (filters.status) filterPayload.status = filters.status
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: KEYS.all })
 
-            const data = await getTables(page, 10, filterPayload)
-            setTables(data)
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error cargando mesas'
-            setError(errorMsg)
-            toast.error(errorMsg)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleCreate = async (payload: CreateTablePayload) => {
-        try {
-            await createTable(payload)
+    const createMutation = useMutation({
+        mutationFn: (payload: CreateTablePayload) => createTable(payload),
+        onSuccess: async () => {
             toast.success('Mesa creada correctamente')
-            await loadTables()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error creando mesa'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) => toast.error(getErrorMessage(error, 'Error creando mesa')),
+    })
 
-    const handleUpdate = async (id: string, payload: CreateTablePayload) => {
-        try {
-            await updateTable(id, payload)
+    const updateMutation = useMutation({
+        mutationFn: ({
+            id,
+            payload,
+        }: {
+            id: string
+            payload: CreateTablePayload
+        }) => updateTable(id, payload),
+        onSuccess: async () => {
             toast.success('Mesa actualizada correctamente')
-            await loadTables()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error actualizando mesa'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error actualizando mesa')),
+    })
 
-    const handleDelete = async (id: string, number: number) => {
-        try {
-            await deleteTable(id)
-            toast.success(`Mesa #${number} desactivada correctamente`)
-            await loadTables()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error desactivando mesa'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+    const deleteMutation = useMutation({
+        mutationFn: ({ id }: { id: string; number: number }) => deleteTable(id),
+        onSuccess: async (_data, variables) => {
+            toast.success(`Mesa #${variables.number} desactivada correctamente`)
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error desactivando mesa')),
+    })
 
-    const handleChangeStatus = async (id: string, number: number, status: TableStatus) => {
-        try {
-            await changeTableStatus(id, { status })
-            const statusLabel = status === 'AVAILABLE' ? 'disponible' : status === 'OCCUPIED' ? 'ocupada' : 'reservada'
-            toast.success(`Mesa #${number} marcada como ${statusLabel}`)
-            await loadTables()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error cambiando estado de mesa'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+    const statusMutation = useMutation({
+        mutationFn: ({
+            id,
+            status,
+        }: {
+            id: string
+            number: number
+            status: TableStatus
+        }) => changeTableStatus(id, { status }),
+        onSuccess: async (_data, variables) => {
+            toast.success(
+                `Mesa #${variables.number} marcada como ${statusLabels[variables.status]}`,
+            )
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error cambiando estado de mesa')),
+    })
 
     return {
-        tables,
-        areas,
-        loading,
-        error,
+        tables: query.data ?? null,
+        areas: areasQuery.data ?? [],
+        loading: query.isLoading,
+        error: query.error
+            ? getErrorMessage(query.error, 'Error cargando mesas')
+            : null,
         page,
         filters,
         setPage,
         setFilters,
-        loadAreas,
-        loadTables,
-        handleCreate,
-        handleUpdate,
-        handleDelete,
-        handleChangeStatus,
+        loadAreas: () => {
+            void areasQuery.refetch()
+        },
+        loadTables: () => {
+            void query.refetch()
+        },
+        handleCreate: (payload: CreateTablePayload) =>
+            createMutation.mutateAsync(payload),
+        handleUpdate: (id: string, payload: CreateTablePayload) =>
+            updateMutation.mutateAsync({ id, payload }),
+        handleDelete: (id: string, number: number) =>
+            deleteMutation.mutateAsync({ id, number }),
+        handleChangeStatus: (id: string, number: number, status: TableStatus) =>
+            statusMutation.mutateAsync({ id, number, status }),
     }
 }

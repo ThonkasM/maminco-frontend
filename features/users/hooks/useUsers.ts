@@ -1,109 +1,140 @@
 'use client'
-import { useState, useEffect } from 'react'
-import {
-    getUsers,
-    createUser,
-    updateUser,
-    deleteUser,
-    resetUserPassword,
-    PaginatedUsersResponse,
-    UserResponse,
-    CreateUserPayload,
-} from '@/features/users/api'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import {
+    createUser,
+    deleteUser,
+    getUsers,
+    resetUserPassword,
+    updateUser,
+    type CreateUserPayload,
+    type UpdateUserPayload,
+} from '../api'
+
+const KEYS = { all: ['users'] as const }
 
 export function useUsers() {
-    const [users, setUsers] = useState<PaginatedUsersResponse | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
-    const [existingEmails, setExistingEmails] = useState<Set<string>>(new Set())
+    const queryClient = useQueryClient()
 
-    useEffect(() => {
-        loadUsers()
-    }, [page, search])
+    const query = useQuery({
+        queryKey: [...KEYS.all, { page, search }],
+        queryFn: ({ signal }) => getUsers(page, 10, search || undefined, signal),
+    })
 
-    const loadUsers = async () => {
-        setLoading(true)
-        setError(null)
-        try {
-            const data = await getUsers(page, 10, search)
-            setUsers(data)
-            setExistingEmails(new Set(data.data.map((u) => u.email)))
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error cargando usuarios'
-            setError(errorMsg)
-            toast.error(errorMsg)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const emailsQuery = useQuery({
+        queryKey: [...KEYS.all, 'emails'],
+        queryFn: ({ signal }) => getUsers(1, 1000, undefined, signal),
+    })
 
-    const createNewUser = async (payload: CreateUserPayload): Promise<boolean> => {
-        try {
-            await createUser(payload)
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: KEYS.all })
+
+    const createMutation = useMutation({
+        mutationFn: (payload: CreateUserPayload) => createUser(payload),
+        onSuccess: async () => {
             toast.success('Usuario creado correctamente')
             setPage(1)
-            await loadUsers()
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error creando usuario'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error creando usuario')),
+    })
 
-    const updateExistingUser = async (id: string, payload: Omit<CreateUserPayload, 'password'>): Promise<boolean> => {
-        try {
-            await updateUser(id, payload)
+    const updateMutation = useMutation({
+        mutationFn: ({
+            id,
+            payload,
+        }: {
+            id: string
+            payload: UpdateUserPayload
+        }) => updateUser(id, payload),
+        onSuccess: async () => {
             toast.success('Usuario actualizado correctamente')
-            await loadUsers()
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error actualizando usuario'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error actualizando usuario')),
+    })
 
-    const deleteExistingUser = async (id: string, name: string): Promise<boolean> => {
-        try {
-            await deleteUser(id)
-            toast.success(`Usuario ${name} desactivado correctamente`)
-            await loadUsers()
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error desactivando usuario'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+    const deleteMutation = useMutation({
+        mutationFn: ({ id }: { id: string; name: string }) => deleteUser(id),
+        onSuccess: async (_data, variables) => {
+            toast.success(`Usuario ${variables.name} desactivado correctamente`)
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error desactivando usuario')),
+    })
 
-    const resetPassword = async (id: string, newPassword: string, name: string): Promise<boolean> => {
-        try {
-            await resetUserPassword(id, newPassword)
-            toast.success(`Contraseña reseteada para ${name}`)
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error reseteando contraseña'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+    const resetMutation = useMutation({
+        mutationFn: ({
+            id,
+            newPassword,
+        }: {
+            id: string
+            newPassword: string
+            name: string
+        }) => resetUserPassword(id, newPassword),
+        onSuccess: async (_data, variables) => {
+            toast.success(`Contraseña reseteada para ${variables.name}`)
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error reseteando contraseña')),
+    })
 
     return {
-        users,
-        loading,
-        error,
+        users: query.data ?? null,
+        loading: query.isLoading,
+        error: query.error
+            ? getErrorMessage(query.error, 'Error cargando usuarios')
+            : null,
         page,
         search,
-        existingEmails,
+        existingEmails: useMemo(
+            () =>
+                new Set(
+                    (emailsQuery.data?.data ?? []).map((user) =>
+                        user.email.toLowerCase(),
+                    ),
+                ),
+            [emailsQuery.data],
+        ),
         setPage,
         setSearch,
-        createNewUser,
-        updateExistingUser,
-        deleteExistingUser,
-        resetPassword,
+        createNewUser: async (payload: CreateUserPayload) => {
+            try {
+                await createMutation.mutateAsync(payload)
+                return true
+            } catch {
+                return false
+            }
+        },
+        updateExistingUser: async (id: string, payload: UpdateUserPayload) => {
+            try {
+                await updateMutation.mutateAsync({ id, payload })
+                return true
+            } catch {
+                return false
+            }
+        },
+        deleteExistingUser: async (id: string, name: string) => {
+            try {
+                await deleteMutation.mutateAsync({ id, name })
+                return true
+            } catch {
+                return false
+            }
+        },
+        resetPassword: async (id: string, newPassword: string, name: string) => {
+            try {
+                await resetMutation.mutateAsync({ id, newPassword, name })
+                return true
+            } catch {
+                return false
+            }
+        },
     }
 }

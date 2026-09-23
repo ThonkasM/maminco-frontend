@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { UserResponse } from '@/features/users/api'
 
-interface UseUsuariosUIReturn {
-    // Estado de modales
+interface UseUsersUIReturn {
     showModal: boolean
     editingUser: UserResponse | undefined
     showDeleteModal: boolean
@@ -10,18 +9,15 @@ interface UseUsuariosUIReturn {
     showResetModal: boolean
     resetTarget: UserResponse | null
 
-    // Estados de carga
     submitting: boolean
     deleteSubmitting: boolean
     resetSubmitting: boolean
 
-    // Handlers UI
     handleOpenModal: (user?: UserResponse) => void
     handleCloseModal: () => void
     handleDeleteClick: (user: UserResponse) => void
     handleResetClick: (user: UserResponse) => void
 
-    // Setters para handlers de CRUD
     setSubmitting: (value: boolean) => void
     setDeleteSubmitting: (value: boolean) => void
     setResetSubmitting: (value: boolean) => void
@@ -33,17 +29,11 @@ interface UseUsuariosUIReturn {
     setEditingUser: (value: UserResponse | undefined) => void
 }
 
-/**
- * Hook que gestiona TODO el estado UI de la página de usuarios
- * Responsabilidades:
- * - Modal de crear/editar
- * - Modal de confirmación de delete
- * - Modal de reset de contraseña
- * - Estados de carga durante operaciones
- */
-export function useUsersUI(): UseUsuariosUIReturn {
+export function useUsersUI(): UseUsersUIReturn {
     const [showModal, setShowModal] = useState(false)
-    const [editingUser, setEditingUser] = useState<UserResponse | undefined>(undefined)
+    const [editingUser, setEditingUser] = useState<UserResponse | undefined>(
+        undefined,
+    )
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState<UserResponse | null>(null)
     const [showResetModal, setShowResetModal] = useState(false)
@@ -53,11 +43,7 @@ export function useUsersUI(): UseUsuariosUIReturn {
     const [resetSubmitting, setResetSubmitting] = useState(false)
 
     const handleOpenModal = (user?: UserResponse) => {
-        if (user) {
-            setEditingUser(user)
-        } else {
-            setEditingUser(undefined)
-        }
+        setEditingUser(user)
         setShowModal(true)
     }
 

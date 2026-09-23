@@ -1,62 +1,59 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
-import * as adminPaymentsApi from '@/features/payments/api'
-import { PaymentMethodDto } from '@/features/payments/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import {
+    listPaymentMethods,
+    togglePaymentMethodActive,
+    type PaymentMethodDto,
+} from '../api'
+
+const KEYS = { all: ['payment-methods'] as const }
 
 export function usePaymentMethods() {
-    const [methods, setMethods] = useState<PaymentMethodDto[]>([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const queryClient = useQueryClient()
 
-    // Cargar métodos de pago del seed
-    const loadPaymentMethods = useCallback(async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            const data = await adminPaymentsApi.listPaymentMethods(true)
-            console.log('✓ Métodos cargados:', data)
-            setMethods(data)
-        } catch (err: any) {
-            const message = err.message || 'Error cargando métodos de pago'
-            setError(message)
-            toast.error(message)
-            console.error('Error loading payment methods:', err)
-        } finally {
-            setLoading(false)
-        }
-    }, [])
+    const query = useQuery({
+        queryKey: KEYS.all,
+        queryFn: ({ signal }) => listPaymentMethods(true, signal),
+    })
 
-    // Cargar métodos al montar el componente
-    useEffect(() => {
-        loadPaymentMethods()
-    }, [loadPaymentMethods])
+    const toggleMutation = useMutation({
+        mutationFn: ({
+            id,
+            isActive,
+        }: {
+            id: string
+            isActive: boolean
+        }) => togglePaymentMethodActive(id, isActive),
+        onSuccess: async (updated) => {
+            toast.success(
+                `Método ${updated.isActive ? 'activado' : 'desactivado'}`,
+            )
+            await queryClient.invalidateQueries({ queryKey: KEYS.all })
+        },
+        onError: (error) =>
+            toast.error(
+                getErrorMessage(error, 'Error actualizando método de pago'),
+            ),
+    })
 
-    // Alternar activo/inactivo
-    const handleToggle = async (id: string, currentStatus: boolean) => {
-        try {
-            setError(null)
-            const updated = await adminPaymentsApi.togglePaymentMethodActive(id, !currentStatus)
-            setMethods((prev) => prev.map((m) => (m.id === id ? updated : m)))
-            toast.success(`Método ${updated.isActive ? 'activado' : 'desactivado'}`)
-        } catch (err: any) {
-            const message = err.message || 'Error toggling método de pago'
-            setError(message)
-            toast.error(message)
-            console.error('Error toggling payment method:', err)
-        }
+    const handleToggle = async (
+        id: string,
+        currentStatus: boolean,
+    ): Promise<void> => {
+        await toggleMutation.mutateAsync({ id, isActive: !currentStatus })
     }
 
-    // Recargar datos
-    const refresh = useCallback(() => {
-        loadPaymentMethods()
-    }, [loadPaymentMethods])
-
     return {
-        methods,
-        loading,
-        error,
+        methods: query.data ?? ([] as PaymentMethodDto[]),
+        loading: query.isLoading,
+        error: query.error
+            ? getErrorMessage(query.error, 'Error cargando métodos de pago')
+            : null,
         handleToggle,
-        refresh,
+        refresh: () => {
+            void query.refetch()
+        },
     }
 }

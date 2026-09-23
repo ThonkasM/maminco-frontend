@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, Banknote } from 'lucide-react'
+import { Button, EmptyState, Skeleton } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
-import * as adminPaymentsApi from '@/features/payments/api'
+import { listCashDenominations } from '@/features/payments/api'
 
 export interface CashDenomination {
     id: string
@@ -15,108 +17,110 @@ export interface CashDenomination {
 
 interface CashPaymentFormProps {
     total: number
-    onSubmit?: (data: { method: string; amount: number; denominations: any[] }) => void
+    onSubmit?: (data: {
+        method: string
+        amount: number
+        denominations: CashDenomination[]
+    }) => void
     onBack?: () => void
 }
 
-export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({ total, onSubmit, onBack }) => {
-    const [denominations, setDenominations] = useState<CashDenomination[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({
+    total,
+    onSubmit,
+    onBack,
+}) => {
     const [receivedAmount, setReceivedAmount] = useState<number>(0)
-    const [change, setChange] = useState<number>(0)
 
-    useEffect(() => {
-        loadDenominations()
-    }, [])
+    const {
+        data: denominations = [],
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['pos', 'cash-denominations'],
+        queryFn: ({ signal }) => listCashDenominations(true, signal),
+    })
 
-    useEffect(() => {
-        setChange(Math.max(0, receivedAmount - total))
-    }, [receivedAmount, total])
-
-    const loadDenominations = async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            const data = await adminPaymentsApi.listCashDenominations(true)
-            setDenominations(data.filter(d => d.isActive).map(d => ({
-                id: d.id,
-                value: d.value,
-                type: d.type as 'COIN' | 'BILL',
-                quantity: d.quantity,
-                isActive: d.isActive
-            })))
-        } catch (err: any) {
-            setError(err.message || 'Error cargando denominaciones')
-            console.error('Error loading denominations:', err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const coinDenoms = denominations.filter(d => d.type === 'COIN')
-    const billDenoms = denominations.filter(d => d.type === 'BILL')
+    const activeDenominations = denominations.filter((denomination) => denomination.isActive)
+    const billDenoms = activeDenominations.filter((denomination) => denomination.type === 'BILL')
+    const coinDenoms = activeDenominations.filter((denomination) => denomination.type === 'COIN')
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-slate-800">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-linear-to-r from-green-500 to-green-600 shrink-0">
+        <div className="flex h-full w-full flex-col overflow-hidden bg-surface">
+            <div className="shrink-0 border-b border-border bg-surface-muted p-4">
                 <div className="flex items-center gap-3">
-                    <Banknote className="w-6 h-6 text-white" />
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Banknote className="size-6" />
+                    </div>
                     <div>
-                        <h3 className="text-sm font-bold text-white uppercase tracking-wide">
-                            Payment en Cash
+                        <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
+                            Pago en efectivo
                         </h3>
-                        <p className="text-xs text-green-50">
-                            Selecciona denominaciones para desglose
+                        <p className="text-xs text-muted-foreground">
+                            Total a cobrar: {formatCurrency(total)}
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Contenido */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Cantidad Recibida */}
-                <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-4">
-                    <label className="text-sm text-slate-600 dark:text-slate-400 block mb-2">
-                        Cantidad Recibida
-                    </label>
-                    <input
-                        type="number"
-                        value={receivedAmount}
-                        onChange={(e) => setReceivedAmount(parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 text-lg font-bold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500"
-                    />
+            <div className="flex-1 space-y-6 overflow-y-auto p-4">
+                <div className="rounded-lg border border-border bg-surface-muted p-4">
+                    <p className="text-xs text-muted-foreground">Monto recibido:</p>
+                    <p className="text-3xl font-bold font-mono text-foreground">
+                        {receivedAmount > 0 ? formatCurrency(receivedAmount) : '—'}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Cambio:</span>
+                        <span className="font-semibold text-success">
+                            {formatCurrency(Math.max(0, receivedAmount - total))}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Error */}
                 {error && (
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2">
-                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                        <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                    <div className="flex items-start gap-2 rounded-lg border border-danger/30 bg-danger/10 p-3">
+                        <AlertCircle className="mt-0.5 size-5 shrink-0 text-danger" />
+                        <p className="text-sm text-danger">
+                            Error cargando denominaciones
+                        </p>
                     </div>
                 )}
 
-                {/* Denominaciones */}
-                {!loading && denominations.length > 0 && (
+                {isLoading ? (
+                    <div className="space-y-3">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                    </div>
+                ) : activeDenominations.length === 0 ? (
+                    <EmptyState
+                        icon={<Banknote />}
+                        title="Sin denominaciones"
+                        description="Configura denominaciones en el panel de gestión."
+                    />
+                ) : (
                     <>
                         {billDenoms.length > 0 && (
                             <div>
-                                <h4 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-3">
+                                <h4 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
                                     Billetes
                                 </h4>
                                 <div className="grid grid-cols-4 gap-3">
-                                    {billDenoms.map((denom) => (
-                                        <button
-                                            key={denom.id}
-                                            onClick={() => setReceivedAmount(receivedAmount + denom.value)}
-                                            className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border-2 border-slate-200 dark:border-slate-600 hover:border-green-500 dark:hover:border-green-500 flex flex-col items-center justify-center w-35 h-35"
-                                            title={`Agregar Bs ${denom.value}`}
+                                    {billDenoms.map((denomination) => (
+                                        <Button
+                                            key={denomination.id}
+                                            variant="secondary"
+                                            onClick={() =>
+                                                setReceivedAmount(
+                                                    (prev) => prev + denomination.value,
+                                                )
+                                            }
+                                            className="aspect-square h-auto flex-col"
+                                            title={`Agregar Bs ${denomination.value}`}
                                         >
-                                            <p className="text-lg font-bold text-slate-900 dark:text-white">
-                                                {denom.value}
-                                            </p>
-                                        </button>
+                                            <span className="text-lg font-bold">
+                                                {denomination.value}
+                                            </span>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>
@@ -124,21 +128,26 @@ export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({ total, onSubmi
 
                         {coinDenoms.length > 0 && (
                             <div>
-                                <h4 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-3">
+                                <h4 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
                                     Monedas
                                 </h4>
                                 <div className="grid grid-cols-4 gap-3">
-                                    {coinDenoms.map((denom) => (
-                                        <button
-                                            key={denom.id}
-                                            onClick={() => setReceivedAmount(receivedAmount + denom.value)}
-                                            className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border-2 border-slate-200 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-500 flex flex-col items-center justify-center h-35 w-35"
-                                            title={`Agregar Bs ${denom.value}`}
+                                    {coinDenoms.map((denomination) => (
+                                        <Button
+                                            key={denomination.id}
+                                            variant="secondary"
+                                            onClick={() =>
+                                                setReceivedAmount(
+                                                    (prev) => prev + denomination.value,
+                                                )
+                                            }
+                                            className="aspect-square h-auto flex-col"
+                                            title={`Agregar Bs ${denomination.value}`}
                                         >
-                                            <p className="text-base font-bold text-slate-900 dark:text-white">
-                                                {denom.value}
-                                            </p>
-                                        </button>
+                                            <span className="text-base font-bold">
+                                                {denomination.value}
+                                            </span>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>
@@ -147,21 +156,23 @@ export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({ total, onSubmi
                 )}
             </div>
 
-            {/* Footer - Botones */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700 space-y-2 shrink-0">
-                <button
-                    disabled={receivedAmount <= 0 || loading}
-                    onClick={() => onSubmit?.({ method: 'CASH', amount: receivedAmount, denominations: [] })}
-                    className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-bold transition-all"
+            <div className="shrink-0 space-y-2 border-t border-border bg-surface p-4">
+                <Button
+                    className="w-full"
+                    disabled={receivedAmount <= 0 || isLoading}
+                    onClick={() =>
+                        onSubmit?.({
+                            method: 'CASH',
+                            amount: receivedAmount,
+                            denominations: [],
+                        })
+                    }
                 >
-                    Registrar Payment con Cash
-                </button>
-                <button
-                    onClick={onBack}
-                    className="w-full px-4 py-2 bg-slate-400 hover:bg-slate-500 text-white rounded-lg font-medium transition-all text-sm"
-                >
-                    ← Volver a detalle
-                </button>
+                    Registrar pago en efectivo
+                </Button>
+                <Button variant="secondary" className="w-full" onClick={onBack}>
+                    Volver al detalle
+                </Button>
             </div>
         </div>
     )

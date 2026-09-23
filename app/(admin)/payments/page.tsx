@@ -1,15 +1,10 @@
-import React from 'react'
-import PaymentsManagementPanel from '@/features/payments/components/PaymentsManagementPanel'
+import { PaymentsPage } from '@/features/payments/components/PaymentsPage'
 
 export const metadata = {
-    title: 'Gestión de Pagos | POS Maminco',
+    title: 'Gestión de pagos | POS Maminco',
     description: 'Administra los métodos de pago y el efectivo en caja',
 }
 
-export default function PayosPage() {
-    return (
-        <div className="space-y-6 p-8">
-            <PaymentsManagementPanel />
-        </div>
-    )
+export default function PaymentsRoute() {
+    return <PaymentsPage />
 }

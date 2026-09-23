@@ -1,34 +1,86 @@
-import { API_BASE, getHeaders } from '@/lib/http/client'
+import { apiFetch } from '@/lib/http/client'
 
-const API_ORDERS = `${API_BASE}/api/orders`
+export type OrderStatus = 'DRAFT' | 'CLOSED' | 'CANCELLED'
+export type ServiceType = 'MESA' | 'DELIVERY' | 'RECOGER'
 
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_ORDERS}${endpoint}`
-    const response = await fetch(url, {
-        ...options,
-        headers: getHeaders(options.headers as Record<string, string>),
-    })
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `API Error: ${response.statusText}`)
-    }
-
-    if (response.status === 204 || !response.headers.get('content-length')) {
-        return {} as T
-    }
-
-    return response.json()
+export interface OrderItemResponseDto {
+    id: string
+    productId: string
+    productName: string
+    quantity: number
+    unitPrice: number
+    discountAmount: number
+    subtotal: number
+    notes?: string
+    addedById: string
+    addedByName: string
+    createdAt: string
 }
 
-/**
- * Interfaces para el historial de auditoría
- */
+export interface OrderResponseDto {
+    id: string
+    orderNumber: string
+    status: OrderStatus
+    serviceType: ServiceType
+    subtotal: number
+    discountAmount: number
+    tipAmount: number
+    total: number
+    tableId: string
+    tableName: string
+    areaId: string
+    createdById: string
+    createdByName: string
+    attendedById?: string
+    attendedByName?: string
+    closedById?: string
+    closedByName?: string
+    items: OrderItemResponseDto[]
+    itemCount: number
+    createdAt: string
+    updatedAt: string
+    closedAt?: string
+}
+
+export interface PaginatedOrdersResponse {
+    data: OrderResponseDto[]
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+}
+
+export interface AddOrderItemPayload {
+    productId: string
+    quantity: number
+    notes?: string
+}
+
+export interface ChangeOrderStatusPayload {
+    status: OrderStatus
+}
+
+export interface ApplyDiscountPayload {
+    percentageDiscount?: number
+    fixedDiscount?: number
+    reason?: string
+}
+
+export interface OrderFilters {
+    status?: OrderStatus
+    tableId?: string
+    serviceType?: ServiceType
+    createdById?: string
+    onlyOpen?: boolean
+    sortBy?: 'createdAt' | 'total' | 'status'
+    sortOrder?: 'asc' | 'desc'
+}
+
 export interface OrderHistoryEntry {
     id: string
     action: string
     description: string
-    metadata: any
+    metadata: unknown
     user: {
         id: string
         name: string
@@ -67,7 +119,7 @@ export interface OrderHistoryTimelineEntry {
     action: string
     description: string
     detail: string
-    metadata?: any  // Contiene información adicional según la acción
+    metadata?: unknown
 }
 
 export interface OrderHistoryTimelineResponse {
@@ -82,52 +134,103 @@ export interface OrderHistoryTimelineResponse {
     timeline: OrderHistoryTimelineEntry[]
 }
 
-/**
- * Obtiene el historial completo de una orden
- * @param orderId - ID de la orden
- * @param page - Número de página (default: 1)
- * @param limit - Items por página (default: 50, max: 500)
- */
-export async function getOrderHistory(
-    orderId: string,
-    page: number = 1,
-    limit: number = 50,
-): Promise<OrderHistoryResponse> {
-    try {
-        const params = new URLSearchParams({
-            page: Math.max(1, page).toString(),
-            limit: Math.min(500, Math.max(1, limit)).toString(),
-        })
-        return apiRequest<OrderHistoryResponse>(`/${orderId}/history?${params}`, {
-            method: 'GET',
-        })
-    } catch (error: any) {
-        console.error('Error obteniendo historial de orden:', error)
-        throw error
-    }
+export function getOrders(
+    page = 1,
+    limit = 10,
+    filters?: OrderFilters,
+    signal?: AbortSignal,
+): Promise<PaginatedOrdersResponse> {
+    return apiFetch('/api/orders', {
+        query: {
+            page,
+            limit,
+            status: filters?.status,
+            tableId: filters?.tableId,
+            serviceType: filters?.serviceType,
+            createdById: filters?.createdById,
+            onlyOpen: filters?.onlyOpen,
+            sortBy: filters?.sortBy,
+            sortOrder: filters?.sortOrder,
+        },
+        signal,
+    })
 }
 
-/**
- * Obtiene el timeline visual simplificado de una orden
- * @param orderId - ID de la orden
- * @param page - Número de página (default: 1)
- * @param limit - Items por página (default: 50, max: 500)
- */
-export async function getOrderHistoryTimeline(
+export function changeOrderStatus(
     orderId: string,
-    page: number = 1,
-    limit: number = 50,
+    payload: ChangeOrderStatusPayload,
+): Promise<OrderResponseDto> {
+    return apiFetch(`/api/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: payload,
+    })
+}
+
+export function addOrderItem(
+    orderId: string,
+    payload: AddOrderItemPayload,
+): Promise<OrderResponseDto> {
+    return apiFetch(`/api/orders/${orderId}/items`, {
+        method: 'POST',
+        body: payload,
+    })
+}
+
+export function removeOrderItem(
+    orderId: string,
+    itemId: string,
+): Promise<OrderResponseDto> {
+    return apiFetch(`/api/orders/${orderId}/items/${itemId}`, {
+        method: 'DELETE',
+    })
+}
+
+export function applyDiscount(
+    orderId: string,
+    payload: ApplyDiscountPayload,
+): Promise<OrderResponseDto> {
+    return apiFetch(`/api/orders/${orderId}/discount`, {
+        method: 'PATCH',
+        body: payload,
+    })
+}
+
+export function addTip(
+    orderId: string,
+    tipAmount: number,
+): Promise<OrderResponseDto> {
+    return apiFetch(`/api/orders/${orderId}/tip`, {
+        method: 'PATCH',
+        body: { tipAmount },
+    })
+}
+
+export function getOrderHistory(
+    orderId: string,
+    page = 1,
+    limit = 50,
+    signal?: AbortSignal,
+): Promise<OrderHistoryResponse> {
+    return apiFetch(`/api/orders/${orderId}/history`, {
+        query: {
+            page: Math.max(1, page),
+            limit: Math.min(500, Math.max(1, limit)),
+        },
+        signal,
+    })
+}
+
+export function getOrderHistoryTimeline(
+    orderId: string,
+    page = 1,
+    limit = 50,
+    signal?: AbortSignal,
 ): Promise<OrderHistoryTimelineResponse> {
-    try {
-        const params = new URLSearchParams({
-            page: Math.max(1, page).toString(),
-            limit: Math.min(500, Math.max(1, limit)).toString(),
-        })
-        return apiRequest<OrderHistoryTimelineResponse>(`/${orderId}/history/timeline?${params}`, {
-            method: 'GET',
-        })
-    } catch (error: any) {
-        console.error('Error obteniendo timeline de orden:', error)
-        throw error
-    }
+    return apiFetch(`/api/orders/${orderId}/history/timeline`, {
+        query: {
+            page: Math.max(1, page),
+            limit: Math.min(500, Math.max(1, limit)),
+        },
+        signal,
+    })
 }

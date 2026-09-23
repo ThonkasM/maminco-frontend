@@ -1,6 +1,8 @@
 'use client'
 
 import React, { memo } from 'react'
+import { ClipboardList, Minus, Plus, Trash2 } from 'lucide-react'
+import { Button, EmptyState, Input } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 
 interface CartItem {
@@ -27,11 +29,11 @@ const CartItemStaticFields = memo(function CartItemStaticFields({
     unitPrice: number
 }) {
     return (
-        <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+        <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">
                 {productName}
             </p>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-muted-foreground">
                 {formatCurrency(unitPrice)}
             </p>
         </div>
@@ -48,70 +50,71 @@ const CartItemComponent = memo(function CartItemComponent({
     onRemove: (productId: string) => void
 }) {
     return (
-        <div key={item.id} className="space-y-1">
-            <div className="flex items-start gap-2">
-                {/* Item del carrito */}
-                <div className="flex-1 bg-slate-50 dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600 flex items-center justify-between gap-3">
-                    {/* Cantidad - Izquierda */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                            onClick={() =>
-                                onChangeQuantity(item.productId, item.quantity - 1)
-                            }
-                            className="px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-900 dark:text-white rounded text-sm font-bold hover:bg-slate-300 dark:hover:bg-slate-500 transition-all"
-                        >
-                            −
-                        </button>
-                        <input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) =>
-                                onChangeQuantity(
-                                    item.productId,
-                                    parseInt(e.target.value) || 1
-                                )
-                            }
-                            style={{
-                                MozAppearance: 'textfield',
-                            }}
-                            className="w-12 px-1.5 py-1 text-center font-bold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded text-sm"
-                        />
-                        <button
-                            onClick={() =>
-                                onChangeQuantity(item.productId, item.quantity + 1)
-                            }
-                            className="px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-900 dark:text-white rounded text-sm font-bold hover:bg-slate-300 dark:hover:bg-slate-500 transition-all"
-                        >
-                            +
-                        </button>
-                    </div>
-
-                    {/* Info del Producto - Centro */}
-                    <CartItemStaticFields
-                        productName={item.productName}
-                        unitPrice={item.unitPrice}
-                    />
-
-                    {/* Subtotal - Derecha */}
-                    <div className="text-right shrink-0">
-                        <p className="font-bold text-lg text-slate-900 dark:text-white">
-                            {formatCurrency(item.subtotal)}
-                        </p>
-                    </div>
-
-                    {/* Botón Eliminar */}
-                    <button
-                        onClick={() => onRemove(item.productId)}
-                        className="ml-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-bold transition-all shrink-0"
+        <div className="space-y-1">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-muted p-3">
+                <div className="flex shrink-0 items-center gap-1.5">
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="size-8"
+                        aria-label="Disminuir cantidad"
+                        onClick={() =>
+                            onChangeQuantity(item.productId, item.quantity - 1)
+                        }
                     >
-                        ✕
-                    </button>
+                        <Minus />
+                    </Button>
+                    <Input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        aria-label="Cantidad"
+                        onChange={(event) =>
+                            onChangeQuantity(
+                                item.productId,
+                                parseInt(event.target.value, 10) || 1,
+                            )
+                        }
+                        className="h-8 w-12 px-1 text-center font-bold"
+                    />
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="size-8"
+                        aria-label="Aumentar cantidad"
+                        onClick={() =>
+                            onChangeQuantity(item.productId, item.quantity + 1)
+                        }
+                    >
+                        <Plus />
+                    </Button>
                 </div>
+
+                <CartItemStaticFields
+                    productName={item.productName}
+                    unitPrice={item.unitPrice}
+                />
+
+                <div className="shrink-0 text-right">
+                    <p className="text-lg font-bold text-foreground">
+                        {formatCurrency(item.subtotal)}
+                    </p>
+                </div>
+
+                <Button
+                    variant="danger"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    aria-label="Eliminar producto"
+                    onClick={() => onRemove(item.productId)}
+                >
+                    <Trash2 />
+                </Button>
             </div>
             {item.addedByName && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 px-2">
-                    <span className="font-extrabold">Modificado por:</span> {item.addedByName}
+                <p className="px-2 text-sm text-muted-foreground">
+                    <span className="font-extrabold">Modificado por:</span>{' '}
+                    {item.addedByName}
                 </p>
             )}
         </div>
@@ -124,13 +127,14 @@ export const CartItemsList: React.FC<CartItemsListProps> = ({
     onRemove,
 }) => {
     return (
-        <div className="overflow-y-auto p-4 space-y-3 h-full">
+        <div className="h-full space-y-3 overflow-y-auto p-4">
             {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 gap-4">
-                    <div className="text-6xl">📋</div>
-                    <p className="text-base font-medium">Carrito vacío</p>
-                    <p className="text-sm">Selecciona products</p>
-                </div>
+                <EmptyState
+                    icon={<ClipboardList />}
+                    title="Carrito vacío"
+                    description="Selecciona productos para agregarlos a la orden."
+                    className="h-full"
+                />
             ) : (
                 items.map((item) => (
                     <CartItemComponent

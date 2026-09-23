@@ -1,5 +1,4 @@
-import { toast } from '@/components/shared/ToastProvider'
-import { API_BASE, getHeaders } from '@/lib/http/client'
+import { apiFetch } from '@/lib/http/client'
 
 export type CategoryStatus = 'ACTIVE' | 'INACTIVE'
 
@@ -32,127 +31,42 @@ export interface UpdateCategoryPayload {
     isActive?: boolean
 }
 
-/**
- * Obtener lista de categorías con paginación
- */
-export async function getCategories(
+export function getCategories(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    signal?: AbortSignal,
 ): Promise<PaginatedCategoriesResponse> {
-    const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        ...(search && { search }),
+    return apiFetch('/api/categories', {
+        query: { page, limit, search },
+        signal,
     })
-
-    const response = await fetch(`${API_BASE}/api/categories?${params}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: response.statusText }))
-        throw new Error(error.message || 'Error al cargar categorías')
-    }
-
-    const data = await response.json().catch(() => null)
-    if (!data) {
-        return { data: [], total: 0, page, limit, totalPages: 0 }
-    }
-    return data
 }
 
-/**
- * Obtener categoría por ID
- */
-export async function getCategoryById(id: string): Promise<CategoryResponse> {
-    const response = await fetch(`${API_BASE}/api/categories/${id}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al obtener categoría')
-    }
-
-    return response.json()
-}
-
-/**
- * Obtener todas las categorías activas (sin paginación)
- * Útil para dropdowns/selects
- * ENDPOINT PÚBLICO - No requiere autenticación
- */
-export async function getActiveCategories(): Promise<CategoryResponse[]> {
-    const response = await fetch(`${API_BASE}/api/categories/public/active`, {
-        method: 'GET',
-        // Sin headers de autenticación - endpoint público
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al cargar categorías activas')
-    }
-
-    return response.json()
-}
-
-/**
- * Crear nueva categoría
- */
-export async function createCategory(
-    payload: CreateCategoryPayload
-): Promise<CategoryResponse> {
-    const response = await fetch(`${API_BASE}/api/categories`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al crear categoría')
-    }
-
-    return response.json()
-}
-
-/**
- * Actualizar categoría
- */
-export async function updateCategory(
+export function getCategoryById(
     id: string,
-    payload: UpdateCategoryPayload
+    signal?: AbortSignal,
 ): Promise<CategoryResponse> {
-    const response = await fetch(`${API_BASE}/api/categories/${id}`, {
-        method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al actualizar categoría')
-    }
-
-    return response.json()
+    return apiFetch(`/api/categories/${id}`, { signal })
 }
 
-/**
- * Desactivar categoría (soft delete)
- */
-export async function deleteCategory(id: string): Promise<CategoryResponse> {
-    const response = await fetch(`${API_BASE}/api/categories/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    })
+export function getActiveCategories(signal?: AbortSignal): Promise<CategoryResponse[]> {
+    return apiFetch('/api/categories/public/active', { auth: false, signal })
+}
 
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al desactivar categoría')
-    }
+export function createCategory(
+    payload: CreateCategoryPayload,
+): Promise<CategoryResponse> {
+    return apiFetch('/api/categories', { method: 'POST', body: payload })
+}
 
-    return response.json()
+export function updateCategory(
+    id: string,
+    payload: UpdateCategoryPayload,
+): Promise<CategoryResponse> {
+    return apiFetch(`/api/categories/${id}`, { method: 'PATCH', body: payload })
+}
+
+export function deleteCategory(id: string): Promise<CategoryResponse> {
+    return apiFetch(`/api/categories/${id}`, { method: 'DELETE' })
 }

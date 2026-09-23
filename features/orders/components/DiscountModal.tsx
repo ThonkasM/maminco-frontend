@@ -1,197 +1,216 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+    Button,
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    FormField,
+    Input,
+    Select,
+} from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 
 interface DiscountModalProps {
     isOpen: boolean
     totalAmount: number
-    onSubmit: (type: 'percentage' | 'fixed', amount: number, reason: string) => Promise<void>
+    onSubmit: (
+        type: 'percentage' | 'fixed',
+        amount: number,
+        reason: string,
+    ) => Promise<void>
     onClose: () => void
     isLoading?: boolean
 }
 
-export default function DiscountModal({ isOpen, totalAmount, onSubmit, onClose, isLoading }: DiscountModalProps) {
+const REASONS = [
+    'Cortesía',
+    'Promoción',
+    'Cliente Especial',
+    'Error de Precio',
+    'Compensación',
+    'Otra',
+]
+
+export function DiscountModal({
+    isOpen,
+    totalAmount,
+    onSubmit,
+    onClose,
+    isLoading,
+}: DiscountModalProps) {
     const [type, setType] = useState<'percentage' | 'fixed'>('percentage')
     const [amount, setAmount] = useState(0)
     const [reason, setReason] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
+    useEffect(() => {
+        if (!isOpen) return
+        setType('percentage')
+        setAmount(0)
+        setReason('')
+    }, [isOpen])
+
     const discountPreview = useMemo(() => {
         if (type === 'percentage') {
             const discountAmount = (totalAmount * amount) / 100
             return {
-                discountAmount,
-                finalTotal: totalAmount - discountAmount,
                 display: `${amount}%`,
+                finalTotal: totalAmount - discountAmount,
             }
-        } else {
-            return {
-                discountAmount: amount,
-                finalTotal: totalAmount - amount,
-                display: formatCurrency(amount),
-            }
+        }
+        return {
+            display: formatCurrency(amount),
+            finalTotal: totalAmount - amount,
         }
     }, [type, amount, totalAmount])
 
-    const handleSubmit = async () => {
-        if (amount <= 0) return
+    const isValid =
+        amount > 0 &&
+        (type === 'fixed' ? amount <= totalAmount : amount <= 100)
+    const loading = submitting || isLoading
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault()
+        if (!isValid) return
 
         setSubmitting(true)
         try {
             await onSubmit(type, amount, reason)
-            setAmount(0)
-            setReason('')
-            setType('percentage')
+            onClose()
         } finally {
             setSubmitting(false)
         }
     }
 
-    const handleClose = () => {
-        setAmount(0)
-        setReason('')
-        setType('percentage')
-        onClose()
-    }
-
-    if (!isOpen) return null
-
-    const isValid = amount > 0 && (type === 'fixed' ? amount <= totalAmount : amount <= 100)
-
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-md w-full p-6 space-y-4">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">💰 Aplicar Discount</h3>
-                    <button
-                        onClick={handleClose}
-                        disabled={submitting}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-50"
-                    >
-                        ✕
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Aplicar descuento</DialogTitle>
+                </DialogHeader>
 
-                {/* Type Selection */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Tipo de Discount
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            onClick={() => setType('percentage')}
-                            disabled={submitting}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 ${
-                                type === 'percentage'
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600'
-                            }`}
-                        >
-                            Porcentaje (%)
-                        </button>
-                        <button
-                            onClick={() => setType('fixed')}
-                            disabled={submitting}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 ${
-                                type === 'fixed'
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600'
-                            }`}
-                        >
-                            Monto Fijo
-                        </button>
-                    </div>
-                </div>
-
-                {/* Amount Input */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Monto ({type === 'percentage' ? '%' : 'Bs.'})
-                    </label>
-                    <input
-                        type="number"
-                        min="0"
-                        max={type === 'percentage' ? 100 : totalAmount}
-                        value={amount}
-                        onChange={(e) => setAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                        disabled={submitting}
-                        placeholder={type === 'percentage' ? 'Ej: 10' : 'Ej: 50000'}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white disabled:opacity-50"
-                    />
-                    {type === 'percentage' && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Máximo: 100%</p>
-                    )}
-                    {type === 'fixed' && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Máximo: {formatCurrency(totalAmount)}
-                        </p>
-                    )}
-                </div>
-
-                {/* Reason */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Razón (opcional)
-                    </label>
-                    <select
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        disabled={submitting}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white disabled:opacity-50"
-                    >
-                        <option value="">Selecciona una razón...</option>
-                        <option value="Cortesía">Cortesía</option>
-                        <option value="Promoción">Promoción</option>
-                        <option value="Cliente Especial">Cliente Especial</option>
-                        <option value="Error de Precio">Error de Precio</option>
-                        <option value="Compensación">Compensación</option>
-                        <option value="Otra">Otra</option>
-                    </select>
-                </div>
-
-                {/* Preview */}
-                {amount > 0 && (
-                    <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-slate-700 dark:text-slate-300">Total Original:</span>
-                            <span className="font-semibold text-slate-900 dark:text-white">
-                                {formatCurrency(totalAmount)}
-                            </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-red-600 dark:text-red-400">Discount:</span>
-                            <span className="font-semibold text-red-600 dark:text-red-400">
-                                -{discountPreview.display}
-                            </span>
-                        </div>
-                        <div className="border-t border-orange-200 dark:border-orange-700 pt-2 flex justify-between">
-                            <span className="font-bold text-slate-900 dark:text-white">Total Final:</span>
-                            <span className="font-bold text-orange-600 dark:text-orange-400">
-                                {formatCurrency(discountPreview.finalTotal)}
-                            </span>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <span className="text-sm font-medium text-foreground">
+                            Tipo de descuento
+                        </span>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                type="button"
+                                variant={
+                                    type === 'percentage'
+                                        ? 'primary'
+                                        : 'secondary'
+                                }
+                                onClick={() => setType('percentage')}
+                                disabled={loading}
+                            >
+                                Porcentaje (%)
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={
+                                    type === 'fixed' ? 'primary' : 'secondary'
+                                }
+                                onClick={() => setType('fixed')}
+                                disabled={loading}
+                            >
+                                Monto fijo
+                            </Button>
                         </div>
                     </div>
-                )}
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!isValid || submitting}
-                        className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    <FormField
+                        label={`Monto (${type === 'percentage' ? '%' : 'Bs.'})`}
+                        description={
+                            type === 'percentage'
+                                ? 'Máximo: 100%'
+                                : `Máximo: ${formatCurrency(totalAmount)}`
+                        }
+                        required
                     >
-                        {submitting ? 'Aplicando...' : 'Aplicar'}
-                    </button>
-                    <button
-                        onClick={handleClose}
-                        disabled={submitting}
-                        className="flex-1 px-4 py-2 bg-slate-300 dark:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-all disabled:opacity-50 font-medium"
-                    >
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        </div>
+                        <Input
+                            type="number"
+                            min="0"
+                            max={type === 'percentage' ? 100 : totalAmount}
+                            value={amount}
+                            onChange={(e) =>
+                                setAmount(
+                                    Math.max(
+                                        0,
+                                        parseInt(e.target.value) || 0,
+                                    ),
+                                )
+                            }
+                            disabled={loading}
+                            placeholder={
+                                type === 'percentage' ? 'Ej: 10' : 'Ej: 50000'
+                            }
+                        />
+                    </FormField>
+
+                    <FormField label="Razón" description="Opcional">
+                        <Select
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            disabled={loading}
+                        >
+                            <option value="">Selecciona una razón...</option>
+                            {REASONS.map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
+                        </Select>
+                    </FormField>
+
+                    {amount > 0 && (
+                        <div className="space-y-2 rounded-lg bg-surface-muted p-4">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Total original
+                                </span>
+                                <span className="font-medium text-foreground">
+                                    {formatCurrency(totalAmount)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-danger">Descuento</span>
+                                <span className="font-medium text-danger">
+                                    -{discountPreview.display}
+                                </span>
+                            </div>
+                            <div className="flex justify-between border-t border-border pt-2">
+                                <span className="font-semibold text-foreground">
+                                    Total final
+                                </span>
+                                <span className="font-bold text-foreground">
+                                    {formatCurrency(
+                                        discountPreview.finalTotal,
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={onClose}
+                            disabled={loading}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button type="submit" disabled={!isValid || loading}>
+                            {submitting ? 'Aplicando...' : 'Aplicar'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     )
 }

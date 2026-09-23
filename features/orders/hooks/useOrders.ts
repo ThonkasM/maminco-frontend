@@ -1,134 +1,173 @@
-import { useState, useEffect } from 'react'
-import {
-    getOrders,
-    changeOrderStatus,
-    addOrderItem,
-    removeOrderItem,
-    applyDiscount,
-    addTip,
-    PaginatedOrdersResponse,
-    OrderResponseDto,
-    OrderStatus,
-} from '@/features/pos/orders/api'
-import { getTables, TableResponse } from '@/features/tables/api'
-import { getProducts, ProductResponse } from '@/features/products/api'
+'use client'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import { getTables, type TableResponse } from '@/features/tables/api'
+import { getProducts, type ProductResponse } from '@/features/products/api'
+import {
+    addOrderItem,
+    addTip,
+    applyDiscount,
+    changeOrderStatus,
+    getOrders,
+    removeOrderItem,
+    type OrderStatus,
+} from '../api'
+
+const KEYS = {
+    all: ['orders'] as const,
+    tables: ['tables', 'options'] as const,
+    products: ['products', 'options'] as const,
+}
 
 export function useOrders() {
-    const [orders, setOrders] = useState<PaginatedOrdersResponse | null>(null)
-    const [tables, setTables] = useState<TableResponse[]>([])
-    const [products, setProducts] = useState<ProductResponse[]>([])
-    const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('')
     const [tableFilter, setTableFilter] = useState('')
-    const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('')
+    const [serviceTypeFilter, setServiceTypeFilter] = useState('')
+    const queryClient = useQueryClient()
 
-    // Auto-load on filters or page change
-    useEffect(() => {
-        loadTables()
-        loadProducts()
-        loadOrders()
-    }, [page, statusFilter, tableFilter, serviceTypeFilter])
+    const query = useQuery({
+        queryKey: [
+            ...KEYS.all,
+            { page, statusFilter, tableFilter, serviceTypeFilter },
+        ],
+        queryFn: ({ signal }) =>
+            getOrders(
+                page,
+                10,
+                {
+                    status: statusFilter || undefined,
+                    tableId: tableFilter || undefined,
+                    serviceType: serviceTypeFilter
+                        ? (serviceTypeFilter as never)
+                        : undefined,
+                },
+                signal,
+            ),
+    })
 
-    const loadTables = async () => {
-        try {
-            const data = await getTables(1, 1000)
-            setTables(data.data)
-        } catch (err) {
-            console.error('Error loading tables:', err)
-        }
-    }
+    const tablesQuery = useQuery({
+        queryKey: KEYS.tables,
+        queryFn: ({ signal }) => getTables(1, 1000, undefined, signal),
+    })
 
-    const loadProducts = async () => {
-        try {
-            const data = await getProducts(1, 1000)
-            setProducts(data.data)
-        } catch (err) {
-            console.error('Error loading products:', err)
-        }
-    }
+    const productsQuery = useQuery({
+        queryKey: KEYS.products,
+        queryFn: ({ signal }) =>
+            getProducts(1, 1000, undefined, undefined, signal),
+    })
 
-    const loadOrders = async () => {
-        setLoading(true)
-        try {
-            const data = await getOrders(page, 10, {
-                status: statusFilter || undefined,
-                tableId: tableFilter || undefined,
-                serviceType: serviceTypeFilter ? (serviceTypeFilter as any) : undefined,
-            })
-            setOrders(data)
-        } catch (err: any) {
-            toast.error(err.message || 'Error loading orders')
-        } finally {
-            setLoading(false)
-        }
-    }
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: KEYS.all })
 
-    const handleChangeStatus = async (orderId: string, newStatus: OrderStatus) => {
-        try {
-            await changeOrderStatus(orderId, { status: newStatus })
-            const statusLabel = newStatus === 'CLOSED' ? 'completada' : newStatus === 'DRAFT' ? 'borrador' : 'cancelada'
-            toast.success(`Orden marcada como ${statusLabel}`)
-            await loadOrders()
-        } catch (err: any) {
-            toast.error(err.message || 'Error changing order status')
-            throw err
-        }
-    }
+    const changeStatusMutation = useMutation({
+        mutationFn: ({
+            orderId,
+            status,
+        }: {
+            orderId: string
+            status: OrderStatus
+        }) => changeOrderStatus(orderId, { status }),
+        onSuccess: async (_data, variables) => {
+            const label =
+                variables.status === 'CLOSED'
+                    ? 'completada'
+                    : variables.status === 'DRAFT'
+                      ? 'borrador'
+                      : 'cancelada'
+            toast.success(`Orden marcada como ${label}`)
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(
+                getErrorMessage(error, 'Error cambiando el estado de la orden'),
+            ),
+    })
 
-    const handleAddItem = async (orderId: string, productId: string, quantity: number, notes?: string) => {
-        try {
-            await addOrderItem(orderId, { productId, quantity, notes })
+    const addItemMutation = useMutation({
+        mutationFn: ({
+            orderId,
+            productId,
+            quantity,
+            notes,
+        }: {
+            orderId: string
+            productId: string
+            quantity: number
+            notes?: string
+        }) => addOrderItem(orderId, { productId, quantity, notes }),
+        onSuccess: async () => {
             toast.success('Producto agregado a la orden')
-            await loadOrders()
-        } catch (err: any) {
-            toast.error(err.message || 'Error adding item')
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error agregando producto')),
+    })
 
-    const handleRemoveItem = async (orderId: string, itemId: string) => {
-        try {
-            await removeOrderItem(orderId, itemId)
+    const removeItemMutation = useMutation({
+        mutationFn: ({
+            orderId,
+            itemId,
+        }: {
+            orderId: string
+            itemId: string
+        }) => removeOrderItem(orderId, itemId),
+        onSuccess: async () => {
             toast.success('Producto removido de la orden')
-            await loadOrders()
-        } catch (err: any) {
-            toast.error(err.message || 'Error removing item')
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error removiendo producto')),
+    })
 
-    const handleApplyDiscount = async (orderId: string, type: 'percentage' | 'fixed', amount: number, reason?: string) => {
-        try {
-            const payload = type === 'percentage'
-                ? { percentageDiscount: amount, reason }
-                : { fixedDiscount: amount, reason }
-            await applyDiscount(orderId, payload)
+    const discountMutation = useMutation({
+        mutationFn: ({
+            orderId,
+            type,
+            amount,
+            reason,
+        }: {
+            orderId: string
+            type: 'percentage' | 'fixed'
+            amount: number
+            reason?: string
+        }) =>
+            applyDiscount(
+                orderId,
+                type === 'percentage'
+                    ? { percentageDiscount: amount, reason }
+                    : { fixedDiscount: amount, reason },
+            ),
+        onSuccess: async () => {
             toast.success('Descuento aplicado')
-            await loadOrders()
-        } catch (err: any) {
-            toast.error(err.message || 'Error applying discount')
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error aplicando descuento')),
+    })
 
-    const handleAddTip = async (orderId: string, tipAmount: number) => {
-        try {
-            await addTip(orderId, tipAmount)
+    const tipMutation = useMutation({
+        mutationFn: ({
+            orderId,
+            tipAmount,
+        }: {
+            orderId: string
+            tipAmount: number
+        }) => addTip(orderId, tipAmount),
+        onSuccess: async () => {
             toast.success('Propina agregada')
-            await loadOrders()
-        } catch (err: any) {
-            toast.error(err.message || 'Error adding tip')
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error agregando propina')),
+    })
 
     return {
-        orders,
-        tables,
-        products,
-        loading,
+        orders: query.data ?? null,
+        tables: (tablesQuery.data?.data ?? []) as TableResponse[],
+        products: (productsQuery.data?.data ?? []) as ProductResponse[],
+        loading: query.isLoading,
         page,
         statusFilter,
         tableFilter,
@@ -137,11 +176,33 @@ export function useOrders() {
         setStatusFilter,
         setTableFilter,
         setServiceTypeFilter,
-        loadOrders,
-        handleChangeStatus,
-        handleAddItem,
-        handleRemoveItem,
-        handleApplyDiscount,
-        handleAddTip,
+        loadOrders: () => {
+            void query.refetch()
+        },
+        handleChangeStatus: (orderId: string, newStatus: OrderStatus) =>
+            changeStatusMutation.mutateAsync({ orderId, status: newStatus }),
+        handleAddItem: (
+            orderId: string,
+            productId: string,
+            quantity: number,
+            notes?: string,
+        ) =>
+            addItemMutation.mutateAsync({
+                orderId,
+                productId,
+                quantity,
+                notes,
+            }),
+        handleRemoveItem: (orderId: string, itemId: string) =>
+            removeItemMutation.mutateAsync({ orderId, itemId }),
+        handleApplyDiscount: (
+            orderId: string,
+            type: 'percentage' | 'fixed',
+            amount: number,
+            reason?: string,
+        ) =>
+            discountMutation.mutateAsync({ orderId, type, amount, reason }),
+        handleAddTip: (orderId: string, tipAmount: number) =>
+            tipMutation.mutateAsync({ orderId, tipAmount }),
     }
 }

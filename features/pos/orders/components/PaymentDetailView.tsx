@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react'
+import { AlertTriangle, ArrowLeft, Check, RefreshCw } from 'lucide-react'
+import { Badge, Button, Card } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 
 interface RegisteredPayment {
@@ -25,123 +27,97 @@ export const PaymentDetailView: React.FC<PaymentDetailViewProps> = ({
     change,
     totalPaid,
     onBack,
-    onAddPayment,
-    onFinalize,
 }) => {
+    const changeState =
+        change > 0
+            ? { variant: 'info' as const, label: 'Cambio a dar', icon: RefreshCw }
+            : change === 0
+              ? { variant: 'success' as const, label: 'Monto exacto', icon: Check }
+              : { variant: 'danger' as const, label: 'Falta pagar', icon: AlertTriangle }
+
     return (
-        <div className="w-full h-full bg-white dark:bg-slate-800 flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700 shrink-0">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">
-                    Detalle de Payment
+        <div className="flex h-full w-full flex-col overflow-hidden bg-surface">
+            <div className="shrink-0 border-b border-border bg-surface-muted p-4">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
+                    Detalle de pago
                 </h3>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Payments Breakdown Section */}
+            <div className="flex-1 space-y-6 overflow-y-auto p-6">
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                        Payments Registrados
-                    </label>
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        Pagos registrados
+                    </p>
                     {registeredPayments.length > 0 ? (
                         <div className="space-y-2">
-                            {registeredPayments.map((payment, idx) => (
-                                <div
-                                    key={idx}
-                                    className="bg-linear-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 border-l-4 border-green-500 flex items-center justify-between"
+                            {registeredPayments.map((payment, index) => (
+                                <Card
+                                    key={`${payment.methodCode}-${index}`}
+                                    className="flex items-center justify-between p-4"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        <span className="size-2 rounded-full bg-success" />
+                                        <span className="font-semibold text-foreground">
                                             {payment.methodName}
                                         </span>
                                     </div>
-                                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    <span className="text-lg font-bold text-success">
                                         {formatCurrency(payment.amount)}
                                     </span>
-                                </div>
+                                </Card>
                             ))}
-                            {/* Total Pagado */}
-                            <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-4 flex items-center justify-between border border-slate-300 dark:border-slate-600">
-                                <span className="font-bold text-slate-900 dark:text-white">Total Pagado:</span>
-                                <span className="text-xl font-bold text-slate-900 dark:text-white">
+                            <Card className="flex items-center justify-between bg-surface-muted p-4">
+                                <span className="font-bold text-foreground">
+                                    Total pagado:
+                                </span>
+                                <span className="text-xl font-bold text-foreground">
                                     {formatCurrency(totalPaid)}
                                 </span>
-                            </div>
+                            </Card>
                         </div>
                     ) : (
-                        <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-4 text-center">
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                No hay payments registrados aún
+                        <Card className="bg-surface-muted p-4 text-center">
+                            <p className="text-sm text-muted-foreground">
+                                No hay pagos registrados aún
                             </p>
-                        </div>
+                        </Card>
                     )}
                 </div>
-                {/* Subtotal Section */}
+
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                        Subtotal a Pagar
-                    </label>
-                    <div className="bg-linear-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white text-right">
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        Subtotal a pagar
+                    </p>
+                    <Card className="bg-surface-muted p-4">
+                        <p className="text-right text-2xl font-bold text-foreground">
                             {formatCurrency(subtotal)}
                         </p>
-                    </div>
+                    </Card>
                 </div>
-                {/* Change Section */}
+
                 {totalPaid > 0 && (
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                            Estado de Cambio
-                        </label>
-                        <div
-                            className={`rounded-lg p-4 border-l-4 ${
-                                change > 0
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
-                                    : change === 0
-                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-500'
-                                        : 'bg-red-50 dark:bg-red-900/20 border-red-500'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between mb-2">
-                                <span
-                                    className={`text-sm font-bold uppercase tracking-wide ${
-                                        change > 0
-                                            ? 'text-blue-700 dark:text-blue-300'
-                                            : change === 0
-                                                ? 'text-green-700 dark:text-green-300'
-                                                : 'text-red-700 dark:text-red-300'
-                                    }`}
-                                >
-                                    {change > 0 ? '🔄 Cambio a Dar' : change === 0 ? '✓ Monto Exacto' : '⚠️ Falta Pagar'}
-                                </span>
-                            </div>
-                            <p
-                                className={`text-2xl font-bold text-right ${
-                                    change > 0
-                                        ? 'text-blue-600 dark:text-blue-400'
-                                        : change === 0
-                                            ? 'text-green-600 dark:text-green-400'
-                                            : 'text-red-600 dark:text-red-400'
-                                }`}
-                            >
+                        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                            Estado del cambio
+                        </p>
+                        <Card className="flex items-center justify-between p-4">
+                            <Badge variant={changeState.variant}>
+                                <changeState.icon className="size-3.5" />
+                                {changeState.label}
+                            </Badge>
+                            <span className="text-2xl font-bold text-foreground">
                                 {formatCurrency(Math.abs(change))}
-                            </p>
-                        </div>
+                            </span>
+                        </Card>
                     </div>
                 )}
             </div>
 
-            {/* Footer - Botones de Acción */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700 space-y-2 shrink-0">
-
-                <button
-                    onClick={onBack}
-                    className="w-full px-4 py-2 bg-slate-400 hover:bg-slate-500 text-white rounded-lg font-medium transition-all text-sm"
-                >
-                    ← Volver
-                </button>
+            <div className="shrink-0 border-t border-border bg-surface p-4">
+                <Button variant="secondary" className="w-full" onClick={onBack}>
+                    <ArrowLeft />
+                    Volver
+                </Button>
             </div>
         </div>
     )

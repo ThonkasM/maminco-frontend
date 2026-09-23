@@ -1,33 +1,33 @@
 import Link from 'next/link'
+import { buttonVariants } from '@/components/ui'
 
 export const metadata = {
-  title: 'Acceso denegado · Maminco',
+    title: 'Acceso denegado · Maminco',
 }
 
 export default function UnauthorizedPage() {
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <h1 className="text-4xl font-bold text-white mb-2">Acceso denegado</h1>
-        <p className="text-slate-300 mb-8">
-          No tienes permiso para acceder a esta sección. Contacta al administrador si crees que es
-          un error.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Link
-            href="/"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all"
-          >
-            Ir al inicio
-          </Link>
-          <Link
-            href="/auth/login"
-            className="border-2 border-slate-400 hover:border-white text-white font-semibold py-3 px-6 rounded-lg transition-all"
-          >
-            Iniciar sesión
-          </Link>
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+            <div className="max-w-md text-center">
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                    Acceso denegado
+                </h1>
+                <p className="mt-3 text-muted-foreground">
+                    No tienes permiso para acceder a esta sección. Contacta al
+                    administrador si crees que es un error.
+                </p>
+                <div className="mt-8 flex justify-center gap-3">
+                    <Link href="/" className={buttonVariants({ variant: 'primary' })}>
+                        Ir al inicio
+                    </Link>
+                    <Link
+                        href="/auth/login"
+                        className={buttonVariants({ variant: 'secondary' })}
+                    >
+                        Iniciar sesión
+                    </Link>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    )
 }

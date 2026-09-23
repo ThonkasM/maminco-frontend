@@ -1,114 +1,111 @@
+'use client'
 import { useState, useEffect } from 'react'
-import { TableResponse, CreateTablePayload } from '@/features/tables/api'
-import { AreaResponse } from '@/features/areas/api'
+import { Button, FormField, Input, Select } from '@/components/ui'
+import type { TableResponse, CreateTablePayload } from '../api'
+import type { AreaResponse } from '@/features/areas/api'
 
 interface TableFormProps {
-  table?: TableResponse
-  areas: AreaResponse[]
-  onSubmit: (formData: CreateTablePayload) => Promise<void>
-  onCancel: () => void
-  submitting?: boolean
+    table?: TableResponse
+    areas: AreaResponse[]
+    onSubmit: (formData: CreateTablePayload) => Promise<void>
+    onCancel: () => void
+    submitting?: boolean
 }
 
-export function TableForm({ table, areas, onSubmit, onCancel, submitting = false }: TableFormProps) {
-  const [formData, setFormData] = useState<CreateTablePayload>({ number: 0, areaId: '' })
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+export function TableForm({
+    table,
+    areas,
+    onSubmit,
+    onCancel,
+    submitting = false,
+}: TableFormProps) {
+    const [formData, setFormData] = useState<CreateTablePayload>({
+        number: 0,
+        areaId: '',
+    })
+    const [errors, setErrors] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    if (table) {
-      setFormData({
-        number: table.number,
-        areaId: table.areaId,
-      })
-    } else {
-      setFormData({ number: 0, areaId: '' })
+    useEffect(() => {
+        setFormData({
+            number: table?.number ?? 0,
+            areaId: table?.areaId ?? '',
+        })
+        setErrors({})
+    }, [table])
+
+    const validate = (): boolean => {
+        const next: Record<string, string> = {}
+        if (!formData.number) {
+            next.number = 'El número de mesa es requerido'
+        } else if (isNaN(formData.number)) {
+            next.number = 'Debe ser un número'
+        } else if (formData.number < 0) {
+            next.number = 'El número no puede ser negativo'
+        }
+        if (!formData.areaId) {
+            next.areaId = 'El área es requerida'
+        }
+        setErrors(next)
+        return Object.keys(next).length === 0
     }
-    setFormErrors({})
-  }, [table])
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
-
-    if (!formData.number) {
-      errors.number = 'El número de mesa es requerido'
-    } else if (isNaN(formData.number)) {
-      errors.number = 'Debe ser un número'
-    } else if (formData.number < 0) {
-      errors.number = 'Número no puede ser negativo'
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault()
+        if (!validate()) return
+        await onSubmit(formData)
     }
 
-    if (!formData.areaId) {
-      errors.areaId = 'El área es requerida'
-    }
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField
+                label="Número de mesa"
+                required
+                error={errors.number}
+            >
+                <Input
+                    type="number"
+                    value={formData.number || ''}
+                    placeholder="Ej: 1, 2, 3..."
+                    onChange={(e) => {
+                        setFormData({
+                            ...formData,
+                            number: e.target.value ? Number(e.target.value) : 0,
+                        })
+                        if (errors.number) setErrors({ ...errors, number: '' })
+                    }}
+                />
+            </FormField>
 
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+            <FormField label="Área" required error={errors.areaId}>
+                <Select
+                    value={formData.areaId}
+                    onChange={(e) => {
+                        setFormData({ ...formData, areaId: e.target.value })
+                        if (errors.areaId) setErrors({ ...errors, areaId: '' })
+                    }}
+                >
+                    <option value="">Selecciona un área</option>
+                    {areas.map((area) => (
+                        <option key={area.id} value={area.id}>
+                            {area.name}
+                        </option>
+                    ))}
+                </Select>
+            </FormField>
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validateForm()) return
-
-    try {
-      await onSubmit(formData)
-    } catch (err) {
-      // Error is handled by the hook
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Número de Table</label>
-        <input
-          type="number"
-          value={formData.number || ''}
-          onChange={(e) => {
-            setFormData({ ...formData, number: e.target.value ? Number(e.target.value) : 0 })
-            if (formErrors.number) setFormErrors({ ...formErrors, number: '' })
-          }}
-          className={`w-full px-4 py-2 rounded-lg border ${formErrors.number ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} dark:bg-slate-700 dark:text-white focus:outline-none focus:border-blue-500`}
-          placeholder="Ej: 1, 2, 3..."
-        />
-        {formErrors.number && <p className="text-red-600 text-sm mt-1">{formErrors.number}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Área</label>
-        <select
-          value={formData.areaId}
-          onChange={(e) => {
-            setFormData({ ...formData, areaId: e.target.value })
-            if (formErrors.areaId) setFormErrors({ ...formErrors, areaId: '' })
-          }}
-          className={`w-full px-4 py-2 rounded-lg border ${formErrors.areaId ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} dark:bg-slate-700 dark:text-white focus:outline-none focus:border-blue-500`}
-        >
-          <option value="">Selecciona un área</option>
-          {areas.map((area) => (
-            <option key={area.id} value={area.id}>
-              {area.name}
-            </option>
-          ))}
-        </select>
-        {formErrors.areaId && <p className="text-red-600 text-sm mt-1">{formErrors.areaId}</p>}
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-slate-400 transition-all"
-        >
-          {submitting ? 'Guardando...' : 'Guardar'}
-        </button>
-      </div>
-    </form>
-  )
+            <div className="flex gap-3 pt-2">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={onCancel}
+                >
+                    Cancelar
+                </Button>
+                <Button type="submit" className="flex-1" disabled={submitting}>
+                    {submitting ? 'Guardando...' : 'Guardar'}
+                </Button>
+            </div>
+        </form>
+    )
 }

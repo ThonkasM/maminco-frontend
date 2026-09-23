@@ -1,10 +1,15 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
-import * as adminPaymentsApi from '@/features/payments/api'
-import { CashDenominationDto } from '@/features/payments/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import {
+    createCashDenomination,
+    deleteCashDenomination,
+    listCashDenominations,
+    type CashDenominationDto,
+} from '../api'
 
-interface NewDenominationForm {
+export interface NewDenominationForm {
     value: string
     type: 'COIN' | 'BILL'
 }
@@ -14,87 +19,75 @@ const INITIAL_FORM: NewDenominationForm = {
     type: 'COIN',
 }
 
+const KEYS = { all: ['cash-denominations'] as const }
+
 export function useCashDenominations() {
-    const [denominations, setDenominations] = useState<CashDenominationDto[]>([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const queryClient = useQueryClient()
 
-    // Cargar denominaciones
-    const loadDenominations = useCallback(async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            console.log('📡 Cargando denominaciones desde backend...')
-            const data = await adminPaymentsApi.listCashDenominations(true)
-            console.log('✅ Denominaciones cargadas:', data)
-            setDenominations(data)
-        } catch (err: any) {
-            const message = err.message || 'Error cargando denominaciones'
-            setError(message)
-            toast.error(message)
-            console.error('❌ Error loading denominations:', err)
-        } finally {
-            setLoading(false)
-        }
-    }, [])
+    const query = useQuery({
+        queryKey: KEYS.all,
+        queryFn: ({ signal }) => listCashDenominations(true, signal),
+    })
 
-    // Cargar denominaciones al montar
-    useEffect(() => {
-        loadDenominations()
-    }, [loadDenominations])
+    const createMutation = useMutation({
+        mutationFn: ({ value, type }: { value: number; type: 'COIN' | 'BILL' }) =>
+            createCashDenomination(value, type),
+        onSuccess: async (created) => {
+            toast.success(
+                `${created.type === 'COIN' ? 'Moneda' : 'Billete'} de Bs. ${created.value} creado`,
+            )
+            await queryClient.invalidateQueries({ queryKey: KEYS.all })
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error creando denominación')),
+    })
 
-    // Crear nueva denominación
-    const createDenomination = async (value: string, type: 'COIN' | 'BILL'): Promise<boolean> => {
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => deleteCashDenomination(id),
+        onSuccess: async () => {
+            toast.success('Denominación eliminada')
+            await queryClient.invalidateQueries({ queryKey: KEYS.all })
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error eliminando denominación')),
+    })
+
+    const createDenomination = async (
+        value: string,
+        type: 'COIN' | 'BILL',
+    ): Promise<boolean> => {
         if (!value.trim() || value === '0') {
             toast.error('Ingresa un valor válido')
             return false
         }
-
         try {
-            setError(null)
-            const newDenom = await adminPaymentsApi.createCashDenomination(parseInt(value), type)
-            console.log('✅ Denominación creada:', newDenom)
-            setDenominations((prev) => [...prev, newDenom])
-            toast.success(`${type === 'COIN' ? 'Moneda' : 'Billete'} de Bs. ${value} creado`)
+            await createMutation.mutateAsync({ value: parseInt(value), type })
             return true
-        } catch (err: any) {
-            const message = err.message || 'Error creando denominación'
-            setError(message)
-            toast.error(message)
-            console.error('❌ Error creating denomination:', err)
+        } catch {
             return false
         }
     }
 
-    // Eliminar denominación
     const deleteDenomination = async (id: string): Promise<boolean> => {
         try {
-            setError(null)
-            await adminPaymentsApi.deleteCashDenomination(id)
-            setDenominations((prev) => prev.filter((d) => d.id !== id))
-            toast.success('Denominación eliminada')
+            await deleteMutation.mutateAsync(id)
             return true
-        } catch (err: any) {
-            const message = err.message || 'Error eliminando denominación'
-            setError(message)
-            toast.error(message)
-            console.error('❌ Error deleting denomination:', err)
+        } catch {
             return false
         }
     }
 
-    // Recargar datos
-    const refresh = useCallback(() => {
-        loadDenominations()
-    }, [loadDenominations])
-
     return {
-        denominations,
-        loading,
-        error,
+        denominations: query.data ?? ([] as CashDenominationDto[]),
+        loading: query.isLoading,
+        error: query.error
+            ? getErrorMessage(query.error, 'Error cargando denominaciones')
+            : null,
         createDenomination,
         deleteDenomination,
-        refresh,
+        refresh: () => {
+            void query.refetch()
+        },
         INITIAL_FORM,
     }
 }

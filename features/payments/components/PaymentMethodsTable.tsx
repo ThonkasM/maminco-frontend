@@ -1,7 +1,14 @@
 'use client'
-import React from 'react'
-import { AlertCircle, Banknote } from 'lucide-react'
-import { PaymentMethodDto } from '@/features/payments/api'
+import { Banknote, CreditCard } from 'lucide-react'
+import {
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    EmptyState,
+    Skeleton,
+} from '@/components/ui'
+import type { PaymentMethodDto } from '../api'
 
 interface PaymentMethodsTableProps {
     methods: PaymentMethodDto[]
@@ -10,112 +17,120 @@ interface PaymentMethodsTableProps {
     onToggle: (id: string, currentStatus: boolean) => Promise<void>
 }
 
-export default function PaymentMethodsTable({ methods, loading, error, onToggle }: PaymentMethodsTableProps) {
+export function PaymentMethodsTable({
+    methods,
+    loading,
+    error,
+    onToggle,
+}: PaymentMethodsTableProps) {
     return (
         <div className="space-y-6">
-            {/* Encabezado */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Métodos de Payment</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    Gestionar métodos de payment disponibles. Estos fueron creados en el seed inicial.
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                    Métodos de pago
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Gestiona los métodos de pago disponibles. Fueron creados en
+                    el seed inicial.
                 </p>
             </div>
 
-            {/* Mensajes de error */}
             {error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="text-red-600 dark:text-red-400 shrink-0 mt-0.5" size={20} />
-                    <div>
-                        <h3 className="font-semibold text-red-900 dark:text-red-200">Error</h3>
-                        <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-                    </div>
+                <div className="rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
+                    {error}
                 </div>
             )}
 
-            {/* Lista de métodos */}
-            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                {loading ? (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                        <div className="inline-block">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        </div>
-                        <p className="mt-2">Cargando métodos de payment...</p>
-                    </div>
-                ) : methods.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                        <p>No hay métodos de payment disponibles. Ejecuta el seed para crearlos.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-0">
-                        {methods.map((method, index) => {
-                            const isEffectivo = method.code === 'CASH'
-
-                            return (
-                                <div
-                                    key={method.id}
-                                    className={`p-6 flex items-center justify-between ${
-                                        index !== methods.length - 1 ? 'border-b border-gray-200 dark:border-slate-700' : ''
-                                    }`}
-                                >
-                                    {/* Información del método */}
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3">
-                                            {isEffectivo && (
-                                                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                                    <Banknote className="text-green-600 dark:text-green-400" size={24} />
-                                                </div>
+            {loading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                </div>
+            ) : methods.length === 0 ? (
+                <EmptyState
+                    icon={<CreditCard />}
+                    title="No hay métodos de pago"
+                    description="Ejecuta el seed para crear los métodos de pago del sistema."
+                />
+            ) : (
+                <div className="space-y-3">
+                    {methods.map((method) => {
+                        const isCash = method.code === 'CASH'
+                        return (
+                            <Card key={method.id}>
+                                <CardContent className="flex items-center justify-between gap-4 p-4">
+                                    <div className="flex flex-1 items-center gap-3">
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-muted-foreground">
+                                            {isCash ? (
+                                                <Banknote className="size-5" />
+                                            ) : (
+                                                <CreditCard className="size-5" />
                                             )}
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h3 className="font-medium text-foreground">
                                                     {method.name}
                                                 </h3>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <code className="text-sm bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-gray-900 dark:text-white">
-                                                        {method.code}
-                                                    </code>
-                                                    {method.description && (
-                                                        <p className="text-sm text-gray-500 dark:text-gray-400">{method.description}</p>
-                                                    )}
-                                                </div>
+                                                <code className="rounded bg-surface-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                                    {method.code}
+                                                </code>
+                                                {isCash && (
+                                                    <Badge variant="info">
+                                                        Configurable
+                                                    </Badge>
+                                                )}
                                             </div>
+                                            {method.description && (
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                    {method.description}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Estado y acciones */}
-                                    <div className="flex items-center gap-4 ml-4">
-                                        <button
-                                            onClick={() => onToggle(method.id, method.isActive)}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                    <div className="flex items-center gap-3">
+                                        <Badge
+                                            variant={
                                                 method.isActive
-                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
-                                                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
-                                            }`}
+                                                    ? 'success'
+                                                    : 'danger'
+                                            }
                                         >
-                                            {method.isActive ? '✓ Activo' : '✗ Inactivo'}
-                                        </button>
-
-                                        {/* Badge adicional para efectivo */}
-                                        {isEffectivo && (
-                                            <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-medium">
-                                                💰 Configurable
-                                            </div>
-                                        )}
+                                            {method.isActive
+                                                ? 'Activo'
+                                                : 'Inactivo'}
+                                        </Badge>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                                void onToggle(
+                                                    method.id,
+                                                    method.isActive,
+                                                )
+                                            }
+                                        >
+                                            {method.isActive
+                                                ? 'Desactivar'
+                                                : 'Activar'}
+                                        </Button>
                                     </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-            </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
+                </div>
+            )}
 
-            {/* Info box */}
             {methods.length > 0 && (
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>💡 Nota:</strong> Los métodos de payment se crean en el seed inicial. Aquí solo puedes
-                        activarlos o desactivarlos. Para EFECTIVO, ve a la sección de "Denominaciones de Efectivo"
-                        para configurar monedas y billetes.
-                    </p>
+                <div className="rounded-lg border border-border bg-surface-muted/40 p-4 text-sm text-muted-foreground">
+                    <strong className="text-foreground">Nota:</strong> Los
+                    métodos de pago se crean en el seed inicial. Aquí solo puedes
+                    activarlos o desactivarlos. Para efectivo, ve a la sección de
+                    denominaciones de efectivo para configurar monedas y
+                    billetes.
                 </div>
             )}
         </div>

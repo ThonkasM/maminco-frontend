@@ -1,8 +1,4 @@
-import { API_BASE, getHeaders } from '@/lib/http/client'
-
-/**
- * Report DTOs
- */
+import { apiFetch } from '@/lib/http/client'
 
 export interface DailySalesDto {
     totalSales: number
@@ -29,74 +25,47 @@ export interface DailyReportDto {
     topProducts: TopProductDto[]
 }
 
-/**
- * Get today's sales
- */
-export async function getTodaySales(): Promise<DailySalesDto> {
-    const res = await fetch(`${API_BASE}/api/reports/today/sales`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching today sales')
-    }
-
-    const response = await res.json()
-    return response.data || {}
+interface ReportEnvelope<T> {
+    data?: T
 }
 
-/**
- * Get today's top products
- */
-export async function getTodayTopProducts(limit: number = 10): Promise<TopProductDto[]> {
-    const params = new URLSearchParams({ limit: String(limit) })
-
-    const res = await fetch(`${API_BASE}/api/reports/today/top-products?${params}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching today top products')
-    }
-
-    const response = await res.json()
-    return response.data || []
+export async function getTodaySales(
+    signal?: AbortSignal,
+): Promise<DailySalesDto> {
+    const response = await apiFetch<ReportEnvelope<DailySalesDto>>(
+        '/api/reports/today/sales',
+        { signal },
+    )
+    return response.data ?? ({} as DailySalesDto)
 }
 
-/**
- * Get complete daily report (sales + top products)
- */
-export async function getDailyReport(limit: number = 10): Promise<DailyReportDto> {
-    const params = new URLSearchParams({ limit: String(limit) })
+export async function getTodayTopProducts(
+    limit: number = 10,
+    signal?: AbortSignal,
+): Promise<TopProductDto[]> {
+    const response = await apiFetch<ReportEnvelope<TopProductDto[]>>(
+        '/api/reports/today/top-products',
+        { query: { limit }, signal },
+    )
+    return response.data ?? []
+}
 
-    const res = await fetch(`${API_BASE}/api/reports/today?${params}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
+export async function getDailyReport(
+    limit: number = 10,
+    signal?: AbortSignal,
+): Promise<DailyReportDto> {
+    const response = await apiFetch<
+        ReportEnvelope<{
+            date?: string
+            sales?: DailySalesDto
+            topProducts?: TopProductDto[]
+        }>
+    >('/api/reports/today', { query: { limit }, signal })
 
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        console.error('[getDailyReport] HTTP Error:', res.status, err)
-        throw new Error(err.message || 'Error fetching daily report')
+    const data = response.data ?? {}
+    return {
+        date: new Date(data.date ?? new Date().toISOString()),
+        sales: data.sales ?? ({} as DailySalesDto),
+        topProducts: data.topProducts ?? [],
     }
-
-    const response = await res.json()
-    console.log('[getDailyReport] Raw response:', response)
-
-    const data = response.data || { date: new Date().toISOString(), sales: {}, topProducts: [] }
-    console.log('[getDailyReport] Data extracted:', data)
-
-    // Ensure date is properly formatted
-    const result = {
-        date: new Date(data.date),
-        sales: data.sales || {},
-        topProducts: data.topProducts || [],
-    }
-
-    console.log('[getDailyReport] Final result:', result)
-    return result
 }

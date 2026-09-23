@@ -1,113 +1,132 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Building2 } from 'lucide-react'
+import { Building2, Delete } from 'lucide-react'
+import { Button, Input } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 
 interface TransferPaymentFormProps {
     total: number
-    onSubmit?: (data: { method: string; amount: number; referenceNumber: string }) => void
+    onSubmit?: (data: {
+        method: string
+        amount: number
+        referenceNumber: string
+    }) => void
     onBack?: () => void
 }
 
-export const TransferPaymentForm: React.FC<TransferPaymentFormProps> = ({ total, onSubmit, onBack }) => {
+const BUTTON_GRID = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['0', '.', 'back'],
+]
+
+export const TransferPaymentForm: React.FC<TransferPaymentFormProps> = ({
+    total,
+    onSubmit,
+    onBack,
+}) => {
     const [amountPaid, setAmountPaid] = useState('')
     const [referenceNumber, setReferenceNumber] = useState('')
 
     const paidAmount = parseFloat(amountPaid) || 0
-    const difference = paidAmount - total
-    const canConfirm = paidAmount > 0 // Permite CUALQUIER monto > 0
+    const canConfirm = paidAmount > 0
 
-    const handleDigitClick = (digit: string | number) => {
-        if (digit === '←') {
-            setAmountPaid(amountPaid.slice(0, -1))
-        } else if (digit === '.') {
-            if (!amountPaid.includes('.')) {
-                setAmountPaid(amountPaid + '.')
-            }
-        } else if (digit === '✓') {
-            if (canConfirm) {
-                onSubmit?.({ method: 'TRANSFER', amount: paidAmount, referenceNumber: referenceNumber || 'Manual' })
-            }
-        } else {
-            setAmountPaid(amountPaid + digit)
+    const handleDigitClick = (digit: string) => {
+        if (digit === 'back') {
+            setAmountPaid((prev) => prev.slice(0, -1))
+            return
         }
+        if (digit === '.') {
+            setAmountPaid((prev) => (prev.includes('.') ? prev : prev + '.'))
+            return
+        }
+        setAmountPaid((prev) => prev + digit)
     }
 
-    const buttonGrid = [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [0, '.', '←'],
-    ]
-
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-slate-800">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-linear-to-r from-blue-500 to-blue-600 shrink-0">
+        <div className="flex h-full flex-col overflow-hidden bg-surface">
+            <div className="shrink-0 border-b border-border bg-primary p-4 text-primary-foreground">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-white" />
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-white/20">
+                        <Building2 className="size-6" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-white uppercase tracking-wide">
-                            Transfer Bancaria
+                        <h3 className="text-sm font-bold uppercase tracking-wide">
+                            Transferencia bancaria
                         </h3>
-                        <p className="text-xs text-blue-50">
-                            Ingresa monto que está pagando
+                        <p className="text-xs opacity-90">
+                            Ingresa el monto que está pagando
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Contenido */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Display de Monto Pagado */}
-                <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border-2 border-slate-300 dark:border-slate-600">
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Monto Ingresado:</p>
-                    <p className="text-3xl font-bold font-mono text-slate-900 dark:text-white min-h-10">
-                        {amountPaid ? formatCurrency(Number(amountPaid)) : '─'}
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+                <div className="rounded-lg border-2 border-border bg-surface-muted p-4">
+                    <p className="mb-1 text-xs text-muted-foreground">
+                        Monto ingresado:
+                    </p>
+                    <p className="min-h-10 font-mono text-3xl font-bold text-foreground">
+                        {amountPaid ? formatCurrency(Number(amountPaid)) : '—'}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Total a cobrar: {formatCurrency(total)}
                     </p>
                 </div>
 
-                {/* Teclado Numérico */}
                 <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                        Monto Pagado
+                    <label
+                        htmlFor="transfer-reference"
+                        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                        Número de referencia
+                    </label>
+                    <Input
+                        id="transfer-reference"
+                        value={referenceNumber}
+                        onChange={(event) => setReferenceNumber(event.target.value)}
+                        placeholder="Opcional"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Monto pagado
                     </p>
                     <div className="grid grid-cols-3 gap-2">
-                        {buttonGrid.flat().map((btn, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => handleDigitClick(btn)}
-                                className={`p-4 rounded-lg font-bold text-sm transition-all active:scale-95 ${
-                                    btn === '←'
-                                        ? 'bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white'
-                                        : 'bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white'
-                                }`}
+                        {BUTTON_GRID.flat().map((button) => (
+                            <Button
+                                key={button}
+                                variant={button === 'back' ? 'danger' : 'secondary'}
+                                className="h-14 text-base font-bold"
+                                onClick={() => handleDigitClick(button)}
                             >
-                                {btn}
-                            </button>
+                                {button === 'back' ? <Delete /> : button}
+                            </Button>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700 space-y-2 shrink-0">
-                <button
+            <div className="shrink-0 space-y-2 border-t border-border bg-surface p-4">
+                <Button
+                    className="w-full"
                     disabled={!canConfirm}
-                    onClick={() => handleDigitClick('✓')}
-                    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-bold transition-all"
+                    onClick={() =>
+                        onSubmit?.({
+                            method: 'TRANSFER',
+                            amount: paidAmount,
+                            referenceNumber: referenceNumber || 'Manual',
+                        })
+                    }
                 >
-                    Registar Payment por Transfer
-                </button>
-                <button
-                    onClick={onBack}
-                    className="w-full px-4 py-2 bg-slate-400 hover:bg-slate-500 text-white rounded-lg font-medium transition-all text-sm"
-                >
-                    ← Volver a detalle
-                </button>
+                    Registrar pago por transferencia
+                </Button>
+                <Button variant="secondary" className="w-full" onClick={onBack}>
+                    Volver al detalle
+                </Button>
             </div>
         </div>
     )

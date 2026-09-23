@@ -1,12 +1,31 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { UserResponse, CreateUserPayload } from '@/features/users/api'
+import { useEffect, useState } from 'react'
+import {
+    Button,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    FormField,
+    Input,
+    Select,
+} from '@/components/ui'
+import type { CreateUserPayload, UserResponse } from '../api'
+
+const ROLES = [
+    { value: 'WAITER', label: 'Mesero' },
+    { value: 'CASHIER', label: 'Cajero' },
+    { value: 'MANAGER', label: 'Gerente' },
+    { value: 'ADMINISTRATOR', label: 'Administrador' },
+] as const
 
 interface UserFormModalProps {
     isOpen: boolean
     user: UserResponse | null
     existingEmails: Set<string>
-    onSubmit: (payload: CreateUserPayload | Omit<CreateUserPayload, 'password'>) => Promise<void>
+    onSubmit: (
+        payload: CreateUserPayload | Omit<CreateUserPayload, 'password'>,
+    ) => Promise<void>
     onClose: () => void
     isLoading?: boolean
 }
@@ -24,14 +43,7 @@ interface FormErrors {
     password?: string
 }
 
-const ROLES = [
-    { value: 'WAITER', label: 'Mesero' },
-    { value: 'CASHIER', label: 'Cajero' },
-    { value: 'MANAGER', label: 'Gerente' },
-    { value: 'ADMINISTRATOR', label: 'Administrador' },
-]
-
-export default function UserFormModal({
+export function UserFormModal({
     isOpen,
     user,
     existingEmails,
@@ -49,24 +61,14 @@ export default function UserFormModal({
     const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
-        if (isOpen) {
-            if (user) {
-                setFormData({
-                    name: user.name,
-                    email: user.email,
-                    password: '',
-                    role: user.role,
-                })
-            } else {
-                setFormData({
-                    name: '',
-                    email: '',
-                    password: '',
-                    role: 'WAITER',
-                })
-            }
-            setFormErrors({})
-        }
+        if (!isOpen) return
+        setFormData({
+            name: user?.name ?? '',
+            email: user?.email ?? '',
+            password: '',
+            role: user?.role ?? 'WAITER',
+        })
+        setFormErrors({})
     }, [isOpen, user])
 
     const validateForm = (): boolean => {
@@ -74,9 +76,14 @@ export default function UserFormModal({
 
         if (!formData.name.trim()) errors.name = 'El nombre es requerido'
         if (!formData.email.trim()) errors.email = 'El email es requerido'
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Email inválido'
-        else if (!user || formData.email !== user.email) {
-            if (existingEmails.has(formData.email)) errors.email = 'Email ya existe en el sistema'
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+            errors.email = 'Email inválido'
+        else if (
+            (!user ||
+                formData.email.toLowerCase() !== user.email.toLowerCase()) &&
+            existingEmails.has(formData.email.toLowerCase())
+        ) {
+            errors.email = 'El email ya existe en el sistema'
         }
 
         if (!user && !formData.password) {
@@ -89,8 +96,8 @@ export default function UserFormModal({
         return Object.keys(errors).length === 0
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault()
         if (!validateForm()) return
 
         setSubmitting(true)
@@ -99,142 +106,142 @@ export default function UserFormModal({
                 await onSubmit({
                     name: formData.name.trim(),
                     email: formData.email.trim(),
-                    role: formData.role as any,
+                    role: formData.role as CreateUserPayload['role'],
                 })
             } else {
                 await onSubmit({
                     name: formData.name.trim(),
                     email: formData.email.trim(),
                     password: formData.password,
-                    role: formData.role as any,
-                } as CreateUserPayload)
+                    role: formData.role as CreateUserPayload['role'],
+                })
             }
-            handleClose()
+            onClose()
         } finally {
             setSubmitting(false)
         }
     }
 
-    const handleClose = () => {
-        setFormData({
-            name: '',
-            email: '',
-            password: '',
-            role: 'WAITER',
-        })
-        setFormErrors({})
-        onClose()
+    const handleOpenChange = (next: boolean) => {
+        if (!next) onClose()
     }
 
-    if (!isOpen) return null
+    const loading = submitting || isLoading
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-md w-full p-6">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-                    {user ? 'Editar Usuario' : 'Nuevo Usuario'}
-                </h3>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Name */}
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                            Nombre *
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => {
-                                setFormData({ ...formData, name: e.target.value })
-                                if (formErrors.name) setFormErrors({ ...formErrors, name: undefined })
-                            }}
-                            className={`w-full px-4 py-2 rounded-lg border ${
-                                formErrors.name ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
-                            } dark:bg-slate-700 dark:text-white focus:outline-none focus:border-blue-500`}
-                            placeholder="Juan Pérez"
-                        />
-                        {formErrors.name && <p className="text-red-600 text-sm mt-1">{formErrors.name}</p>}
-                    </div>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>
+                        {user ? 'Editar usuario' : 'Nuevo usuario'}
+                    </DialogTitle>
+                </DialogHeader>
 
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                            Email *
-                        </label>
-                        <input
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <FormField
+                        label="Nombre"
+                        required
+                        error={formErrors.name}
+                    >
+                        <Input
+                            value={formData.name}
+                            placeholder="Juan Pérez"
+                            onChange={(e) => {
+                                setFormData({
+                                    ...formData,
+                                    name: e.target.value,
+                                })
+                                if (formErrors.name)
+                                    setFormErrors({
+                                        ...formErrors,
+                                        name: undefined,
+                                    })
+                            }}
+                        />
+                    </FormField>
+
+                    <FormField label="Email" required error={formErrors.email}>
+                        <Input
                             type="email"
                             value={formData.email}
-                            onChange={(e) => {
-                                setFormData({ ...formData, email: e.target.value })
-                                if (formErrors.email) setFormErrors({ ...formErrors, email: undefined })
-                            }}
-                            className={`w-full px-4 py-2 rounded-lg border ${
-                                formErrors.email ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
-                            } dark:bg-slate-700 dark:text-white focus:outline-none focus:border-blue-500`}
                             placeholder="juan@ejemplo.com"
+                            onChange={(e) => {
+                                setFormData({
+                                    ...formData,
+                                    email: e.target.value,
+                                })
+                                if (formErrors.email)
+                                    setFormErrors({
+                                        ...formErrors,
+                                        email: undefined,
+                                    })
+                            }}
                         />
-                        {formErrors.email && <p className="text-red-600 text-sm mt-1">{formErrors.email}</p>}
-                    </div>
+                    </FormField>
 
-                    {/* Password (only for new users) */}
                     {!user && (
-                        <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                Contraseña *
-                            </label>
-                            <input
+                        <FormField
+                            label="Contraseña"
+                            required
+                            error={formErrors.password}
+                        >
+                            <Input
                                 type="password"
                                 value={formData.password}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, password: e.target.value })
-                                    if (formErrors.password) setFormErrors({ ...formErrors, password: undefined })
-                                }}
-                                className={`w-full px-4 py-2 rounded-lg border ${
-                                    formErrors.password ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
-                                } dark:bg-slate-700 dark:text-white focus:outline-none focus:border-blue-500`}
                                 placeholder="Mínimo 8 caracteres"
+                                onChange={(e) => {
+                                    setFormData({
+                                        ...formData,
+                                        password: e.target.value,
+                                    })
+                                    if (formErrors.password)
+                                        setFormErrors({
+                                            ...formErrors,
+                                            password: undefined,
+                                        })
+                                }}
                             />
-                            {formErrors.password && <p className="text-red-600 text-sm mt-1">{formErrors.password}</p>}
-                        </div>
+                        </FormField>
                     )}
 
-                    {/* Role */}
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                            Rol
-                        </label>
-                        <select
+                    <FormField label="Rol">
+                        <Select
                             value={formData.role}
-                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                            className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:border-blue-500"
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    role: e.target.value,
+                                })
+                            }
                         >
                             {ROLES.map((role) => (
                                 <option key={role.value} value={role.value}>
                                     {role.label}
                                 </option>
                             ))}
-                        </select>
-                    </div>
+                        </Select>
+                    </FormField>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-4">
-                        <button
+                    <div className="flex gap-3 pt-2">
+                        <Button
                             type="button"
-                            onClick={handleClose}
-                            disabled={submitting}
-                            className="flex-1 px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-all disabled:opacity-50"
+                            variant="secondary"
+                            className="flex-1"
+                            onClick={onClose}
+                            disabled={loading}
                         >
                             Cancelar
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
-                            disabled={submitting}
-                            className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-slate-400 transition-all"
+                            className="flex-1"
+                            disabled={loading}
                         >
                             {submitting ? 'Guardando...' : 'Guardar'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     )
 }

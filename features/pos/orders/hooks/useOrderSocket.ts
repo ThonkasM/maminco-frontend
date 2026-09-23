@@ -4,6 +4,8 @@ import { io, Socket } from 'socket.io-client'
 import { useAuth } from '@/hooks/useAuth'
 
 interface UseOrderSocketOptions {
+    onConnect?: () => void
+    onDisconnect?: () => void
     onOrderCreated?: (data: any) => void
     onOrderUpdated?: (data: any) => void
     onOrderItemAdded?: (data: any) => void
@@ -12,6 +14,7 @@ interface UseOrderSocketOptions {
     onTableStateUpdated?: (data: any) => void
     onTableStatusChanged?: (data: any) => void
     onTablesStateSnapshot?: (data: any) => void
+    subscribeToTablesStatus?: boolean
     tableId?: string
 }
 
@@ -21,21 +24,14 @@ export function useOrderSocket(options: UseOrderSocketOptions) {
     const token = useAuth((s) => s.token)
     const callbacksRef = useRef(options)
 
-    // Actualizar callbacks sin reiniciar conexión
     useEffect(() => {
         callbacksRef.current = options
     }, [options])
 
-    // Conectar al WebSocket UNA SOLA VEZ
     useEffect(() => {
-        if (!user || !token) {
-            console.log('⏳ Esperando autenticación para conectar WebSocket...')
-            return
-        }
+        if (!user || !token) return
 
-        // Si ya está conectado, solo cambiar de mesa
         if (socketRef.current?.connected) {
-            console.log('♻️ Socket ya conectado, solo cambiando de mesa')
             if (options.tableId) {
                 socketRef.current?.emit('join:table', options.tableId)
             }
@@ -43,12 +39,9 @@ export function useOrderSocket(options: UseOrderSocketOptions) {
         }
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-        console.log('🔌 Conectando a WebSocket:', apiUrl)
 
         socketRef.current = io(`${apiUrl}/orders`, {
-            auth: {
-                token: token,
-            },
+            auth: { token },
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,
@@ -56,80 +49,63 @@ export function useOrderSocket(options: UseOrderSocketOptions) {
             reconnectionAttempts: 5,
         })
 
-        // Conexión establecida
         socketRef.current.on('connect', () => {
-            console.log('✅ WebSocket conectado:', socketRef.current?.id)
-
             if (options.tableId) {
-                console.log(`📍 Uniéndose a mesa: ${options.tableId}`)
                 socketRef.current?.emit('join:table', options.tableId)
             }
+            if (callbacksRef.current.subscribeToTablesStatus) {
+                socketRef.current?.emit('subscribe:tables:status')
+            }
+            callbacksRef.current.onConnect?.()
         })
 
-        // Eventos de órdenes - usar callbacks ref para evitar closures
         socketRef.current.on('order:created', (data) => {
-            console.log('📢 [order:created]:', data)
             callbacksRef.current.onOrderCreated?.(data)
         })
 
         socketRef.current.on('order:updated', (data) => {
-            console.log('📢 [order:updated]:', data)
             callbacksRef.current.onOrderUpdated?.(data)
         })
 
         socketRef.current.on('order:item:added', (data) => {
-            console.log('📢 [order:item:added]:', data)
             callbacksRef.current.onOrderItemAdded?.(data)
         })
 
         socketRef.current.on('order:item:removed', (data) => {
-            console.log('📢 [order:item:removed]:', data)
             callbacksRef.current.onOrderItemRemoved?.(data)
         })
 
         socketRef.current.on('order:status:changed', (data) => {
-            console.log('📢 [order:status:changed]:', data)
             callbacksRef.current.onOrderStatusChanged?.(data)
         })
 
-        // Eventos globales de estado de mesa
         socketRef.current.on('table:state:updated', (data) => {
-            console.log('📊 [table:state:updated]:', data)
             callbacksRef.current.onTableStateUpdated?.(data)
         })
 
         socketRef.current.on('tables:status:changed', (data) => {
-            console.log('📊 [tables:status:changed]:', data)
             callbacksRef.current.onTableStatusChanged?.(data)
         })
 
         socketRef.current.on('tables:state:snapshot', (data) => {
-            console.log('📋 [tables:state:snapshot]:', data)
             callbacksRef.current.onTablesStateSnapshot?.(data)
         })
 
-        // Errores
-        socketRef.current.on('connect_error', (error) => {
-            console.error('❌ Error de conexión WebSocket:', error)
+        socketRef.current.on('disconnect', () => {
+            callbacksRef.current.onDisconnect?.()
         })
 
-        socketRef.current.on('disconnect', (reason) => {
-            console.log('⏹️ WebSocket desconectado:', reason)
-        })
-
-        // Cleanup solo al desmontar componente
         return () => {
-            console.log('🧹 Limpiando WebSocket...')
+            if (callbacksRef.current.subscribeToTablesStatus) {
+                socketRef.current?.emit('unsubscribe:tables:status')
+            }
             socketRef.current?.disconnect()
             socketRef.current = null
         }
-    }, [user?.id, token]) // Dependencias mínimas
+    }, [user?.id, token])
 
-    // Actualizar mesa cuando cambia tableId
     useEffect(() => {
         if (!socketRef.current?.connected || !options.tableId) return
-
-        console.log(`📍 Cambiando a mesa: ${options.tableId}`)
         socketRef.current.emit('join:table', options.tableId)
     }, [options.tableId])
 

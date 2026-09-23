@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
-import {
-    getDailyReport,
-    DailyReportDto,
-} from '@/features/dashboard/api'
+'use client'
+import { useQuery } from '@tanstack/react-query'
+import { getErrorMessage } from '@/lib/utils/errors'
+import { getDailyReport, type DailyReportDto } from '../api'
 
 export interface DashboardData {
     dailyReport: DailyReportDto | null
@@ -15,51 +14,24 @@ export interface DashboardState {
 }
 
 export function useDashboardReports() {
-    const [state, setState] = useState<DashboardState>({
-        data: {
-            dailyReport: null,
-        },
-        loading: false,
-        error: null,
+    const query = useQuery({
+        queryKey: ['dashboard', 'daily-report'],
+        queryFn: ({ signal }) => getDailyReport(10, signal),
     })
 
-    const fetchReports = useCallback(async () => {
-        setState((prev) => ({ ...prev, loading: true, error: null }))
-
-        try {
-            const dailyReport = await getDailyReport(10)
-            console.log('[useDashboardReports] Data fetched:', dailyReport)
-
-            setState((prev) => ({
-                ...prev,
-                data: {
-                    dailyReport,
-                },
-                loading: false,
-            }))
-        } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : 'Error al cargar reportes'
-            console.error('[useDashboardReports] Error:', errorMsg)
-            setState((prev) => ({
-                ...prev,
-                loading: false,
-                error: errorMsg,
-            }))
-        }
-    }, [])
-
-    // Auto-fetch on mount
-    useEffect(() => {
-        fetchReports()
-    }, [fetchReports])
-
-    const refresh = useCallback(() => {
-        fetchReports()
-    }, [fetchReports])
+    const refetch = () => {
+        void query.refetch()
+    }
 
     return {
-        state,
-        fetchReports,
-        refresh,
+        state: {
+            data: { dailyReport: query.data ?? null },
+            loading: query.isLoading,
+            error: query.error
+                ? getErrorMessage(query.error, 'Error al cargar reportes')
+                : null,
+        } as DashboardState,
+        fetchReports: refetch,
+        refresh: refetch,
     }
 }

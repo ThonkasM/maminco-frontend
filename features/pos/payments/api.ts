@@ -1,4 +1,4 @@
-import { API_BASE, getHeaders } from '@/lib/http/client'
+import { apiFetch } from '@/lib/http/client'
 
 /**
  * DTOs para el flujo de pagos
@@ -72,57 +72,35 @@ export interface PaymentResponseDto {
 /**
  * Obtiene todos los métodos de pago disponibles
  */
-export async function getPaymentMethods(): Promise<PaymentMethodResponseDto[]> {
-    const response = await fetch(`${API_BASE}/api/payments/methods`, {
-        headers: getHeaders(),
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error obteniendo métodos de pago')
-    }
-
-    return response.json()
+export function getPaymentMethods(
+    signal?: AbortSignal,
+): Promise<PaymentMethodResponseDto[]> {
+    return apiFetch('/api/payments/methods', { signal })
 }
 
 /**
  * Procesa un pago en una orden
- * 
+ *
  * @param orderId - ID de la orden a pagar
  * @param dto - Datos del pago
  * @returns Información del pago procesado
  */
-export async function processPayment(
+export function processPayment(
     orderId: string,
     dto: ProcessPaymentDto,
 ): Promise<PaymentProcessResponseDto> {
-    const response = await fetch(`${API_BASE}/api/payments/orders/${orderId}`, {
+    return apiFetch(`/api/payments/orders/${orderId}`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(dto),
+        body: dto,
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || 'Error procesando pago')
-    }
-
-    return data
 }
 
 /**
  * Obtiene todos los pagos de una orden
  */
-export async function getPaymentsByOrder(orderId: string): Promise<PaymentResponseDto[]> {
-    const response = await fetch(`${API_BASE}/api/payments/orders/${orderId}`, {
-        headers: getHeaders(),
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error obteniendo pagos')
-    }
-
-    return response.json()
+export function getPaymentsByOrder(
+    orderId: string,
+    signal?: AbortSignal,
+): Promise<PaymentResponseDto[]> {
+    return apiFetch(`/api/payments/orders/${orderId}`, { signal })
 }

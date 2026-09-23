@@ -1,134 +1,147 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
-import {
-    getProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    PaginatedProductsResponse,
-    ProductResponse,
-    CreateProductPayload,
-} from '@/features/products/api'
-import { getActiveCategories, CategoryResponse } from '@/features/categories/api'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import {
+    createProduct,
+    deleteProduct,
+    getProducts,
+    updateProduct,
+    type CreateProductPayload,
+} from '../api'
+import { getActiveCategories } from '@/features/categories/api'
+
+const KEYS = {
+    all: ['products'] as const,
+    activeCategories: ['categories', 'active'] as const,
+}
 
 export function useProducts() {
-    const [products, setProducts] = useState<PaginatedProductsResponse | null>(null)
-    const [categories, setCategories] = useState<CategoryResponse[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
     const [categoryFilter, setCategoryFilter] = useState('')
-    const [existingNames, setExistingNames] = useState<Set<string>>(new Set())
+    const queryClient = useQueryClient()
 
-    // Cargar categorías y productos
-    useEffect(() => {
-        loadCategories()
-    }, [])
+    const query = useQuery({
+        queryKey: [...KEYS.all, { page, search, categoryFilter }],
+        queryFn: ({ signal }) =>
+            getProducts(
+                page,
+                10,
+                search || undefined,
+                categoryFilter || undefined,
+                signal,
+            ),
+    })
 
-    useEffect(() => {
-        loadProducts()
-    }, [page, search, categoryFilter])
+    const categoriesQuery = useQuery({
+        queryKey: KEYS.activeCategories,
+        queryFn: ({ signal }) => getActiveCategories(signal),
+    })
 
-    const loadCategories = async () => {
-        try {
-            const data = await getActiveCategories()
-            setCategories(data)
-        } catch (err: any) {
-            console.error('Error loading categories:', err)
-        }
-    }
+    const namesQuery = useQuery({
+        queryKey: [...KEYS.all, 'names'],
+        queryFn: ({ signal }) => getProducts(1, 1000, undefined, undefined, signal),
+    })
 
-    const loadProducts = async () => {
-        setLoading(true)
-        setError(null)
-        try {
-            const data = await getProducts(page, 10, search || undefined, categoryFilter || undefined)
-            setProducts(data)
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error cargando productos'
-            setError(errorMsg)
-            toast.error(errorMsg)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: KEYS.all })
 
-    const loadProductNames = useCallback(async (excludeProductId?: string) => {
-        try {
-            const data = await getProducts(1, 1000)
-            const names = new Set(
-                data.data
-                    .filter((p) => !excludeProductId || p.id !== excludeProductId)
-                    .map((p) => p.name.toLowerCase())
-            )
-            setExistingNames(names)
-        } catch (err) {
-            console.error('Error loading product names:', err)
-        }
-    }, [])
-
-    const createNewProduct = async (payload: CreateProductPayload): Promise<boolean> => {
-        try {
-            await createProduct(payload)
+    const createMutation = useMutation({
+        mutationFn: (payload: CreateProductPayload) => createProduct(payload),
+        onSuccess: async () => {
             toast.success('Producto creado correctamente')
             setPage(1)
-            await loadProducts()
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error creando producto'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error creando producto')),
+    })
 
-    const updateExistingProduct = async (id: string, payload: CreateProductPayload): Promise<boolean> => {
-        try {
-            await updateProduct(id, payload)
+    const updateMutation = useMutation({
+        mutationFn: ({
+            id,
+            payload,
+        }: {
+            id: string
+            payload: CreateProductPayload
+        }) => updateProduct(id, payload),
+        onSuccess: async () => {
             toast.success('Producto actualizado correctamente')
-            await loadProducts()
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error actualizando producto'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error actualizando producto')),
+    })
 
-    const deleteExistingProduct = async (id: string, name: string): Promise<boolean> => {
-        try {
-            await deleteProduct(id)
-            toast.success(`Producto "${name}" desactivado correctamente`)
-            await loadProducts()
-            return true
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error desactivando producto'
-            toast.error(errorMsg)
-            return false
-        }
-    }
+    const deleteMutation = useMutation({
+        mutationFn: ({ id }: { id: string; name: string }) => deleteProduct(id),
+        onSuccess: async (_data, variables) => {
+            toast.success(`Producto "${variables.name}" desactivado correctamente`)
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error desactivando producto')),
+    })
 
-    const getCategoryName = (categoryId: string) => {
-        return categories.find((c) => c.id === categoryId)?.name || '-'
-    }
+    const categories = useMemo(
+        () => categoriesQuery.data ?? [],
+        [categoriesQuery.data],
+    )
 
     return {
-        products,
+        products: query.data ?? null,
         categories,
-        loading,
-        error,
+        loading: query.isLoading,
+        error: query.error
+            ? getErrorMessage(query.error, 'Error cargando productos')
+            : null,
         page,
         search,
         categoryFilter,
-        existingNames,
+        existingNames: useMemo(
+            () =>
+                new Set(
+                    (namesQuery.data?.data ?? []).map((product) =>
+                        product.name.toLowerCase(),
+                    ),
+                ),
+            [namesQuery.data],
+        ),
         setPage,
         setSearch,
         setCategoryFilter,
-        loadProductNames,
-        createNewProduct,
-        updateExistingProduct,
-        deleteExistingProduct,
-        getCategoryName,
+        loadProductNames: (_excludeProductId?: string) => {
+            void namesQuery.refetch()
+        },
+        createNewProduct: async (payload: CreateProductPayload) => {
+            try {
+                await createMutation.mutateAsync(payload)
+                return true
+            } catch {
+                return false
+            }
+        },
+        updateExistingProduct: async (
+            id: string,
+            payload: CreateProductPayload,
+        ) => {
+            try {
+                await updateMutation.mutateAsync({ id, payload })
+                return true
+            } catch {
+                return false
+            }
+        },
+        deleteExistingProduct: async (id: string, name: string) => {
+            try {
+                await deleteMutation.mutateAsync({ id, name })
+                return true
+            } catch {
+                return false
+            }
+        },
+        getCategoryName: (categoryId: string) =>
+            categories.find((category) => category.id === categoryId)?.name || '—',
     }
 }

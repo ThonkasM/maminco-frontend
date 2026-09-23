@@ -1,4 +1,4 @@
-import { API_BASE, getHeaders } from '@/lib/http/client'
+import { apiFetch } from '@/lib/http/client'
 
 export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED'
 
@@ -37,120 +37,62 @@ export interface PaginatedTablesResponse {
     totalPages: number
 }
 
-export async function getTables(
+export interface TableFilters {
+    number?: number
+    areaId?: string
+    status?: TableStatus
+}
+
+export function getTables(
     page = 1,
     limit = 10,
-    filters?: {
-        number?: number
-        areaId?: string
-        status?: TableStatus
-    }
+    filters?: TableFilters,
+    signal?: AbortSignal,
 ): Promise<PaginatedTablesResponse> {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    if (filters?.number !== undefined) params.append('number', String(filters.number))
-    if (filters?.areaId) params.append('areaId', filters.areaId)
-    if (filters?.status) params.append('status', filters.status)
-
-    const res = await fetch(`${API_BASE}/api/tables?${params}`, {
-        method: 'GET',
-        headers: getHeaders(),
+    return apiFetch('/api/tables', {
+        query: {
+            page,
+            limit,
+            number: filters?.number,
+            areaId: filters?.areaId,
+            status: filters?.status,
+        },
+        signal,
     })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching tables')
-    }
-
-    const data = await res.json().catch(() => null)
-    if (!data) {
-        return { data: [], total: 0, page, limit, totalPages: 0 }
-    }
-    return data
 }
 
-export async function getTableById(id: string): Promise<TableResponse> {
-    const res = await fetch(`${API_BASE}/api/tables/${id}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching table')
-    }
-
-    return res.json()
+export function getTableById(
+    id: string,
+    signal?: AbortSignal,
+): Promise<TableResponse> {
+    return apiFetch(`/api/tables/${id}`, { signal })
 }
 
-export async function getTablesByArea(areaId: string): Promise<TableResponse[]> {
-    const res = await fetch(`${API_BASE}/api/tables/area/${areaId}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching tables by area')
-    }
-
-    return res.json()
+export function getTablesByArea(
+    areaId: string,
+    signal?: AbortSignal,
+): Promise<TableResponse[]> {
+    return apiFetch(`/api/tables/area/${areaId}`, { signal })
 }
 
-export async function createTable(payload: CreateTablePayload): Promise<TableResponse> {
-    const res = await fetch(`${API_BASE}/api/tables`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error creating table')
-    }
-
-    return res.json()
+export function createTable(payload: CreateTablePayload): Promise<TableResponse> {
+    return apiFetch('/api/tables', { method: 'POST', body: payload })
 }
 
-export async function updateTable(id: string, payload: UpdateTablePayload): Promise<TableResponse> {
-    const res = await fetch(`${API_BASE}/api/tables/${id}`, {
-        method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error updating table')
-    }
-
-    return res.json()
+export function updateTable(
+    id: string,
+    payload: UpdateTablePayload,
+): Promise<TableResponse> {
+    return apiFetch(`/api/tables/${id}`, { method: 'PATCH', body: payload })
 }
 
-export async function changeTableStatus(id: string, payload: ChangeTableStatusPayload): Promise<TableResponse> {
-    const res = await fetch(`${API_BASE}/api/tables/${id}/status`, {
-        method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error changing table status')
-    }
-
-    return res.json()
+export function changeTableStatus(
+    id: string,
+    payload: ChangeTableStatusPayload,
+): Promise<TableResponse> {
+    return apiFetch(`/api/tables/${id}/status`, { method: 'PATCH', body: payload })
 }
 
-export async function deleteTable(id: string): Promise<TableResponse> {
-    const res = await fetch(`${API_BASE}/api/tables/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error deleting table')
-    }
-
-    return res.json()
+export function deleteTable(id: string): Promise<TableResponse> {
+    return apiFetch(`/api/tables/${id}`, { method: 'DELETE' })
 }

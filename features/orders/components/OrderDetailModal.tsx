@@ -1,8 +1,32 @@
 'use client'
-import React from 'react'
-import { OrderResponseDto } from '@/features/pos/orders/api'
+import { MessageSquare } from 'lucide-react'
+import {
+    Badge,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
-import OrderHistoryTimeline from './OrderHistoryTimeline'
+import type { OrderResponseDto, OrderStatus } from '../api'
+import { OrderHistoryTimeline } from './OrderHistoryTimeline'
+
+const STATUS_LABELS: Record<OrderStatus, string> = {
+    DRAFT: 'Borrador',
+    CLOSED: 'Cerrada',
+    CANCELLED: 'Cancelada',
+}
+
+const STATUS_VARIANTS: Record<
+    OrderStatus,
+    'info' | 'success' | 'danger'
+> = {
+    DRAFT: 'info',
+    CLOSED: 'success',
+    CANCELLED: 'danger',
+}
 
 interface OrderDetailModalProps {
     isOpen: boolean
@@ -10,133 +34,147 @@ interface OrderDetailModalProps {
     onClose: () => void
 }
 
-export default function OrderDetailModal({
+export function OrderDetailModal({
     isOpen,
     order,
     onClose,
 }: OrderDetailModalProps) {
-    if (!isOpen || !order) return null
-
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                            Order #{order.orderNumber}
-                        </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm">
-                            Table {order.tableName} • {order.serviceType}
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                    >
-                        ✕
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
+            <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+                {order && (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>
+                                Orden #{order.orderNumber}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {order.tableName || 'Sin mesa'} ·{' '}
+                                {order.serviceType}
+                            </DialogDescription>
+                        </DialogHeader>
 
-                {/* Items Section */}
-                <div className="mb-6">
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Items ({order.itemCount})</h3>
-                    <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
-                        {order.items.map((item) => (
-                            <div key={item.id} className="space-y-1">
-                                <div className="bg-slate-50 dark:bg-slate-700 p-3 rounded">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <p className="font-medium text-slate-900 dark:text-white">{item.productName}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                {formatCurrency(Number(item.unitPrice))} × {item.quantity} ={' '}
-                                                <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                                    {formatCurrency(Number(item.subtotal))}
+                        <section className="space-y-3">
+                            <h3 className="font-semibold text-foreground">
+                                Items ({order.itemCount})
+                            </h3>
+                            <div className="max-h-48 space-y-2 overflow-y-auto">
+                                {order.items.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="rounded-lg border border-border bg-surface-muted/40 p-3"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-foreground">
+                                                    {item.productName}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {formatCurrency(
+                                                        Number(item.unitPrice),
+                                                    )}{' '}
+                                                    × {item.quantity} ={' '}
+                                                    <span className="font-semibold text-foreground">
+                                                        {formatCurrency(
+                                                            Number(item.subtotal),
+                                                        )}
+                                                    </span>
+                                                </p>
+                                                {item.notes && (
+                                                    <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground">
+                                                        <MessageSquare className="size-3" />
+                                                        {item.notes}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {item.addedByName && (
+                                            <p className="mt-2 text-xs text-muted-foreground">
+                                                Por:{' '}
+                                                <span className="font-medium text-foreground">
+                                                    {item.addedByName}
                                                 </span>
                                             </p>
-                                            {item.notes && (
-                                                <p className="text-xs text-slate-600 dark:text-slate-300 italic mt-1">
-                                                    💬 {item.notes}
-                                                </p>
-                                            )}
-                                        </div>
+                                        )}
                                     </div>
-                                    {item.addedByName && (
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                            Por: <span className="font-semibold">{item.addedByName}</span>
-                                        </p>
-                                    )}
-                                </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </section>
 
-                {/* Totals Section */}
-                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg space-y-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-slate-700 dark:text-slate-300">Subtotal:</span>
-                        <span className="font-semibold text-slate-900 dark:text-white">
-                            {formatCurrency(Number(order.subtotal))}
-                        </span>
-                    </div>
+                        <section className="space-y-2 rounded-lg border border-border bg-surface-muted/40 p-4">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Subtotal
+                                </span>
+                                <span className="font-medium text-foreground">
+                                    {formatCurrency(Number(order.subtotal))}
+                                </span>
+                            </div>
 
-                    {order.discountAmount > 0 && (
-                        <div className="flex justify-between text-sm">
-                            <span className="text-red-600 dark:text-red-400">Discount:</span>
-                            <span className="font-semibold text-red-600 dark:text-red-400">
-                                -{formatCurrency(Number(order.discountAmount))}
-                            </span>
+                            {order.discountAmount > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-danger">
+                                        Descuento
+                                    </span>
+                                    <span className="font-medium text-danger">
+                                        -
+                                        {formatCurrency(
+                                            Number(order.discountAmount),
+                                        )}
+                                    </span>
+                                </div>
+                            )}
+
+                            {order.tipAmount > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-success">
+                                        Propina
+                                    </span>
+                                    <span className="font-medium text-success">
+                                        +
+                                        {formatCurrency(Number(order.tipAmount))}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between border-t border-border pt-2">
+                                <span className="font-semibold text-foreground">
+                                    Total
+                                </span>
+                                <span className="text-lg font-bold text-foreground">
+                                    {formatCurrency(Number(order.total))}
+                                </span>
+                            </div>
+                        </section>
+
+                        <section className="space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                                Estado
+                            </p>
+                            <Badge variant={STATUS_VARIANTS[order.status]}>
+                                {STATUS_LABELS[order.status] ?? order.status}
+                            </Badge>
+                        </section>
+
+                        <section className="rounded-lg border border-border bg-surface-muted/30 p-4">
+                            <OrderHistoryTimeline
+                                orderId={order.id}
+                                isOpen={isOpen}
+                            />
+                        </section>
+
+                        <div className="flex">
+                            <Button
+                                variant="secondary"
+                                className="flex-1"
+                                onClick={onClose}
+                            >
+                                Cerrar
+                            </Button>
                         </div>
-                    )}
-
-                    {order.tipAmount > 0 && (
-                        <div className="flex justify-between text-sm">
-                            <span className="text-green-600 dark:text-green-400">Tip:</span>
-                            <span className="font-semibold text-green-600 dark:text-green-400">
-                                +{formatCurrency(Number(order.tipAmount))}
-                            </span>
-                        </div>
-                    )}
-
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-600 flex justify-between">
-                        <span className="font-bold text-slate-900 dark:text-white">Total:</span>
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                            {formatCurrency(Number(order.total))}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Status Badge */}
-                <div className="mb-6 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Estado</p>
-                    <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${order.status === 'DRAFT'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                                : order.status === 'CLOSED'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                            }`}
-                    >
-                        {order.status}
-                    </span>
-                </div>
-
-                {/* Order History / Audit Trail */}
-                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600 max-h-96 overflow-y-auto">
-                    <OrderHistoryTimeline orderId={order.id} isOpen={isOpen} />
-                </div>
-
-                {/* Close Button */}
-                <div className="flex gap-2">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500 text-slate-900 dark:text-white rounded-lg transition-all font-medium"
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
+                    </>
+                )}
+            </DialogContent>
+        </Dialog>
     )
 }

@@ -1,16 +1,18 @@
-import { API_BASE, getHeaders } from '@/lib/http/client'
+import { apiFetch } from '@/lib/http/client'
+
+export type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER'
 
 export interface CreateUserPayload {
     email: string
     name: string
     password: string
-    role: 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER'
+    role: UserRole
 }
 
 export interface UpdateUserPayload {
     email?: string
     name?: string
-    role?: 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER'
+    role?: UserRole
     isActive?: boolean
 }
 
@@ -32,92 +34,46 @@ export interface PaginatedUsersResponse {
     totalPages: number
 }
 
-export async function getUsers(page = 1, limit = 10, search?: string): Promise<PaginatedUsersResponse> {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    if (search) params.append('search', search)
-
-    const res = await fetch(`${API_BASE}/api/users?${params}`, {
-        method: 'GET',
-        headers: getHeaders(),
+export function getUsers(
+    page = 1,
+    limit = 10,
+    search?: string,
+    signal?: AbortSignal,
+): Promise<PaginatedUsersResponse> {
+    return apiFetch('/api/users', {
+        query: { page, limit, search },
+        signal,
     })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching users')
-    }
-
-    return res.json()
 }
 
-export async function getUserById(id: string): Promise<UserResponse> {
-    const res = await fetch(`${API_BASE}/api/users/${id}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching user')
-    }
-
-    return res.json()
+export function getUserById(
+    id: string,
+    signal?: AbortSignal,
+): Promise<UserResponse> {
+    return apiFetch(`/api/users/${id}`, { signal })
 }
 
-export async function createUser(payload: CreateUserPayload): Promise<UserResponse> {
-    const res = await fetch(`${API_BASE}/api/users`, {
+export function createUser(payload: CreateUserPayload): Promise<UserResponse> {
+    return apiFetch('/api/users', { method: 'POST', body: payload })
+}
+
+export function updateUser(
+    id: string,
+    payload: UpdateUserPayload,
+): Promise<UserResponse> {
+    return apiFetch(`/api/users/${id}`, { method: 'PATCH', body: payload })
+}
+
+export function deleteUser(id: string): Promise<UserResponse> {
+    return apiFetch(`/api/users/${id}`, { method: 'DELETE' })
+}
+
+export function resetUserPassword(
+    id: string,
+    newPassword: string,
+): Promise<{ message: string }> {
+    return apiFetch(`/api/users/${id}/reset-password`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
+        body: { newPassword },
     })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error creating user')
-    }
-
-    return res.json()
-}
-
-export async function updateUser(id: string, payload: UpdateUserPayload): Promise<UserResponse> {
-    const res = await fetch(`${API_BASE}/api/users/${id}`, {
-        method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error updating user')
-    }
-
-    return res.json()
-}
-
-export async function deleteUser(id: string): Promise<UserResponse> {
-    const res = await fetch(`${API_BASE}/api/users/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error deleting user')
-    }
-
-    return res.json()
-}
-
-export async function resetUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
-    const res = await fetch(`${API_BASE}/api/users/${id}/reset-password`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ newPassword }),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error resetting password')
-    }
-
-    return res.json()
 }

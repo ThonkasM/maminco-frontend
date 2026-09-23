@@ -1,5 +1,14 @@
 'use client'
-import React from 'react'
+import { useState } from 'react'
+import {
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui'
 
 interface DeleteConfirmModalProps {
     isOpen: boolean
@@ -9,14 +18,14 @@ interface DeleteConfirmModalProps {
     isLoading?: boolean
 }
 
-export default function DeleteConfirmModal({
+export function DeleteConfirmModal({
     isOpen,
     productName,
     onConfirm,
     onCancel,
     isLoading,
 }: DeleteConfirmModalProps) {
-    const [confirming, setConfirming] = React.useState(false)
+    const [confirming, setConfirming] = useState(false)
 
     const handleConfirm = async () => {
         setConfirming(true)
@@ -28,33 +37,36 @@ export default function DeleteConfirmModal({
         }
     }
 
-    if (!isOpen) return null
+    const loading = confirming || isLoading
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-sm w-full p-6">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Confirmar eliminación</h3>
-                <p className="text-slate-700 dark:text-slate-300 mb-6">
-                    ¿Desactivas el product{' '}
-                    <span className="font-semibold text-slate-900 dark:text-white">"{productName}"</span>?
-                </p>
-                <div className="flex gap-3">
-                    <button
+        <Dialog open={isOpen} onOpenChange={(next) => !next && onCancel()}>
+            <DialogContent className="max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>Desactivar producto</DialogTitle>
+                    <DialogDescription>
+                        ¿Seguro que deseas desactivar el producto{' '}
+                        <strong className="text-foreground">{productName}</strong>?
+                        Esta acción puede revertirse.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button
+                        variant="secondary"
                         onClick={onCancel}
-                        disabled={confirming}
-                        className="flex-1 px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-all disabled:opacity-50"
+                        disabled={loading}
                     >
                         Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="danger"
                         onClick={handleConfirm}
-                        disabled={confirming}
-                        className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:bg-slate-400 transition-all"
+                        disabled={loading}
                     >
-                        {confirming ? 'Eliminando...' : 'Eliminar'}
-                    </button>
-                </div>
-            </div>
-        </div>
+                        {loading ? 'Desactivando...' : 'Desactivar'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }

@@ -1,114 +1,92 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { History, RefreshCw } from 'lucide-react'
+import { Badge, Button } from '@/components/ui'
+import { getErrorMessage } from '@/lib/utils/errors'
+import { getOrderHistoryTimeline } from '../api'
 import { OrderHistoryTable } from './OrderHistoryTable'
-import * as adminOrdersApi from '@/features/orders/api'
-import { OrderHistoryTimelineEntry, PaginationInfo } from '@/features/orders/api'
 
 interface OrderHistoryTimelineProps {
     orderId: string
     isOpen?: boolean
 }
 
-export const OrderHistoryTimeline: React.FC<OrderHistoryTimelineProps> = ({ orderId, isOpen = true }) => {
-    const [history, setHistory] = useState<OrderHistoryTimelineEntry[]>([])
-    const [pagination, setPagination] = useState<PaginationInfo | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [currentPage, setCurrentPage] = useState(1)
-    const LIMIT = 50
+export function OrderHistoryTimeline({
+    orderId,
+    isOpen = true,
+}: OrderHistoryTimelineProps) {
+    const [page, setPage] = useState(1)
 
-    useEffect(() => {
-        if (!isOpen) return
+    const query = useQuery({
+        queryKey: ['orders', orderId, 'timeline', page],
+        queryFn: ({ signal }) =>
+            getOrderHistoryTimeline(orderId, page, 50, signal),
+        enabled: isOpen,
+    })
 
-        loadHistory(1)
-    }, [orderId, isOpen])
+    const pagination = query.data?.pagination
 
-    const loadHistory = async (page: number) => {
-        try {
-            setLoading(true)
-            setError(null)
-            const response = await adminOrdersApi.getOrderHistoryTimeline(orderId, page, LIMIT)
-            // El backend ya proporciona metadata y detail procesados
-            setHistory(response.timeline || [])
-            setPagination(response.pagination)
-            setCurrentPage(page)
-        } catch (err: any) {
-            setError(err.message || 'Error cargando historial')
-            console.error('Error loading order history:', err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleNextPage = () => {
-        if (pagination?.hasNextPage) {
-            loadHistory(currentPage + 1)
-        }
-    }
-
-    const handlePreviousPage = () => {
-        if (pagination?.hasPreviousPage) {
-            loadHistory(currentPage - 1)
-        }
-    }
-
-    if (error) {
+    if (query.error) {
         return (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-700 dark:text-red-300">
-                    {error}
-                </p>
+            <div className="rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
+                {getErrorMessage(query.error, 'Error cargando el historial')}
             </div>
         )
     }
 
     return (
         <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    📋 Historial de Auditoría
-                    <span className="text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400 font-normal">
-                        {pagination?.total || 0} total
-                    </span>
+            <div className="flex items-center justify-between gap-3">
+                <h3 className="flex items-center gap-2 font-semibold text-foreground">
+                    <History className="size-4" />
+                    Historial de auditoría
+                    <Badge variant="neutral">
+                        {pagination?.total ?? 0} total
+                    </Badge>
                 </h3>
-                <button
-                    onClick={() => loadHistory(currentPage)}
-                    disabled={loading}
-                    className="text-xs px-2 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded transition-colors disabled:opacity-50"
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void query.refetch()}
+                    disabled={query.isFetching}
                 >
-                    🔄 Actualizar
-                </button>
+                    <RefreshCw />
+                    Actualizar
+                </Button>
             </div>
 
-            <OrderHistoryTable history={history} isLoading={loading} />
+            <OrderHistoryTable
+                history={query.data?.timeline ?? []}
+                isLoading={query.isLoading}
+            />
 
-            {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                    <div className="text-xs text-slate-600 dark:text-slate-400">
-                        Página {pagination.page} de {pagination.totalPages} ({pagination.total} registros)
-                    </div>
+                <div className="flex items-center justify-between rounded-lg border border-border bg-surface-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">
+                        Página {pagination.page} de {pagination.totalPages} (
+                        {pagination.total} registros)
+                    </p>
                     <div className="flex gap-2">
-                        <button
-                            onClick={handlePreviousPage}
-                            disabled={!pagination.hasPreviousPage || loading}
-                            className="px-3 py-1 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-900 dark:text-white rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage((prev) => prev - 1)}
+                            disabled={!pagination.hasPreviousPage}
                         >
-                            ← Anterior
-                        </button>
-                        <button
-                            onClick={handleNextPage}
-                            disabled={!pagination.hasNextPage || loading}
-                            className="px-3 py-1 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-900 dark:text-white rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            Anterior
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage((prev) => prev + 1)}
+                            disabled={!pagination.hasNextPage}
                         >
-                            Siguiente →
-                        </button>
+                            Siguiente
+                        </Button>
                     </div>
                 </div>
             )}
         </div>
     )
 }
-
-export default OrderHistoryTimeline
