@@ -11,7 +11,7 @@ export function TopProductsTable({ products, loading = false }: TopProductsTable
     if (loading) {
         return (
             <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📦 Productos Más Vendidos</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📦 Products Más Vendidos</h3>
                 <div className="space-y-3">
                     {Array(5).fill(0).map((_, i) => (
                         <div key={i} className="h-12 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
@@ -23,7 +23,7 @@ export function TopProductsTable({ products, loading = false }: TopProductsTable
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📦 Productos Más Vendidos</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📦 Products Más Vendidos</h3>
 
             {products.length === 0 ? (
                 <p className="text-slate-500 dark:text-slate-400 text-center py-8">No hay datos disponibles</p>
@@ -33,7 +33,7 @@ export function TopProductsTable({ products, loading = false }: TopProductsTable
                         <thead className="bg-slate-50 dark:bg-slate-700">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-900 dark:text-white">#</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-900 dark:text-white">Producto</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-900 dark:text-white">Product</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-900 dark:text-white">Categoría</th>
                                 <th className="px-6 py-3 text-right text-xs font-semibold text-slate-900 dark:text-white">Cantidad</th>
                                 <th className="px-6 py-3 text-right text-xs font-semibold text-slate-900 dark:text-white">Precio Unit.</th>

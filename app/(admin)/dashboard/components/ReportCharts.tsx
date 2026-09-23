@@ -29,7 +29,7 @@ export function TopProductsBarChart({ data, loading = false }: TopProductsBarCha
     if (loading) {
         return (
             <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📊 Top Productos por Ingresos</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📊 Top Products por Ingresos</h3>
                 <div className="h-80 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
             </div>
         )
@@ -37,7 +37,7 @@ export function TopProductsBarChart({ data, loading = false }: TopProductsBarCha
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📊 Top Productos por Ingresos</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">📊 Top Products por Ingresos</h3>
 
             {chartData.length === 0 ? (
                 <div className="h-80 flex items-center justify-center">

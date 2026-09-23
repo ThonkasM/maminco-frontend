@@ -3,18 +3,18 @@ import { NextRequest, NextResponse } from 'next/server'
 const ADMIN_PREFIXES = [
     '/dashboard',
     '/areas',
-    '/categorias',
-    '/productos',
-    '/mesas',
-    '/ordenes',
-    '/pagos',
-    '/usuarios',
+    '/categories',
+    '/products',
+    '/tables',
+    '/orders',
+    '/payments',
+    '/users',
 ]
 
-const NEGOCIO_PREFIXES = ['/mesas-negocio', '/ordenes-negocio']
+const POS_PREFIXES = ['/pos/tables', '/pos/orders']
 
 function isProtected(pathname: string): boolean {
-    return [...ADMIN_PREFIXES, ...NEGOCIO_PREFIXES].some(
+    return [...ADMIN_PREFIXES, ...POS_PREFIXES].some(
         (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
 }
@@ -40,13 +40,13 @@ export const config = {
     matcher: [
         '/dashboard/:path*',
         '/areas/:path*',
-        '/categorias/:path*',
-        '/productos/:path*',
-        '/mesas/:path*',
-        '/ordenes/:path*',
-        '/pagos/:path*',
-        '/usuarios/:path*',
-        '/mesas-negocio/:path*',
-        '/ordenes-negocio/:path*',
+        '/categories/:path*',
+        '/products/:path*',
+        '/tables/:path*',
+        '/orders/:path*',
+        '/payments/:path*',
+        '/users/:path*',
+        '/pos/tables/:path*',
+        '/pos/orders/:path*',
     ],
 }

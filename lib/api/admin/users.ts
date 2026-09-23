@@ -4,13 +4,13 @@ export interface CreateUserPayload {
     email: string
     name: string
     password: string
-    role: 'ADMINISTRADOR' | 'GERENTE' | 'CAJERO' | 'MESERO'
+    role: 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER'
 }
 
 export interface UpdateUserPayload {
     email?: string
     name?: string
-    role?: 'ADMINISTRADOR' | 'GERENTE' | 'CAJERO' | 'MESERO'
+    role?: 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER'
     isActive?: boolean
 }
 

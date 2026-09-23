@@ -143,7 +143,7 @@ export async function getProductAvailability(id: string): Promise<any> {
 }
 
 /**
- * Crear producto (requiere autenticación + ADMINISTRADOR)
+ * Crear producto (requiere autenticación + ADMINISTRATOR)
  */
 export async function createProduct(payload: CreateProductPayload): Promise<ProductResponse> {
     const res = await fetch(`${API_BASE}/api/products`, {
@@ -161,7 +161,7 @@ export async function createProduct(payload: CreateProductPayload): Promise<Prod
 }
 
 /**
- * Actualizar producto (requiere autenticación + ADMINISTRADOR)
+ * Actualizar producto (requiere autenticación + ADMINISTRATOR)
  */
 export async function updateProduct(
     id: string,
@@ -182,7 +182,7 @@ export async function updateProduct(
 }
 
 /**
- * Desactivar/eliminar producto (requiere autenticación + ADMINISTRADOR)
+ * Desactivar/eliminar producto (requiere autenticación + ADMINISTRATOR)
  */
 export async function deleteProduct(id: string): Promise<ProductResponse> {
     const res = await fetch(`${API_BASE}/api/products/${id}`, {

@@ -9,7 +9,7 @@ export default function ModeToggleButton() {
 
     const handleToggleMode = () => {
         toggleMode()
-        router.push('/mesas-negocio')
+        router.push('/pos/tables')
     }
 
     return (

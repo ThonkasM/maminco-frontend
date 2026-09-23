@@ -1,7 +1,7 @@
 'use client'
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-export type Mode = 'admin' | 'negocio'
+export type Mode = 'admin' | 'pos'
 
 interface ModeContextType {
     mode: Mode
@@ -17,7 +17,7 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         try {
             const saved = localStorage.getItem('maminco-mode')
-            if (saved === 'negocio' || saved === 'admin') {
+            if (saved === "pos" || saved === 'admin') {
                 setModeState(saved)
             }
         } catch {
@@ -38,7 +38,7 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
         return {
             mode,
             setMode,
-            toggleMode: () => setMode(mode === 'admin' ? 'negocio' : 'admin'),
+            toggleMode: () => setMode(mode === 'admin' ? "pos" : 'admin'),
         }
     }, [mode])
 

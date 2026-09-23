@@ -93,14 +93,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               📊 Dashboard
             </Link>
             <Link
-              href="/usuarios"
+              href="/users"
               className={`block px-4 py-3 rounded-lg transition-all font-medium ${
-                isActive('/usuarios')
+                isActive('/users')
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              👥 Usuarios
+              👥 Users
             </Link>
             <Link
               href="/areas"
@@ -113,19 +113,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               🏢 Áreas
             </Link>
             <Link
-              href="/mesas"
+              href="/tables"
               className={`block px-4 py-3 rounded-lg transition-all font-medium ${
-                isActive('/mesas')
+                isActive('/tables')
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              🪑 Mesas
+              🪑 Tables
             </Link>
             <Link
-              href="/categorias"
+              href="/categories"
               className={`block px-4 py-3 rounded-lg transition-all font-medium ${
-                isActive('/categorias')
+                isActive('/categories')
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
@@ -133,19 +133,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               📂 Categorías
             </Link>
             <Link
-              href="/productos"
+              href="/products"
               className={`block px-4 py-3 rounded-lg transition-all font-medium ${
-                isActive('/productos')
+                isActive('/products')
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              🍔 Productos
+              🍔 Products
             </Link>
             <Link
-              href="/ordenes"
+              href="/orders"
               className={`block px-4 py-3 rounded-lg transition-all font-medium ${
-                isActive('/ordenes')
+                isActive('/orders')
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
@@ -153,14 +153,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               📋 Órdenes
             </Link>
             <Link
-              href="/pagos"
+              href="/payments"
               className={`block px-4 py-3 rounded-lg transition-all font-medium ${
-                isActive('/pagos')
+                isActive('/payments')
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              💳 Pagos
+              💳 Payments
             </Link>
           </nav>
 

@@ -93,7 +93,7 @@ export function AreaForm({ area, existingNames, onSubmit, onCancel, submitting =
         <label htmlFor="isVirtual" className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer flex-1">
           Área Virtual
           <span className="text-xs text-slate-600 dark:text-slate-400 block mt-1">
-            Para servicios como Delivery o Recoger (sin mesas físicas)
+            Para servicios como Delivery o Recoger (sin tables físicas)
           </span>
         </label>
       </div>

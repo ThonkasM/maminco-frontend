@@ -1,6 +1,6 @@
 import { API_BASE, getHeaders } from '../../http/client'
 
-export type TableStatus = 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA'
+export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED'
 
 export interface CreateTablePayload {
     number: number

@@ -15,7 +15,7 @@ export function AreaTable({ areas, onEdit, onDelete }: AreaTableProps) {
             <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Nombre</th>
             <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Descripción</th>
             <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Tipo</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Mesas</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Tables</th>
             <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Estado</th>
             <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Acciones</th>
           </tr>
@@ -35,7 +35,7 @@ export function AreaTable({ areas, onEdit, onDelete }: AreaTableProps) {
                   {area.isVirtual ? '☁️ Virtual' : '🏢 Física'}
                 </span>
               </td>
-              <td className="px-6 py-4 text-sm font-semibold text-blue-600 dark:text-blue-400">{area.tablesCount || 0} mesas</td>
+              <td className="px-6 py-4 text-sm font-semibold text-blue-600 dark:text-blue-400">{area.tablesCount || 0} tables</td>
               <td className="px-6 py-4 text-sm">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${area.isActive

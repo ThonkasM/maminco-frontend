@@ -141,9 +141,9 @@ export const DailySalesStats: React.FC = () => {
                             {/* Progress Bar */}
                             <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div
-                                    className={`h-full transition-all duration-300 ${method.name === 'Efectivo'
+                                    className={`h-full transition-all duration-300 ${method.name === 'Cash'
                                         ? 'bg-green-500'
-                                        : method.name === 'Transferencia'
+                                        : method.name === 'Transfer'
                                             ? 'bg-blue-500'
                                             : 'bg-purple-500'
                                         }`}
