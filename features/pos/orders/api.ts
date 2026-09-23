@@ -174,10 +174,11 @@ export async function getActiveOrderByTable(
     signal?: AbortSignal,
 ): Promise<OrderResponseDto | null> {
     try {
-        return await apiFetch<OrderResponseDto | null>(
+        const order = await apiFetch<OrderResponseDto | null>(
             `/api/orders/table/${tableId}/active`,
             { signal },
         )
+        return order ?? null
     } catch (error) {
         if (error instanceof ApiError && error.status === 404) return null
         throw error

@@ -106,7 +106,7 @@ export async function apiFetch<T = unknown>(
     }
 
     const text = await response.text()
-    let data: unknown = undefined
+    let data: unknown = null
     if (text) {
         try {
             data = JSON.parse(text)
@@ -117,7 +117,7 @@ export async function apiFetch<T = unknown>(
 
     if (!response.ok) {
         const message =
-            (data as { message?: string } | undefined)?.message ||
+            (data as { message?: string } | null)?.message ||
             response.statusText ||
             'Error de red'
         throw new ApiError(message, response.status, data)

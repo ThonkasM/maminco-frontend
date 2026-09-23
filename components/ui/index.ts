@@ -1,7 +1,13 @@
 export { Button, buttonVariants, type ButtonProps } from './Button'
 export { Input, type InputProps } from './Input'
 export { Textarea, type TextareaProps } from './Textarea'
-export { Select, type SelectProps } from './Select'
+export {
+  Select,
+  SelectItem,
+  SelectGroup,
+  SelectLabel,
+  type SelectProps,
+} from './Select'
 export { Label } from './Label'
 export { FormField, type FormFieldProps } from './FormField'
 export {
