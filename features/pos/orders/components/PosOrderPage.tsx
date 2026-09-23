@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Plus, UtensilsCrossed } from 'lucide-react'
@@ -98,6 +98,14 @@ export function PosOrderPage() {
         : []
 
     const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0)
+
+    const productQuantities = useMemo(() => {
+        const map: Record<string, number> = {}
+        for (const item of cartItems) {
+            map[item.productId] = (map[item.productId] ?? 0) + item.quantity
+        }
+        return map
+    }, [cartItems])
     const totalPaid = registeredPayments.reduce((sum, payment) => sum + payment.amount, 0)
 
     const registerPayment = (method: PaymentMethodDto, amount: number, label: string) => {
@@ -380,6 +388,7 @@ export function PosOrderPage() {
                                 categoryName: product.categoryName,
                                 price: product.price,
                             }))}
+                            quantities={productQuantities}
                             onAddProduct={(product) => {
                                 const fullProduct = filteredProducts.find(
                                     (item) => item.id === product.id,

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { LayoutGrid } from 'lucide-react'
-import { Button, EmptyState } from '@/components/ui'
+import { Badge, Button, EmptyState } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 
 interface ProductResponse {
@@ -15,11 +15,14 @@ interface ProductResponse {
 interface ProductCatalogProps {
     products: ProductResponse[]
     onAddProduct: (product: ProductResponse) => void
+    /** Quantity of each product in the current order (productId → qty). */
+    quantities?: Record<string, number>
 }
 
 export const ProductCatalog: React.FC<ProductCatalogProps> = ({
     products,
     onAddProduct,
+    quantities = {},
 }) => {
     return (
         <div className="flex h-full w-full flex-col overflow-hidden bg-surface">
@@ -38,27 +41,39 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                     />
                 ) : (
                     <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                        {products.map((product) => (
-                            <Button
-                                key={product.id}
-                                variant="secondary"
-                                onClick={() => onAddProduct(product)}
-                                className="group h-auto flex-col items-start justify-start gap-0 whitespace-normal rounded-lg border-2 p-4 text-left transition-all hover:border-primary hover:shadow-elevated active:scale-95"
-                            >
-                                <p className="mb-1 line-clamp-2 text-sm font-semibold text-foreground">
-                                    {product.name}
-                                </p>
-                                <p className="mb-3 text-xs font-normal text-muted-foreground">
-                                    {product.categoryName}
-                                </p>
-                                <p className="mb-2 text-lg font-bold text-primary">
-                                    {formatCurrency(product.price)}
-                                </p>
-                                <span className="w-full text-center text-xs font-semibold text-primary opacity-0 transition-all group-hover:opacity-100">
-                                    Agregar
-                                </span>
-                            </Button>
-                        ))}
+                        {products.map((product) => {
+                            const quantity = quantities[product.id] ?? 0
+                            return (
+                                <Button
+                                    key={product.id}
+                                    variant="secondary"
+                                    onClick={() => onAddProduct(product)}
+                                    className="group relative h-auto flex-col items-start justify-start gap-0 whitespace-normal rounded-lg border-2 p-4 text-left transition-all hover:border-primary hover:shadow-elevated active:scale-95"
+                                >
+                                    {quantity > 0 && (
+                                        <Badge
+                                            variant="info"
+                                            className="absolute right-2 top-2 border-transparent bg-primary text-primary-foreground"
+                                            aria-label={`${quantity} en el pedido`}
+                                        >
+                                            x{quantity}
+                                        </Badge>
+                                    )}
+                                    <p className="mb-1 line-clamp-2 pr-8 text-sm font-semibold text-foreground">
+                                        {product.name}
+                                    </p>
+                                    <p className="mb-3 text-xs font-normal text-muted-foreground">
+                                        {product.categoryName}
+                                    </p>
+                                    <p className="mb-2 text-lg font-bold text-primary">
+                                        {formatCurrency(product.price)}
+                                    </p>
+                                    <span className="w-full text-center text-xs font-semibold text-primary opacity-0 transition-all group-hover:opacity-100">
+                                        Agregar
+                                    </span>
+                                </Button>
+                            )
+                        })}
                     </div>
                 )}
             </div>
