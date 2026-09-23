@@ -1,4 +1,4 @@
-import { API_BASE, getHeaders } from '@/lib/http/client'
+import { apiFetch } from '@/lib/http/client'
 
 export interface CreateAreaPayload {
     name: string
@@ -32,91 +32,34 @@ export interface PaginatedAreasResponse {
     totalPages: number
 }
 
-export async function getAreas(page = 1, limit = 10, search?: string): Promise<PaginatedAreasResponse> {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    if (search) params.append('search', search)
-
-    const res = await fetch(`${API_BASE}/api/areas?${params}`, {
-        method: 'GET',
-        headers: getHeaders(),
+export function getAreas(
+    page = 1,
+    limit = 10,
+    search?: string,
+    signal?: AbortSignal,
+): Promise<PaginatedAreasResponse> {
+    return apiFetch('/api/areas', {
+        query: { page, limit, search },
+        signal,
     })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching areas')
-    }
-
-    return res.json()
 }
 
-export async function getAreaById(id: string): Promise<AreaResponse> {
-    const res = await fetch(`${API_BASE}/api/areas/${id}`, {
-        method: 'GET',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching area')
-    }
-
-    return res.json()
+export function getAreaById(id: string, signal?: AbortSignal): Promise<AreaResponse> {
+    return apiFetch(`/api/areas/${id}`, { signal })
 }
 
-export async function getActiveAreas(): Promise<AreaResponse[]> {
-    const res = await fetch(`${API_BASE}/api/areas/public/active`, {
-        method: 'GET',
-        // ENDPOINT PÚBLICO - No requiere autenticación
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error fetching active areas')
-    }
-
-    return res.json()
+export function getActiveAreas(signal?: AbortSignal): Promise<AreaResponse[]> {
+    return apiFetch('/api/areas/public/active', { auth: false, signal })
 }
 
-export async function createArea(payload: CreateAreaPayload): Promise<AreaResponse> {
-    const res = await fetch(`${API_BASE}/api/areas`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error creating area')
-    }
-
-    return res.json()
+export function createArea(payload: CreateAreaPayload): Promise<AreaResponse> {
+    return apiFetch('/api/areas', { method: 'POST', body: payload })
 }
 
-export async function updateArea(id: string, payload: UpdateAreaPayload): Promise<AreaResponse> {
-    const res = await fetch(`${API_BASE}/api/areas/${id}`, {
-        method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error updating area')
-    }
-
-    return res.json()
+export function updateArea(id: string, payload: UpdateAreaPayload): Promise<AreaResponse> {
+    return apiFetch(`/api/areas/${id}`, { method: 'PATCH', body: payload })
 }
 
-export async function deleteArea(id: string): Promise<AreaResponse> {
-    const res = await fetch(`${API_BASE}/api/areas/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    })
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || 'Error deleting area')
-    }
-
-    return res.json()
+export function deleteArea(id: string): Promise<AreaResponse> {
+    return apiFetch(`/api/areas/${id}`, { method: 'DELETE' })
 }

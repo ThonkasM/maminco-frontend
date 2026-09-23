@@ -1,63 +1,80 @@
-import { PaginatedAreasResponse, AreaResponse } from '@/features/areas/api'
+import { Pencil, Trash2 } from 'lucide-react'
+import {
+    TableWrapper,
+    Table,
+    THead,
+    TBody,
+    Tr,
+    Th,
+    Td,
+    Badge,
+    Button,
+} from '@/components/ui'
+import type { AreaResponse, PaginatedAreasResponse } from '../api'
 
 interface AreaTableProps {
-  areas: PaginatedAreasResponse
-  onEdit: (area: AreaResponse) => void
-  onDelete: (area: AreaResponse) => void
+    areas: PaginatedAreasResponse
+    onEdit: (area: AreaResponse) => void
+    onDelete: (area: AreaResponse) => void
 }
 
 export function AreaTable({ areas, onEdit, onDelete }: AreaTableProps) {
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
-          <tr>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Nombre</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Descripción</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Tipo</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Tables</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Estado</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {areas.data.map((area) => (
-            <tr key={area.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all">
-              <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{area.name}</td>
-              <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{area.description || '-'}</td>
-              <td className="px-6 py-4 text-sm">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-semibold ${area.isVirtual
-                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
-                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                    }`}
-                >
-                  {area.isVirtual ? '☁️ Virtual' : '🏢 Física'}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-sm font-semibold text-blue-600 dark:text-blue-400">{area.tablesCount || 0} tables</td>
-              <td className="px-6 py-4 text-sm">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${area.isActive
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                    }`}
-                >
-                  {area.isActive ? 'Activa' : 'Inactiva'}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-sm flex gap-2 flex-wrap">
-                <button onClick={() => onEdit(area)} className="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                  ✏️ Editar
-                </button>
-                <button onClick={() => onDelete(area)} className="text-red-600 hover:text-red-800 font-medium text-sm">
-                  🗑️ Desactivar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
+    return (
+        <TableWrapper>
+            <Table>
+                <THead>
+                    <Tr>
+                        <Th>Nombre</Th>
+                        <Th>Descripción</Th>
+                        <Th>Tipo</Th>
+                        <Th>Mesas</Th>
+                        <Th>Estado</Th>
+                        <Th className="text-right">Acciones</Th>
+                    </Tr>
+                </THead>
+                <TBody>
+                    {areas.data.map((area) => (
+                        <Tr key={area.id}>
+                            <Td className="font-medium text-foreground">{area.name}</Td>
+                            <Td className="text-muted-foreground">
+                                {area.description || '—'}
+                            </Td>
+                            <Td>
+                                <Badge variant={area.isVirtual ? 'info' : 'neutral'}>
+                                    {area.isVirtual ? 'Virtual' : 'Física'}
+                                </Badge>
+                            </Td>
+                            <Td className="text-muted-foreground">{area.tablesCount || 0}</Td>
+                            <Td>
+                                <Badge variant={area.isActive ? 'success' : 'danger'}>
+                                    {area.isActive ? 'Activa' : 'Inactiva'}
+                                </Badge>
+                            </Td>
+                            <Td>
+                                <div className="flex justify-end gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onEdit(area)}
+                                    >
+                                        <Pencil />
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-danger hover:bg-danger/10"
+                                        onClick={() => onDelete(area)}
+                                    >
+                                        <Trash2 />
+                                        Desactivar
+                                    </Button>
+                                </div>
+                            </Td>
+                        </Tr>
+                    ))}
+                </TBody>
+            </Table>
+        </TableWrapper>
+    )
 }

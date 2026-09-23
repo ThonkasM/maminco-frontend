@@ -1,84 +1,88 @@
-import { useState, useEffect } from 'react'
-import { getAreas, createArea, updateArea, deleteArea, PaginatedAreasResponse, AreaResponse, CreateAreaPayload } from '@/features/areas/api'
+'use client'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
+import { getErrorMessage } from '@/lib/utils/errors'
+import {
+    createArea,
+    deleteArea,
+    getAreas,
+    updateArea,
+    type CreateAreaPayload,
+} from '../api'
+
+const KEYS = { all: ['areas'] as const }
 
 export function useAreas() {
-    const [areas, setAreas] = useState<PaginatedAreasResponse | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
-    const [existingNames, setExistingNames] = useState<Set<string>>(new Set())
+    const queryClient = useQueryClient()
 
-    // Auto-load on page or search change
-    useEffect(() => {
-        loadAreas()
-    }, [page, search])
+    const query = useQuery({
+        queryKey: [...KEYS.all, { page, search }],
+        queryFn: ({ signal }) => getAreas(page, 10, search || undefined, signal),
+    })
 
-    const loadAreas = async () => {
-        setLoading(true)
-        setError(null)
-        try {
-            const data = await getAreas(page, 10, search)
-            setAreas(data)
-            setExistingNames(new Set(data.data.map((a) => a.name)))
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error cargando áreas'
-            setError(errorMsg)
-            toast.error(errorMsg)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const invalidate = () =>
+        queryClient.invalidateQueries({ queryKey: KEYS.all })
 
-    const handleCreate = async (formData: CreateAreaPayload) => {
-        try {
-            await createArea(formData)
+    const createMutation = useMutation({
+        mutationFn: (payload: CreateAreaPayload) => createArea(payload),
+        onSuccess: async () => {
             toast.success('Área creada correctamente')
-            await loadAreas()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error creando área'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error creando área')),
+    })
 
-    const handleUpdate = async (id: string, formData: CreateAreaPayload) => {
-        try {
-            await updateArea(id, formData)
+    const updateMutation = useMutation({
+        mutationFn: ({
+            id,
+            payload,
+        }: {
+            id: string
+            payload: CreateAreaPayload
+        }) => updateArea(id, payload),
+        onSuccess: async () => {
             toast.success('Área actualizada correctamente')
-            await loadAreas()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error actualizando área'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error actualizando área')),
+    })
 
-    const handleDelete = async (id: string, name: string) => {
-        try {
-            await deleteArea(id)
-            toast.success(`Área ${name} desactivada correctamente`)
-            await loadAreas()
-        } catch (err: any) {
-            const errorMsg = err.message || 'Error desactivando área'
-            toast.error(errorMsg)
-            throw err
-        }
-    }
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => deleteArea(id),
+        onSuccess: async () => {
+            toast.success('Área desactivada correctamente')
+            await invalidate()
+        },
+        onError: (error) =>
+            toast.error(getErrorMessage(error, 'Error desactivando área')),
+    })
 
     return {
-        areas,
-        loading,
-        error,
+        areas: query.data ?? null,
+        loading: query.isLoading,
+        error: query.error
+            ? getErrorMessage(query.error, 'Error cargando áreas')
+            : null,
         page,
         search,
-        existingNames,
+        existingNames: useMemo(
+            () => new Set((query.data?.data ?? []).map((area) => area.name)),
+            [query.data],
+        ),
         setPage,
         setSearch,
-        loadAreas,
-        handleCreate,
-        handleUpdate,
-        handleDelete,
+        loadAreas: () => {
+            void query.refetch()
+        },
+        handleCreate: (payload: CreateAreaPayload) =>
+            createMutation.mutateAsync(payload),
+        handleUpdate: (id: string, payload: CreateAreaPayload) =>
+            updateMutation.mutateAsync({ id, payload }),
+        handleDelete: (id: string) => deleteMutation.mutateAsync(id),
     }
 }
