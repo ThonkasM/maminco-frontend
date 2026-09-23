@@ -1,12 +1,15 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { LogOut, Settings, Store } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMode } from '@/contexts/ModeContext'
 import AdminGuard from '../(admin)/components/AdminGuard'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
-function NegocioLayoutContent({ children }: { children: React.ReactNode }) {
+function PosLayoutContent({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const user = useAuth((s) => s.user)
     const logout = useAuth((s) => s.logout)
@@ -24,40 +27,46 @@ function NegocioLayoutContent({ children }: { children: React.ReactNode }) {
 
     return (
         <AdminGuard>
-            <div className="h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+            <div className="h-screen bg-background flex flex-col">
                 {/* Header */}
-                <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40 shrink-0">
+                <header className="bg-surface border-b border-border sticky top-0 z-40 shrink-0">
                     <div className="px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                                🏪 Maminco POS
+                        <div className="flex items-center gap-3">
+                            <Store className="w-6 h-6 text-primary" />
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                                Maminco POS
                             </h1>
-                            <span className="px-3 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 rounded-full text-xs font-semibold">
-                                Modo Pos
-                            </span>
+                            <Badge variant="brand">Modo POS</Badge>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <div className="text-sm text-slate-600 dark:text-slate-400">
-                                <p className="font-medium">{user?.name}</p>
+                        <div className="flex items-center gap-3">
+                            <div className="text-sm text-muted-foreground hidden sm:block text-right">
+                                <p className="font-medium text-foreground">{user?.name}</p>
                                 <p className="text-xs">{user?.role}</p>
                             </div>
 
-                            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-4">
-                                <button
+                            <div className="flex items-center gap-2 border-l border-border pl-3">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={handleToggleMode}
-                                    className="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all"
                                     title="Cambiar a Modo Administrador"
                                 >
-                                    ⚙️ Admin
-                                </button>
+                                    <Settings />
+                                    Admin
+                                </Button>
 
-                                <button
+                                <ThemeToggle />
+
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-danger hover:bg-danger/10 hover:text-danger"
                                     onClick={handleLogout}
-                                    className="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
                                 >
-                                    🚪 Salir
-                                </button>
+                                    <LogOut />
+                                    Salir
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -72,6 +81,6 @@ function NegocioLayoutContent({ children }: { children: React.ReactNode }) {
     )
 }
 
-export default function NegocioLayout({ children }: { children: React.ReactNode }) {
-    return <NegocioLayoutContent>{children}</NegocioLayoutContent>
+export default function PosLayout({ children }: { children: React.ReactNode }) {
+    return <PosLayoutContent>{children}</PosLayoutContent>
 }

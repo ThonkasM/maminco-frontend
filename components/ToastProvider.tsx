@@ -10,37 +10,42 @@ export function ToastProvider() {
       toastOptions={{
         duration: 3000,
         style: {
-          background: '#fff',
-          color: '#000',
+          background: 'var(--surface)',
+          color: 'var(--foreground)',
+          border: '1px solid var(--border)',
           padding: '16px',
           borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          boxShadow:
+            '0 12px 32px rgba(16, 24, 20, 0.12), 0 4px 8px rgba(16, 24, 20, 0.06)',
           fontSize: '14px',
         },
         success: {
           style: {
-            background: '#10b981',
+            background: 'var(--success)',
             color: '#fff',
+            border: '1px solid transparent',
           },
           iconTheme: {
             primary: '#fff',
-            secondary: '#10b981',
+            secondary: 'var(--success)',
           },
         },
         error: {
           style: {
-            background: '#ef4444',
+            background: 'var(--danger)',
             color: '#fff',
+            border: '1px solid transparent',
           },
           iconTheme: {
             primary: '#fff',
-            secondary: '#ef4444',
+            secondary: 'var(--danger)',
           },
         },
         loading: {
           style: {
-            background: '#3b82f6',
-            color: '#fff',
+            background: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+            border: '1px solid transparent',
           },
         },
       }}

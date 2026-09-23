@@ -1,31 +1,213 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ */
+/* Dark mode: class based (driven by next-themes on <html>)            */
+/* ------------------------------------------------------------------ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ */
+/* Brand primitives + non-color scales                                 */
+/* ------------------------------------------------------------------ */
+@theme {
+  --color-brand-green: #143f29;
+  --color-brand-charcoal: #191919;
+  --color-brand-yellow: #fcbe28;
+  --color-brand-orange: #f26c1e;
+
+  /* Squared, in-app radii (6–12px) */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* Elevation: stacked shadows + inset hairline ring */
+  --shadow-card: 0 1px 2px rgba(16, 24, 20, 0.04),
+    0 1px 3px rgba(16, 24, 20, 0.06);
+  --shadow-elevated: 0 4px 12px rgba(16, 24, 20, 0.08),
+    0 2px 4px rgba(16, 24, 20, 0.04);
+  --shadow-float: 0 12px 32px rgba(16, 24, 20, 0.12),
+    0 4px 8px rgba(16, 24, 20, 0.06);
+}
+
+/* ------------------------------------------------------------------ */
+/* Semantic tokens — light (default)                                   */
+/* ------------------------------------------------------------------ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  /* migrated from @theme inline */
+  --surface: #ffffff;
+  --surface-muted: #f5f7f5;
+  --foreground: #191919;
+  --muted-foreground: #5c6660;
+  --border: #e4e7e3;
+  --primary: #143f29;
+  --primary-foreground: #ffffff;
+  --accent: #fcbe28;
+  --accent-foreground: #191919;
+  --ring: #143f29;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------ */
+/* Semantic tokens — dark                                              */
+/* ------------------------------------------------------------------ */
+.dark {
+  --background: #0f1411;
+  --surface: #161d18;
+  --surface-muted: #1c241e;
+  --foreground: #f4f6f4;
+  --muted-foreground: #9aa79e;
+  --border: #2a352d;
+  --primary: #2f7a52;
+  --primary-foreground: #ffffff;
+  --accent: #fcbe28;
+  --accent-foreground: #191919;
+  --ring: #fcbe28;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom theme example: brand-yellow                                  */
+/* Applied via <html data-theme="brand-yellow">                         */
+/* ------------------------------------------------------------------ */
+[data-theme="brand-yellow"] {
+  --background: #fffdf5;
+  --surface: #ffffff;
+  --surface-muted: #fdf6e3;
+  --foreground: #2a2415;
+  --muted-foreground: #6b6144;
+  --border: #efe3c2;
+  --primary: #143f29;
+  --primary-foreground: #ffffff;
+  --accent: #f26c1e;
+  --accent-foreground: #ffffff;
+  --ring: #f26c1e;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #b91c1c;
+
+  color-scheme: light;
+}
+
+[data-theme="brand-yellow"].dark {
+  --background: #14110a;
+  --surface: #1d180d;
+  --surface-muted: #262013;
+  --foreground: #faf5e6;
+  --muted-foreground: #c9bd97;
+  --border: #3a3119;
+  --primary: #2f7a52;
+  --primary-foreground: #ffffff;
+  --accent: #fcbe28;
+  --accent-foreground: #191919;
+  --ring: #fcbe28;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ */
+/* Map semantic vars to Tailwind color/font utilities                  */
+/* ------------------------------------------------------------------ */
+@theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* ------------------------------------------------------------------ */
+/* Base styles                                                         */
+/* ------------------------------------------------------------------ */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+    font-feature-settings: "cv11", "ss01";
+    font-variation-settings: normal;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.02em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  /* use configured font variable if available, fallback to system stack */
-  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+/* ------------------------------------------------------------------ */
+/* Brand mesh gradient — hero scale only                               */
+/* ------------------------------------------------------------------ */
+@utility bg-brand-mesh {
+  background-color: var(--color-brand-charcoal);
+  background-image:
+    radial-gradient(
+      at 15% 15%,
+      color-mix(in oklab, var(--color-brand-green) 92%, transparent) 0px,
+      transparent 55%
+    ),
+    radial-gradient(
+      at 82% 8%,
+      color-mix(in oklab, var(--color-brand-yellow) 60%, transparent) 0px,
+      transparent 48%
+    ),
+    radial-gradient(
+      at 78% 82%,
+      color-mix(in oklab, var(--color-brand-orange) 58%, transparent) 0px,
+      transparent 52%
+    ),
+    radial-gradient(
+      at 12% 88%,
+      color-mix(in oklab, var(--color-brand-green) 80%, transparent) 0px,
+      transparent 55%
+    );
 }
 
-/* Remover flechas del input number */
+/* ------------------------------------------------------------------ */
+/* Native input clean-up                                               */
+/* ------------------------------------------------------------------ */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -36,4 +218,3 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
-
