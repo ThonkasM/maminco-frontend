@@ -1,21 +1,33 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
-import { getCategories } from '@/features/categories/api'
-import { getProducts } from '@/features/products/api'
+import { getActiveCategories } from '@/features/categories/api'
+import { getAvailableProducts } from '@/features/products/api'
 
+/**
+ * POS catalog: active categories + available products.
+ *
+ * Uses the public catalog endpoints (`/public/active`, `/public/available`)
+ * because staff roles (WAITER/CASHIER) cannot read the admin list endpoints,
+ * and the POS should only offer categories/products that are actually orderable.
+ */
 export function usePosCatalog() {
     const categoriesQuery = useQuery({
         queryKey: ['pos', 'categories'],
-        queryFn: ({ signal }) => getCategories(1, 1000, undefined, signal),
+        queryFn: ({ signal }) => getActiveCategories(signal),
+        staleTime: 60_000,
     })
 
     const productsQuery = useQuery({
         queryKey: ['pos', 'products'],
-        queryFn: ({ signal }) => getProducts(1, 1000, undefined, undefined, signal),
+        queryFn: ({ signal }) =>
+            getAvailableProducts(undefined, undefined, 500, signal),
+        staleTime: 60_000,
     })
 
     return {
-        categories: categoriesQuery.data?.data ?? [],
-        products: productsQuery.data?.data ?? [],
+        categories: categoriesQuery.data ?? [],
+        products: productsQuery.data ?? [],
+        loading: categoriesQuery.isLoading || productsQuery.isLoading,
+        error: categoriesQuery.error ?? productsQuery.error,
     }
 }

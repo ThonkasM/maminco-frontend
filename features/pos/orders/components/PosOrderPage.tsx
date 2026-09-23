@@ -119,7 +119,7 @@ export function PosOrderPage() {
 
         const confirmed = await showConfirmation({
             title: 'Cancelar orden',
-            message: `Estás a punto de cancelar la orden de la mesa ${table?.number}.\n\nEsta acción:\n• Marcará la orden como cancelada\n• Preservará todos los items para referencia\n• No se puede deshacer\n\n¿Deseas continuar?`,
+            message: `Estás a punto de cancelar la orden de la mesa ${table?.number ?? order?.tableName ?? ''}.\n\nEsta acción:\n• Marcará la orden como cancelada\n• Preservará todos los items para referencia\n• No se puede deshacer\n\n¿Deseas continuar?`,
             confirmText: 'Cancelar orden',
             cancelText: 'Volver',
             confirmButtonClass: 'bg-danger hover:bg-danger/90',
@@ -199,7 +199,9 @@ export function PosOrderPage() {
         )
     }
 
-    if (!table) {
+    const tableLabel = table?.number ?? order?.tableName ?? tableId.slice(0, 8)
+
+    if (!table && !order) {
         return (
             <div className="flex h-full w-full items-center justify-center bg-background p-6">
                 <EmptyState
@@ -232,7 +234,7 @@ export function PosOrderPage() {
                                     </Button>
                                 )}
                                 <h2 className="font-bold text-foreground">
-                                    Mesa {table.number}
+                                    Mesa {tableLabel}
                                 </h2>
                             </div>
 
