@@ -1,8 +1,10 @@
 'use client'
 import { useCallback, type Dispatch, type SetStateAction } from 'react'
 import { toast } from '@/components/shared/ToastProvider'
+import { ApiError } from '@/lib/http/client'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getUserDisplayName } from '@/lib/utils/getUserDisplayName'
+import { roundMoney } from '@/lib/utils/money'
 import {
     addOrderItem,
     addTip,
@@ -28,6 +30,15 @@ interface UseOrderMutationsParams {
     syncFromOrder: (order: OrderResponseDto | null) => void
     markLocalChange: (productId: string) => void
     refreshOrder: () => Promise<OrderResponseDto | null>
+    /** Called when the backend rejects an action because the order is no longer open. */
+    onOrderUnavailable?: (status?: 'CLOSED' | 'CANCELLED') => void
+}
+
+function isOrderUnavailable(error: unknown): boolean {
+    return (
+        error instanceof ApiError &&
+        (error.status === 403 || error.status === 404 || error.status === 409)
+    )
 }
 
 export function useOrderMutations({
@@ -40,6 +51,7 @@ export function useOrderMutations({
     syncFromOrder,
     markLocalChange,
     refreshOrder,
+    onOrderUnavailable,
 }: UseOrderMutationsParams) {
     const handleRemoveProduct = useCallback(
         async (productId: string) => {
@@ -60,13 +72,17 @@ export function useOrderMutations({
             try {
                 await removeOrderItem(order.id, itemToRemove.id)
             } catch (error) {
+                if (isOrderUnavailable(error)) {
+                    onOrderUnavailable?.()
+                    return
+                }
                 toast.error(
                     getErrorMessage(error, 'Error eliminando el producto'),
                 )
                 await refreshOrder()
             }
         },
-        [order, setCartItems, setOrder, refreshOrder],
+        [order, setCartItems, setOrder, refreshOrder, onOrderUnavailable],
     )
 
     const handleChangeQuantity = useCallback(
@@ -81,7 +97,7 @@ export function useOrderMutations({
             const cartItem = cartItems.find((item) => item.productId === productId)
             if (!orderItem || !cartItem) return
 
-            const newSubtotal = orderItem.unitPrice * quantity
+            const newSubtotal = roundMoney(orderItem.unitPrice * quantity)
             const addedByName = getUserDisplayName(user)
 
             markLocalChange(productId)
@@ -104,6 +120,10 @@ export function useOrderMutations({
             try {
                 await updateOrderItemQuantity(order.id, orderItem.id, quantity)
             } catch (error) {
+                if (isOrderUnavailable(error)) {
+                    onOrderUnavailable?.()
+                    return
+                }
                 toast.error(
                     getErrorMessage(error, 'Error actualizando la cantidad'),
                 )
@@ -119,6 +139,7 @@ export function useOrderMutations({
             setOrder,
             handleRemoveProduct,
             refreshOrder,
+            onOrderUnavailable,
         ],
     )
 
@@ -153,14 +174,25 @@ export function useOrderMutations({
                     notes: '',
                 })
             } catch (error) {
-                toast.error(getErrorMessage(error, 'Error agregando el producto'))
                 setCartItems((prev) =>
                     prev.filter((item) => item.id !== optimisticItem.id),
                 )
+                if (isOrderUnavailable(error)) {
+                    onOrderUnavailable?.()
+                    return
+                }
+                toast.error(getErrorMessage(error, 'Error agregando el producto'))
                 await refreshOrder()
             }
         },
-        [user, order, setCartItems, handleChangeQuantity, refreshOrder],
+        [
+            user,
+            order,
+            setCartItems,
+            handleChangeQuantity,
+            refreshOrder,
+            onOrderUnavailable,
+        ],
     )
 
     const handleOpenOrder = useCallback(async () => {
@@ -181,9 +213,13 @@ export function useOrderMutations({
             setCartItems([])
             setOrder(null)
         } catch (error) {
+            if (isOrderUnavailable(error)) {
+                onOrderUnavailable?.('CANCELLED')
+                return
+            }
             toast.error(getErrorMessage(error, 'Error cancelando la orden'))
         }
-    }, [order, setCartItems, setOrder])
+    }, [order, setCartItems, setOrder, onOrderUnavailable])
 
     const handleApplyDiscount = useCallback(
         async (payload: ApplyDiscountPayload) => {
@@ -195,11 +231,15 @@ export function useOrderMutations({
                 toast.success('Descuento aplicado')
                 return updated
             } catch (error) {
+                if (isOrderUnavailable(error)) {
+                    onOrderUnavailable?.()
+                    return null
+                }
                 toast.error(getErrorMessage(error, 'Error aplicando descuento'))
                 return null
             }
         },
-        [order, setOrder, syncFromOrder],
+        [order, setOrder, syncFromOrder, onOrderUnavailable],
     )
 
     const handleAddTip = useCallback(
@@ -212,11 +252,15 @@ export function useOrderMutations({
                 toast.success('Propina agregada')
                 return updated
             } catch (error) {
+                if (isOrderUnavailable(error)) {
+                    onOrderUnavailable?.()
+                    return null
+                }
                 toast.error(getErrorMessage(error, 'Error agregando propina'))
                 return null
             }
         },
-        [order, setOrder, syncFromOrder],
+        [order, setOrder, syncFromOrder, onOrderUnavailable],
     )
 
     return {

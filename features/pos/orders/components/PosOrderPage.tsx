@@ -32,6 +32,12 @@ interface RegisteredPayment {
     amount: number
 }
 
+const ORDER_STATUS_LABEL: Record<string, string> = {
+    DRAFT: 'Borrador',
+    CLOSED: 'Cerrada',
+    CANCELLED: 'Cancelada',
+}
+
 export function PosOrderPage() {
     const params = useParams()
     const router = useRouter()
@@ -76,13 +82,17 @@ export function PosOrderPage() {
     const [registeredPayments, setRegisteredPayments] = useState<RegisteredPayment[]>([])
 
     useEffect(() => {
-        setOnOrderClosed(() => {
+        setOnOrderClosed((status) => {
             handleClosePaymentModal()
             handleResetPaymentSelection()
             setOrder(null)
             setCartItems([])
-            toast.success('La orden fue cerrada por otro usuario')
-            setTimeout(() => router.push('/pos/tables'), 1200)
+            toast.info(
+                status === 'CANCELLED'
+                    ? 'La orden fue cancelada por otro usuario'
+                    : 'La orden fue cerrada por otro usuario',
+            )
+            setTimeout(() => router.push('/pos/tables'), 1500)
         })
     }, [
         setOnOrderClosed,
@@ -244,6 +254,11 @@ export function PosOrderPage() {
                                 <h2 className="font-bold text-foreground">
                                     Mesa {tableLabel}
                                 </h2>
+                                {table?.areaName && (
+                                    <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                        {table.areaName}
+                                    </span>
+                                )}
                             </div>
 
                             <Button
@@ -259,7 +274,9 @@ export function PosOrderPage() {
                         <div className="space-y-1">
                             <p className="text-xs text-muted-foreground">
                                 Orden: {order?.orderNumber || 'N/A'} |{' '}
-                                {order ? `Estado: ${order.status}` : 'Sin orden'}
+                                {order
+                                    ? `Estado: ${ORDER_STATUS_LABEL[order.status] ?? order.status}`
+                                    : 'Sin orden'}
                             </p>
                             {order?.createdByName && (
                                 <p className="text-xs text-muted-foreground">

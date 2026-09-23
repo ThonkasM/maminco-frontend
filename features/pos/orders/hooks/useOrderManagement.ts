@@ -23,7 +23,9 @@ export function useOrderManagement(tableId: string, user: User | null) {
         isRecentLocalChange,
     } = useCart()
 
-    const onOrderClosedRef = useRef<(() => void) | null>(null)
+    const onOrderClosedRef = useRef<
+        ((status: 'CLOSED' | 'CANCELLED') => void) | null
+    >(null)
     const syncedTableRef = useRef<string | null>(null)
 
     const refreshOrder = useCallback(async () => {
@@ -47,7 +49,12 @@ export function useOrderManagement(tableId: string, user: User | null) {
             void refreshOrder()
         },
         onOrderStatusChanged: (data) => {
-            if (data?.status === 'CLOSED') onOrderClosedRef.current?.()
+            const status = data?.newStatus
+            if (status === 'CLOSED' || status === 'CANCELLED') {
+                setOrder(null)
+                onOrderClosedRef.current?.(status)
+                return
+            }
             void refreshOrder()
         },
         onTableStateUpdated: () => {
@@ -74,6 +81,10 @@ export function useOrderManagement(tableId: string, user: User | null) {
         syncFromOrder,
         markLocalChange,
         refreshOrder,
+        onOrderUnavailable: (status) => {
+            setOrder(null)
+            onOrderClosedRef.current?.(status ?? 'CLOSED')
+        },
     })
 
     useEffect(() => {
@@ -107,7 +118,9 @@ export function useOrderManagement(tableId: string, user: User | null) {
         handleAddTip,
         setOrder,
         setCartItems,
-        setOnOrderClosed: (callback: (() => void) | null) => {
+        setOnOrderClosed: (
+            callback: ((status: 'CLOSED' | 'CANCELLED') => void) | null,
+        ) => {
             onOrderClosedRef.current = callback
         },
     }
