@@ -54,7 +54,8 @@ Full rules: `docs/FRONTEND-CONVENTIONS.md`. Read it before adding a feature. Cha
   (`@custom-variant dark` in `globals.css`). Theme toggle in `components/theme/`.
 - **API base:** read `process.env.NEXT_PUBLIC_API_URL` via `lib/http/client.ts`. Never hardcode.
 - **Auth:** Zustand store `hooks/useAuth.tsx` (localStorage `maminco-auth`) + a `token` cookie read
-  by `middleware.ts`, which gates protected prefixes and redirects to `/auth/login`.
+  by `proxy.ts` (Next 16's renamed middleware), which gates protected prefixes and redirects to
+  `/auth/login`.
 - **Realtime:** socket.io client in `lib/realtime/socket.ts` / `features/pos/orders/hooks/useOrderSocket.ts`.
 - Path alias `@/*` maps to the repo root.
 - Tailwind v4 is configured ONLY via `postcss.config.mjs` + `@theme` in `globals.css`. Do not
