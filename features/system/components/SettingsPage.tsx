@@ -6,7 +6,9 @@ import {
     Database,
     Printer,
     RefreshCw,
+    Search,
     Server,
+    Trash2,
     Wifi,
 } from 'lucide-react'
 import {
@@ -16,6 +18,7 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    Input,
     Select,
     Skeleton,
     Table,
@@ -27,7 +30,13 @@ import {
     Tr,
 } from '@/components/ui'
 import type { LogLevel, ServiceHealth } from '../api'
-import { useSystemConfig, useSystemLogs, useSystemStatus } from '../hooks/useSystem'
+import {
+    usePruneSystemLogs,
+    useSystemConfig,
+    useSystemLogs,
+    useSystemLogStats,
+    useSystemStatus,
+} from '../hooks/useSystem'
 
 function formatUptime(seconds: number): string {
     const days = Math.floor(seconds / 86400)
@@ -90,9 +99,12 @@ const LEVEL_VARIANT: Record<LogLevel, 'neutral' | 'danger' | 'warning' | 'info'>
 
 export function SettingsPage() {
     const [level, setLevel] = useState<'' | LogLevel>('')
+    const [search, setSearch] = useState('')
     const status = useSystemStatus()
     const config = useSystemConfig()
-    const logs = useSystemLogs(150, level || undefined)
+    const stats = useSystemLogStats()
+    const logs = useSystemLogs(150, level || undefined, search || undefined)
+    const prune = usePruneSystemLogs()
 
     return (
         <div className="space-y-6">
@@ -200,33 +212,59 @@ export function SettingsPage() {
             )}
 
             <Card>
-                <CardHeader className="flex-row items-center justify-between gap-4">
-                    <div>
-                        <CardTitle>Registros del servidor</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                            Últimos eventos registrados en memoria
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Select
-                            value={level}
-                            onChange={(e) => setLevel(e.target.value as LogLevel | '')}
-                            className="w-40"
-                        >
-                            <option value="">Todos los niveles</option>
-                            <option value="error">Errores</option>
-                            <option value="warn">Advertencias</option>
-                            <option value="log">Información</option>
-                            <option value="debug">Debug</option>
-                        </Select>
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            onClick={() => logs.refetch()}
-                            aria-label="Actualizar registros"
-                        >
-                            <RefreshCw className={logs.isFetching ? 'animate-spin' : undefined} />
-                        </Button>
+                <CardHeader className="gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <CardTitle>Registros del servidor</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Persistidos en la base de datos · retención{' '}
+                                {stats.data?.retentionDays ?? 3} días ·{' '}
+                                {stats.data
+                                    ? `${new Intl.NumberFormat('es-BO').format(stats.data.count)} registros`
+                                    : '—'}{' '}
+                                (máx. {stats.data?.maxRows?.toLocaleString('es-BO') ?? '—'})
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="relative">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    value={search}
+                                    placeholder="Buscar mensaje..."
+                                    className="w-56 pl-9"
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                            </div>
+                            <Select
+                                value={level}
+                                onChange={(e) => setLevel(e.target.value as LogLevel | '')}
+                                className="w-40"
+                            >
+                                <option value="">Todos los niveles</option>
+                                <option value="error">Errores</option>
+                                <option value="warn">Advertencias</option>
+                                <option value="log">Información</option>
+                                <option value="debug">Debug</option>
+                            </Select>
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                onClick={() => logs.refetch()}
+                                aria-label="Actualizar registros"
+                            >
+                                <RefreshCw
+                                    className={logs.isFetching ? 'animate-spin' : undefined}
+                                />
+                            </Button>
+                            <Button
+                                variant="danger"
+                                onClick={() => prune.mutate()}
+                                disabled={prune.isPending}
+                            >
+                                <Trash2 />
+                                Limpiar ahora
+                            </Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>

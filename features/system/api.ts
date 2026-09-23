@@ -46,6 +46,20 @@ export interface SystemConfig {
     startedAt: string
 }
 
+export interface LogStats {
+    count: number
+    oldest: string | null
+    newest: string | null
+    retentionDays: number
+    maxRows: number
+}
+
+export interface LogsResponse {
+    data: LogEntry[]
+    total: number
+    retentionDays: number
+}
+
 export function getSystemStatus(signal?: AbortSignal): Promise<SystemStatus> {
     return apiFetch('/api/system/status', { signal })
 }
@@ -53,9 +67,24 @@ export function getSystemStatus(signal?: AbortSignal): Promise<SystemStatus> {
 export function getSystemLogs(
     limit = 100,
     level?: LogLevel,
+    search?: string,
     signal?: AbortSignal,
-): Promise<{ data: LogEntry[] }> {
-    return apiFetch('/api/system/logs', { query: { limit, level }, signal })
+): Promise<LogsResponse> {
+    return apiFetch('/api/system/logs', {
+        query: { limit, level, search },
+        signal,
+    })
+}
+
+export function getSystemLogStats(signal?: AbortSignal): Promise<LogStats> {
+    return apiFetch('/api/system/logs/stats', { signal })
+}
+
+export function pruneSystemLogs(): Promise<{
+    deletedByAge: number
+    deletedByCap: number
+}> {
+    return apiFetch('/api/system/logs/prune', { method: 'POST' })
 }
 
 export function getSystemConfig(signal?: AbortSignal): Promise<SystemConfig> {
