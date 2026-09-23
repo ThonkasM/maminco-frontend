@@ -17,8 +17,8 @@ import { TransferenciaPaymentForm } from '../components/TransferenciaPaymentForm
 import { TarjetaPaymentForm } from '../components/TarjetaPaymentForm'
 import * as adminPaymentsApi from '@/lib/api/admin/payments'
 import { formatCurrency } from '@/lib/utils/currency'
-import { changeOrderStatus } from '@/lib/api/negocio/orders'
-import { ArrowBigLeft, ArrowLeft, Banknote, SkipBack } from 'lucide-react'
+import { processPayment } from '@/lib/api/negocio/payments'
+import { ArrowLeft } from 'lucide-react'
 
 interface PaymentMethod {
     id: string
@@ -28,6 +28,7 @@ interface PaymentMethod {
 }
 
 interface RegisteredPayment {
+    paymentMethodId: string
     methodName: string
     methodCode: string
     amount: number
@@ -92,7 +93,6 @@ export default function OrderNegocioPage() {
     // 🚪 Registrar callback para cuando se cierre la orden remotamente
     useEffect(() => {
         setOnOrderClosed(() => {
-            console.log('🚪 [PAGE] Orden cerrada remotamente. Redirigiendo a mesas...')
             handleClosePaymentModal()
             handleResetPaymentSelection()
             setOrder(null)
@@ -104,27 +104,19 @@ export default function OrderNegocioPage() {
 
     useEffect(() => {
         const loadCategories = async () => {
-            try {
-                const { getCategories } = await import('@/lib/api/admin/categories')
-                const catsData = await getCategories(1, 1000)
-                setCategories(catsData.data)
-            } catch (err: any) {
-                console.error('Error cargando categorías:', err)
-            }
+            const { getCategories } = await import('@/lib/api/admin/categories')
+            const catsData = await getCategories(1, 1000)
+            setCategories(catsData.data)
         }
 
         const loadProducts = async () => {
-            try {
-                const { getProducts } = await import('@/lib/api/admin/products')
-                const prodsData = await getProducts(1, 1000)
-                setProducts(prodsData.data)
-            } catch (err: any) {
-                console.error('Error cargando productos:', err)
-            }
+            const { getProducts } = await import('@/lib/api/admin/products')
+            const prodsData = await getProducts(1, 1000)
+            setProducts(prodsData.data)
         }
 
-        loadCategories()
-        loadProducts()
+        loadCategories().catch(() => undefined)
+        loadProducts().catch(() => undefined)
     }, [])
 
     // ==========================================
@@ -136,8 +128,7 @@ export default function OrderNegocioPage() {
             const methods = await adminPaymentsApi.listPaymentMethods(true)
             setPaymentMethods(methods)
             handleResetPaymentSelection()
-        } catch (err: any) {
-            console.error('Error cargando métodos de pago:', err)
+        } catch {
             toast.error('Error cargando métodos de pago')
         }
     }
@@ -160,7 +151,6 @@ export default function OrderNegocioPage() {
             toast.success('Orden cancelada correctamente')
             setTimeout(() => router.push('/mesas-negocio'), 800)
         } catch (err: any) {
-            console.error('Error cancelando orden:', err)
             toast.error(err.message || 'Error al cancelar la orden')
         }
     }
@@ -168,8 +158,43 @@ export default function OrderNegocioPage() {
     const handleFinalizePay = async () => {
         if (!order) return
 
+        if (registeredPayments.length === 0) {
+            toast.error('Registra al menos un pago antes de finalizar')
+            return
+        }
+
         try {
-            await changeOrderStatus(order.id, { status: 'CERRADO' })
+            let lastResult: Awaited<ReturnType<typeof processPayment>> | undefined
+
+            for (const payment of registeredPayments) {
+                let result = await processPayment(order.id, {
+                    paymentMethodId: payment.paymentMethodId,
+                    amountReceived: payment.amount,
+                })
+
+                if (result.status === 'PENDING_CONFIRMATION') {
+                    result = await processPayment(order.id, {
+                        paymentMethodId: payment.paymentMethodId,
+                        amountReceived: payment.amount,
+                        isExtraTip: true,
+                    })
+                }
+
+                if (result.status === 'ERROR') {
+                    throw new Error(result.message || 'Error procesando el pago')
+                }
+
+                lastResult = result
+            }
+
+            if (lastResult && !lastResult.isPaid) {
+                toast.error(
+                    `Pago parcial registrado. Saldo pendiente: ${formatCurrency(lastResult.pendingBalance ?? 0)}`,
+                )
+                await loadData()
+                return
+            }
+
             toast.success('Orden cerrada correctamente')
             setRegisteredPayments([])
             setCartItems([])
@@ -178,7 +203,6 @@ export default function OrderNegocioPage() {
             handleResetPaymentSelection()
             setTimeout(() => router.push('/mesas-negocio'), 500)
         } catch (err: any) {
-            console.error('Error finalizando pago:', err)
             toast.error(err.message || 'Error finalizando pago')
         }
     }
@@ -330,6 +354,7 @@ export default function OrderNegocioPage() {
                                                 total={order?.total || 0}
                                                 onSubmit={(data) => {
                                                     setRegisteredPayments((prev) => [...prev, {
+                                                        paymentMethodId: selectedMethod.id,
                                                         methodName: selectedMethod.name,
                                                         methodCode: selectedMethod.code,
                                                         amount: data.amount,
@@ -345,6 +370,7 @@ export default function OrderNegocioPage() {
                                                 total={order?.total || 0}
                                                 onSubmit={(data) => {
                                                     setRegisteredPayments((prev) => [...prev, {
+                                                        paymentMethodId: selectedMethod.id,
                                                         methodName: selectedMethod.name,
                                                         methodCode: selectedMethod.code,
                                                         amount: data.amount,
@@ -360,6 +386,7 @@ export default function OrderNegocioPage() {
                                                 total={order?.total || 0}
                                                 onSubmit={(data) => {
                                                     setRegisteredPayments((prev) => [...prev, {
+                                                        paymentMethodId: selectedMethod.id,
                                                         methodName: selectedMethod.name,
                                                         methodCode: selectedMethod.code,
                                                         amount: data.amount,

@@ -4,13 +4,11 @@ import { useAuth } from '@/hooks/useAuth'
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const user = useAuth((s) => s.user)
-  const token = useAuth((s) => s.token)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    console.log('🔐 AdminGuard: Checking auth. Token:', !!token, 'User:', user?.email)
     setMounted(true)
-  }, [token, user])
+  }, [])
 
   // Mientras se carga, muestra un loading
   if (!mounted) {

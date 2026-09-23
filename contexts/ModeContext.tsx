@@ -1,5 +1,5 @@
 'use client'
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 export type Mode = 'admin' | 'negocio'
 
@@ -13,9 +13,7 @@ const ModeContext = createContext<ModeContextType | undefined>(undefined)
 
 export function ModeProvider({ children }: { children: React.ReactNode }) {
     const [mode, setModeState] = useState<Mode>('admin')
-    const [mounted, setMounted] = useState(false)
 
-    // Cargar modo desde localStorage al montar
     useEffect(() => {
         try {
             const saved = localStorage.getItem('maminco-mode')
@@ -23,34 +21,28 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
                 setModeState(saved)
             }
         } catch {
-            // localStorage no disponible
+            // localStorage no disponible (SSR)
         }
-        setMounted(true)
     }, [])
 
-    const setMode = (newMode: Mode) => {
-        setModeState(newMode)
-        try {
-            localStorage.setItem('maminco-mode', newMode)
-        } catch {
-            // localStorage no disponible
+    const value = useMemo<ModeContextType>(() => {
+        const setMode = (newMode: Mode) => {
+            setModeState(newMode)
+            try {
+                localStorage.setItem('maminco-mode', newMode)
+            } catch {
+                // localStorage no disponible
+            }
         }
-    }
 
-    const toggleMode = () => {
-        const newMode = mode === 'admin' ? 'negocio' : 'admin'
-        setMode(newMode)
-    }
+        return {
+            mode,
+            setMode,
+            toggleMode: () => setMode(mode === 'admin' ? 'negocio' : 'admin'),
+        }
+    }, [mode])
 
-    if (!mounted) {
-        return <>{children}</>
-    }
-
-    return (
-        <ModeContext.Provider value={{ mode, setMode, toggleMode }}>
-            {children}
-        </ModeContext.Provider>
-    )
+    return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>
 }
 
 export function useMode() {

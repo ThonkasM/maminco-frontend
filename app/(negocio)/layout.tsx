@@ -10,14 +10,7 @@ function NegocioLayoutContent({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const user = useAuth((s) => s.user)
     const logout = useAuth((s) => s.logout)
-    
-    let toggleMode: (() => void) | null = null
-    try {
-        const { toggleMode: tm } = useMode()
-        toggleMode = tm
-    } catch (err) {
-        console.warn('⚠️ ModeProvider no disponible en layout')
-    }
+    const { toggleMode } = useMode()
 
     const handleLogout = () => {
         logout()
@@ -25,10 +18,8 @@ function NegocioLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     const handleToggleMode = () => {
-        if (toggleMode) {
-            toggleMode()
-            router.push('/dashboard')
-        }
+        toggleMode()
+        router.push('/dashboard')
     }
 
     return (

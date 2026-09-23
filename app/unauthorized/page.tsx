@@ -1,12 +1,18 @@
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'Acceso denegado · Maminco',
+}
+
 export default function UnauthorizedPage() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <div className="text-6xl mb-4">🚫</div>
-        <h1 className="text-4xl font-bold text-white mb-2">Acceso Denegado</h1>
-        <p className="text-slate-300 mb-8">No tienes permiso para acceder a esta sección. Por favor, contacta al administrador si crees que esto es un error.</p>
+        <h1 className="text-4xl font-bold text-white mb-2">Acceso denegado</h1>
+        <p className="text-slate-300 mb-8">
+          No tienes permiso para acceder a esta sección. Contacta al administrador si crees que es
+          un error.
+        </p>
         <div className="flex gap-4 justify-center">
           <Link
             href="/"

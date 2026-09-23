@@ -6,9 +6,9 @@
  * - Base URL de la API
  */
 
-// Usa siempre localhost:3001 (el frontend) que actúa como proxy
-// El proxy en /app/api/reports/[...path]/route.ts redirecciona al backend en localhost:3000
-export const API_BASE = 'http://localhost:5000'
+// URL base del backend NestJS. Configúrala con NEXT_PUBLIC_API_URL en .env.local.
+export const API_BASE =
+    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 /**
  * Obtiene el token de autenticación desde localStorage (Zustand persists aquí)
