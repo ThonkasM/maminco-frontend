@@ -1,3 +1,5 @@
+import { parseMoney, type Money } from './money'
+
 /**
  * Configuración global de moneda para Bolivia
  * Utilizando Bolivianos (Bs.) como moneda oficial
@@ -24,12 +26,10 @@ export const CURRENCY_CONFIG = {
  * formatCurrency(500.5) // "Bs. 500,50"
  */
 export const formatCurrency = (
-    amount: number | string | null | undefined,
+    amount: Money,
     showDecimals: boolean = true,
 ): string => {
-    const numeric = typeof amount === 'string' ? Number(amount) : amount
-    const value =
-        typeof numeric === 'number' && Number.isFinite(numeric) ? numeric : 0
+    const value = parseMoney(amount)
     const formatter = new Intl.NumberFormat(CURRENCY_CONFIG.locale, {
         style: 'decimal',
         minimumFractionDigits: showDecimals ? CURRENCY_CONFIG.decimals : 0,

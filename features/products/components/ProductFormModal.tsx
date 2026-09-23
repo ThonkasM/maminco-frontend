@@ -89,10 +89,12 @@ export function ProductFormModal({
             errors.name = 'Ya existe un producto con este nombre'
 
         if (!formData.price) errors.price = 'El precio es requerido'
-        else if (isNaN(Number(formData.price))) errors.price = 'Debe ser un número válido'
-        else if (Number(formData.price) <= 0) errors.price = 'El precio debe ser mayor a 0'
-        else if (!Number.isInteger(Number(formData.price)))
-            errors.price = 'El precio debe ser un número entero (sin decimales)'
+        else if (isNaN(Number(formData.price)))
+            errors.price = 'Debe ser un número válido'
+        else if (Number(formData.price) <= 0)
+            errors.price = 'El precio debe ser mayor a 0'
+        else if (!/^\d+(\.\d{1,2})?$/.test(formData.price.trim()))
+            errors.price = 'Máximo 2 decimales'
 
         if (!formData.categoryId) errors.categoryId = 'La categoría es requerida'
 
@@ -158,17 +160,18 @@ export function ProductFormModal({
                     </FormField>
 
                     <FormField
-                        label="Precio (entero, sin decimales)"
-                        description="En bolivianos (Bs.)"
+                        label="Precio (Bs.)"
+                        description="Hasta 2 decimales, ej. 250,50"
                         required
                         error={formErrors.price}
                     >
                         <Input
                             type="number"
-                            step="1"
+                            step="0.01"
                             min="0"
+                            inputMode="decimal"
                             value={formData.price}
-                            placeholder="Ej: 1000"
+                            placeholder="Ej: 250.50"
                             onChange={(e) => {
                                 setFormData({ ...formData, price: e.target.value })
                                 if (formErrors.price)

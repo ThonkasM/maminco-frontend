@@ -58,5 +58,8 @@ Full rules: `docs/FRONTEND-CONVENTIONS.md`. Read it before adding a feature. Cha
   `/auth/login`.
 - **Realtime:** socket.io client in `lib/realtime/socket.ts` / `features/pos/orders/hooks/useOrderSocket.ts`.
 - Path alias `@/*` maps to the repo root.
+- **Money:** never treat it as a plain `number` from the API — Prisma `Decimal` may arrive as a
+  string. Use `parseMoney`/`roundMoney` (`lib/utils/money.ts`) and `formatCurrency`. See
+  `../maminco-backend/docs/MONEY.md`.
 - Tailwind v4 is configured ONLY via `postcss.config.mjs` + `@theme` in `globals.css`. Do not
   re-add `tailwind.config.cjs`/`postcss.config.cjs`.
