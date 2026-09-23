@@ -1,5 +1,5 @@
 import React from 'react'
-import PaymentsManagementPanel from './components/PaymentsManagementPanel'
+import PaymentsManagementPanel from '@/features/payments/components/PaymentsManagementPanel'
 
 export const metadata = {
     title: 'Gestión de Pagos | POS Maminco',

@@ -3,12 +3,12 @@ import React, { useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { io, Socket } from 'socket.io-client'
-import { getTables, TableResponse } from '@/lib/api/admin/tables'
-import { getActiveOrderByTable, createOrderIfNotExists } from '@/lib/api/pos/orders'
-import { getActiveAreas, AreaResponse } from '@/lib/api/admin/areas'
-import { toast } from '@/components/ToastProvider'
+import { getTables, TableResponse } from '@/features/tables/api'
+import { getActiveOrderByTable, createOrderIfNotExists } from '@/features/pos/orders/api'
+import { getActiveAreas, AreaResponse } from '@/features/areas/api'
+import { toast } from '@/components/shared/ToastProvider'
 import { useAuth } from '@/hooks/useAuth'
-import { usePosTablesUI } from './hooks/usePosTablesUI'
+import { usePosTablesUI } from '@/features/pos/tables/hooks/usePosTablesUI'
 
 export default function MesasNegocioPage() {
     const router = useRouter()

@@ -1,13 +1,13 @@
 'use client'
 import React, { useState } from 'react'
-import { OrderResponseDto, OrderStatus } from '@/lib/api/pos/orders'
+import { OrderResponseDto, OrderStatus } from '@/features/pos/orders/api'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from '@/components/ToastProvider'
-import AdminGuard from '../components/AdminGuard'
+import { toast } from '@/components/shared/ToastProvider'
+import AdminGuard from '@/features/auth/components/AdminGuard'
 import { formatCurrency } from '@/lib/utils/currency'
-import { useOrders } from './hooks/useOrders'
-import OrderTable from './components/OrderTable'
-import OrderDetailModal from './components/OrderDetailModal'
+import { useOrders } from '@/features/orders/hooks/useOrders'
+import OrderTable from '@/features/orders/components/OrderTable'
+import OrderDetailModal from '@/features/orders/components/OrderDetailModal'
 
 function OrdenesPageContent() {
     const user = useAuth((s) => s.user)

@@ -1,13 +1,13 @@
 'use client'
 import React from 'react'
-import { ProductResponse, CreateProductPayload } from '@/lib/api/admin/products'
-import { toast } from '@/components/ToastProvider'
-import AdminGuard from '../components/AdminGuard'
-import { useProducts } from './hooks/useProducts'
-import { useProductsUI } from './hooks/useProductsUI'
-import ProductsTable from './components/ProductsTable'
-import ProductFormModal from './components/ProductFormModal'
-import DeleteConfirmModal from './components/DeleteConfirmModal'
+import { ProductResponse, CreateProductPayload } from '@/features/products/api'
+import { toast } from '@/components/shared/ToastProvider'
+import AdminGuard from '@/features/auth/components/AdminGuard'
+import { useProducts } from '@/features/products/hooks/useProducts'
+import { useProductsUI } from '@/features/products/hooks/useProductsUI'
+import ProductsTable from '@/features/products/components/ProductsTable'
+import ProductFormModal from '@/features/products/components/ProductFormModal'
+import DeleteConfirmModal from '@/features/products/components/DeleteConfirmModal'
 
 function ProductosPageContent() {
     const {

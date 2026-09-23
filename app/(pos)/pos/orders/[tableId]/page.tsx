@@ -2,22 +2,22 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from '@/components/ToastProvider'
-import { useConfirmDialog } from '@/components/ConfirmDialog'
-import { useOrderManagement } from '../hooks/useOrderManagement'
-import { usePaymentPosUI } from '../hooks/usePaymentPosUI'
-import { CartItemsList } from '../components/CartItemsList'
-import { CartSummary } from '../components/CartSummary'
-import { ProductCatalog } from '../components/ProductCatalog'
-import { PaymentMethodSelector } from '../components/PaymentMethodSelector'
-import { CategorySelector } from '../components/CategorySelector'
-import { PaymentDetailView } from '../components/PaymentDetailView'
-import { CashPaymentForm } from '../components/CashPaymentForm'
-import { TransferPaymentForm } from '../components/TransferPaymentForm'
-import { CardPaymentForm } from '../components/CardPaymentForm'
-import * as adminPaymentsApi from '@/lib/api/admin/payments'
+import { toast } from '@/components/shared/ToastProvider'
+import { useConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { useOrderManagement } from '@/features/pos/orders/hooks/useOrderManagement'
+import { usePaymentPosUI } from '@/features/pos/orders/hooks/usePaymentPosUI'
+import { CartItemsList } from '@/features/pos/orders/components/CartItemsList'
+import { CartSummary } from '@/features/pos/orders/components/CartSummary'
+import { ProductCatalog } from '@/features/pos/orders/components/ProductCatalog'
+import { PaymentMethodSelector } from '@/features/pos/orders/components/PaymentMethodSelector'
+import { CategorySelector } from '@/features/pos/orders/components/CategorySelector'
+import { PaymentDetailView } from '@/features/pos/orders/components/PaymentDetailView'
+import { CashPaymentForm } from '@/features/pos/orders/components/CashPaymentForm'
+import { TransferPaymentForm } from '@/features/pos/orders/components/TransferPaymentForm'
+import { CardPaymentForm } from '@/features/pos/orders/components/CardPaymentForm'
+import * as adminPaymentsApi from '@/features/payments/api'
 import { formatCurrency } from '@/lib/utils/currency'
-import { processPayment } from '@/lib/api/pos/payments'
+import { processPayment } from '@/features/pos/payments/api'
 import { ArrowLeft } from 'lucide-react'
 
 interface PaymentMethod {
@@ -104,13 +104,13 @@ export default function OrderNegocioPage() {
 
     useEffect(() => {
         const loadCategories = async () => {
-            const { getCategories } = await import('@/lib/api/admin/categories')
+            const { getCategories } = await import('@/features/categories/api')
             const catsData = await getCategories(1, 1000)
             setCategories(catsData.data)
         }
 
         const loadProducts = async () => {
-            const { getProducts } = await import('@/lib/api/admin/products')
+            const { getProducts } = await import('@/features/products/api')
             const prodsData = await getProducts(1, 1000)
             setProducts(prodsData.data)
         }

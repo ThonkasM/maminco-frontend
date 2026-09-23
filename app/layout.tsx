@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
-import { ToastProvider } from "@/components/ToastProvider";
-import { ModeProvider } from "@/contexts/ModeContext";
+import { ToastProvider } from "@/components/shared/ToastProvider";
+import { ModeProvider } from "@/components/providers/ModeContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const geistSans = Geist({

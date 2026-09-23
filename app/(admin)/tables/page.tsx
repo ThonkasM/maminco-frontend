@@ -1,12 +1,12 @@
 'use client'
 import React from 'react'
-import { TableResponse, CreateTablePayload, TableStatus } from '@/lib/api/admin/tables'
-import { useTables } from './hooks/useTables'
-import { useTablesUI } from './hooks/useTablesUI'
-import { TableTable } from './components/TableTable'
-import { FormModal } from './components/FormModal'
-import { DeleteModal } from './components/DeleteModal'
-import { StatusModal } from './components/StatusModal'
+import { TableResponse, CreateTablePayload, TableStatus } from '@/features/tables/api'
+import { useTables } from '@/features/tables/hooks/useTables'
+import { useTablesUI } from '@/features/tables/hooks/useTablesUI'
+import { TableTable } from '@/features/tables/components/TableTable'
+import { FormModal } from '@/features/tables/components/FormModal'
+import { DeleteModal } from '@/features/tables/components/DeleteModal'
+import { StatusModal } from '@/features/tables/components/StatusModal'
 
 export default function MesasPage() {
   const { tables, areas, loading, error, page, filters, setPage, setFilters, handleCreate, handleUpdate, handleDelete, handleChangeStatus } = useTables()

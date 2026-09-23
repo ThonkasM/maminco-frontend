@@ -1,7 +1,7 @@
 'use client'
-import { useDashboardReports } from './hooks/useDashboardReports'
-import { TopProductsTable, SalesSummaryCard } from './components/ReportTables'
-import { TopProductsBarChart } from './components/ReportCharts'
+import { useDashboardReports } from '@/features/dashboard/hooks/useDashboardReports'
+import { TopProductsTable, SalesSummaryCard } from '@/features/dashboard/components/ReportTables'
+import { TopProductsBarChart } from '@/features/dashboard/components/ReportCharts'
 
 export default function DashboardPage() {
   const { state, refresh } = useDashboardReports()

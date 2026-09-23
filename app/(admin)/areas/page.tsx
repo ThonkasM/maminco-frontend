@@ -1,11 +1,11 @@
 'use client'
 import React from 'react'
-import { AreaResponse, CreateAreaPayload } from '@/lib/api/admin/areas'
-import { useAreas } from './hooks/useAreas'
-import { useAreasUI } from './hooks/useAreasUI'
-import { AreaTable } from './components/AreaTable'
-import { FormModal } from './components/FormModal'
-import { DeleteModal } from './components/DeleteModal'
+import { AreaResponse, CreateAreaPayload } from '@/features/areas/api'
+import { useAreas } from '@/features/areas/hooks/useAreas'
+import { useAreasUI } from '@/features/areas/hooks/useAreasUI'
+import { AreaTable } from '@/features/areas/components/AreaTable'
+import { FormModal } from '@/features/areas/components/FormModal'
+import { DeleteModal } from '@/features/areas/components/DeleteModal'
 
 export default function AreasPage() {
   const { areas, loading, error, page, search, existingNames, setPage, setSearch, handleCreate, handleUpdate, handleDelete } = useAreas()

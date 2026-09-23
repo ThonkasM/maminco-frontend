@@ -1,12 +1,12 @@
 'use client'
 import React from 'react'
-import { CategoryResponse, CreateCategoryPayload } from '@/lib/api/admin/categories'
-import { useCategories } from './hooks/useCategories'
-import { useCategoriesUI } from './hooks/useCategoriesUI'
-import { CategoryTable } from './components/CategoryTable'
-import { FormModal } from './components/FormModal'
-import { DeleteModal } from './components/DeleteModal'
-import AdminGuard from '../components/AdminGuard'
+import { CategoryResponse, CreateCategoryPayload } from '@/features/categories/api'
+import { useCategories } from '@/features/categories/hooks/useCategories'
+import { useCategoriesUI } from '@/features/categories/hooks/useCategoriesUI'
+import { CategoryTable } from '@/features/categories/components/CategoryTable'
+import { FormModal } from '@/features/categories/components/FormModal'
+import { DeleteModal } from '@/features/categories/components/DeleteModal'
+import AdminGuard from '@/features/auth/components/AdminGuard'
 
 function CategoriasPageContent() {
   const { categories, loading, error, page, search, existingNames, setPage, setSearch, loadCategoryNames, handleCreate, handleUpdate, handleDelete } = useCategories()

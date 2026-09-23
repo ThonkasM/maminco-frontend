@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { toast } from '@/components/ToastProvider'
+import { toast } from '@/components/shared/ToastProvider'
 
 interface PrintOrderButtonProps {
     orderId: string

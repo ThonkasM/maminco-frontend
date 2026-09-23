@@ -1,12 +1,12 @@
 'use client'
 import React from 'react'
-import { UserResponse, CreateUserPayload } from '@/lib/api/admin/users'
-import { useUsers } from './hooks/useUsers'
-import { useUsersUI } from './hooks/useUsersUI'
-import UsersTable from './components/UsersTable'
-import UserFormModal from './components/UserFormModal'
-import DeleteConfirmModal from './components/DeleteConfirmModal'
-import ResetPasswordModal from './components/ResetPasswordModal'
+import { UserResponse, CreateUserPayload } from '@/features/users/api'
+import { useUsers } from '@/features/users/hooks/useUsers'
+import { useUsersUI } from '@/features/users/hooks/useUsersUI'
+import UsersTable from '@/features/users/components/UsersTable'
+import UserFormModal from '@/features/users/components/UserFormModal'
+import DeleteConfirmModal from '@/features/users/components/DeleteConfirmModal'
+import ResetPasswordModal from '@/features/users/components/ResetPasswordModal'
 
 export default function UsuariosPage() {
     const {
