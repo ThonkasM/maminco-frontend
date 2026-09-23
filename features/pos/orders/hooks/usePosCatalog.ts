@@ -26,7 +26,11 @@ export function usePosCatalog() {
 
     return {
         categories: categoriesQuery.data ?? [],
-        products: productsQuery.data ?? [],
+        // Prisma Decimals arrive as strings; normalize so the UI can format/math them.
+        products: (productsQuery.data ?? []).map((product) => ({
+            ...product,
+            price: Number(product.price),
+        })),
         loading: categoriesQuery.isLoading || productsQuery.isLoading,
         error: categoriesQuery.error ?? productsQuery.error,
     }

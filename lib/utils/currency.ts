@@ -24,11 +24,12 @@ export const CURRENCY_CONFIG = {
  * formatCurrency(500.5) // "Bs. 500,50"
  */
 export const formatCurrency = (
-    amount: number | null | undefined,
+    amount: number | string | null | undefined,
     showDecimals: boolean = true,
 ): string => {
+    const numeric = typeof amount === 'string' ? Number(amount) : amount
     const value =
-        typeof amount === 'number' && Number.isFinite(amount) ? amount : 0
+        typeof numeric === 'number' && Number.isFinite(numeric) ? numeric : 0
     const formatter = new Intl.NumberFormat(CURRENCY_CONFIG.locale, {
         style: 'decimal',
         minimumFractionDigits: showDecimals ? CURRENCY_CONFIG.decimals : 0,
