@@ -156,6 +156,7 @@ export function ProductsPage() {
             )}
 
             <ProductFormModal
+                key={editingProduct?.id ?? 'new'}
                 isOpen={showFormModal}
                 product={editingProduct ?? null}
                 categories={categories}

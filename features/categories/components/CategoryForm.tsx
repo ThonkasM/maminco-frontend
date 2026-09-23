@@ -18,10 +18,10 @@ export function CategoryForm({
     onCancel,
     submitting = false,
 }: CategoryFormProps) {
-    const [formData, setFormData] = useState<CreateCategoryPayload>({
-        name: '',
-        description: '',
-    })
+    const [formData, setFormData] = useState<CreateCategoryPayload>(() => ({
+        name: category?.name ?? '',
+        description: category?.description ?? '',
+    }))
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     useEffect(() => {
@@ -66,6 +66,7 @@ export function CategoryForm({
                 error={errors.name}
             >
                 <Input
+                    autoFocus
                     value={formData.name}
                     placeholder="Ej: Bebidas, Postres, Platos principales"
                     onChange={(e) => {

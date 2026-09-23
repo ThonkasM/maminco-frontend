@@ -46,12 +46,12 @@ export function ProductFormModal({
     onClose,
     isLoading,
 }: ProductFormModalProps) {
-    const [formData, setFormData] = useState<FormData>({
-        name: '',
-        description: '',
-        price: '',
-        categoryId: '',
-    })
+    const [formData, setFormData] = useState<FormData>(() => ({
+        name: product?.name ?? '',
+        description: product?.description ?? '',
+        price: product ? String(product.price) : '',
+        categoryId: product?.categoryId ?? '',
+    }))
     const [formErrors, setFormErrors] = useState<FormErrors>({})
     const [submitting, setSubmitting] = useState(false)
 
@@ -132,6 +132,7 @@ export function ProductFormModal({
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <FormField label="Nombre" required error={formErrors.name}>
                         <Input
+                            autoFocus
                             value={formData.name}
                             placeholder="Ej: Café, Pizza..."
                             onChange={(e) => {

@@ -51,12 +51,12 @@ export function UserFormModal({
     onClose,
     isLoading,
 }: UserFormModalProps) {
-    const [formData, setFormData] = useState<FormData>({
-        name: '',
-        email: '',
+    const [formData, setFormData] = useState<FormData>(() => ({
+        name: user?.name ?? '',
+        email: user?.email ?? '',
         password: '',
-        role: 'WAITER',
-    })
+        role: user?.role ?? 'WAITER',
+    }))
     const [formErrors, setFormErrors] = useState<FormErrors>({})
     const [submitting, setSubmitting] = useState(false)
 
@@ -144,6 +144,7 @@ export function UserFormModal({
                         error={formErrors.name}
                     >
                         <Input
+                            autoFocus
                             value={formData.name}
                             placeholder="Juan Pérez"
                             onChange={(e) => {

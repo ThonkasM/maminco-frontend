@@ -19,10 +19,10 @@ export function TableForm({
     onCancel,
     submitting = false,
 }: TableFormProps) {
-    const [formData, setFormData] = useState<CreateTablePayload>({
-        number: 0,
-        areaId: '',
-    })
+    const [formData, setFormData] = useState<CreateTablePayload>(() => ({
+        number: table?.number ?? 0,
+        areaId: table?.areaId ?? '',
+    }))
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     useEffect(() => {
@@ -63,6 +63,7 @@ export function TableForm({
                 error={errors.number}
             >
                 <Input
+                    autoFocus
                     type="number"
                     value={formData.number || ''}
                     placeholder="Ej: 1, 2, 3..."

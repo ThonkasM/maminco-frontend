@@ -134,6 +134,7 @@ export function AreasPage() {
             )}
 
             <AreaFormModal
+                key={editingArea?.id ?? 'new'}
                 open={showModal}
                 area={editingArea}
                 existingNames={existingNames}

@@ -165,6 +165,7 @@ export function UsersPage() {
             )}
 
             <UserFormModal
+                key={editingUser?.id ?? 'new'}
                 isOpen={showModal}
                 user={editingUser ?? null}
                 existingEmails={existingEmails}

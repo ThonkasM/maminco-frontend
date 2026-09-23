@@ -196,6 +196,7 @@ export function TablesPage() {
             )}
 
             <TableFormModal
+                key={editingTable?.id ?? 'new'}
                 open={showModal}
                 table={editingTable}
                 areas={areas}

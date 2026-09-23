@@ -18,11 +18,11 @@ export function AreaForm({
     onCancel,
     submitting = false,
 }: AreaFormProps) {
-    const [formData, setFormData] = useState<CreateAreaPayload>({
-        name: '',
-        description: '',
-        isVirtual: false,
-    })
+    const [formData, setFormData] = useState<CreateAreaPayload>(() => ({
+        name: area?.name ?? '',
+        description: area?.description ?? '',
+        isVirtual: area?.isVirtual ?? false,
+    }))
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     useEffect(() => {
@@ -58,6 +58,7 @@ export function AreaForm({
         <form onSubmit={handleSubmit} className="space-y-4">
             <FormField label="Nombre del área" required error={errors.name}>
                 <Input
+                    autoFocus
                     value={formData.name}
                     placeholder="Ej: Salón, Exterior, VIP"
                     onChange={(e) => {

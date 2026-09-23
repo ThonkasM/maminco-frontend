@@ -142,6 +142,7 @@ export function CategoriesPage() {
             )}
 
             <CategoryFormModal
+                key={editingCategory?.id ?? 'new'}
                 open={showModal}
                 category={editingCategory}
                 existingNames={existingNames}
