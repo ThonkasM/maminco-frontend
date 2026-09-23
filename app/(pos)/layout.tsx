@@ -1,7 +1,8 @@
 'use client'
 import React from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { LogOut, Settings, Store } from 'lucide-react'
+import { LogOut, Settings } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMode } from '@/contexts/ModeContext'
 import AdminGuard from '../(admin)/components/AdminGuard'
@@ -32,7 +33,13 @@ function PosLayoutContent({ children }: { children: React.ReactNode }) {
                 <header className="bg-surface border-b border-border sticky top-0 z-40 shrink-0">
                     <div className="px-6 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Store className="w-6 h-6 text-primary" />
+                            <Image
+                                src="/maminco-logo.png"
+                                alt=""
+                                width={32}
+                                height={32}
+                                className="size-8 shrink-0 rounded-md"
+                            />
                             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                                 Maminco POS
                             </h1>

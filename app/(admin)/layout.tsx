@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   Armchair,
@@ -88,11 +89,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         >
           <div className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-white">
-                  Maminco
-                </h1>
-                <p className="text-xs text-white/50 mt-1">Panel Administrativo</p>
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/maminco-logo.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="size-10 shrink-0 rounded-lg"
+                />
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-white">
+                    Maminco
+                  </h1>
+                  <p className="text-xs text-white/50 mt-1">Panel Administrativo</p>
+                </div>
               </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}

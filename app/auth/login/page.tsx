@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
@@ -80,7 +81,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-surface-muted flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
-        <div className="text-center mb-10">
+        <div className="flex flex-col items-center text-center mb-10">
+          <Image
+            src="/maminco-logo.png"
+            alt="Maminco"
+            width={80}
+            height={80}
+            priority
+            className="mb-4 size-20"
+          />
           <Link
             href="/"
             className="text-4xl font-semibold tracking-tight text-foreground"
