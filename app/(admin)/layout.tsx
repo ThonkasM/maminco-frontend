@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   Armchair,
+  Brain,
   Building2,
   ClipboardList,
   CreditCard,
@@ -11,6 +12,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Settings,
   Tags,
   Users,
   X,
@@ -32,6 +34,8 @@ const NAV_ITEMS = [
   { href: '/products', label: 'Productos', icon: Package },
   { href: '/orders', label: 'Órdenes', icon: ClipboardList },
   { href: '/payments', label: 'Pagos', icon: CreditCard },
+  { href: '/ai', label: 'IA', icon: Brain },
+  { href: '/settings', label: 'Configuración', icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

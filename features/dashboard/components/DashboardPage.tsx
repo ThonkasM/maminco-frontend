@@ -2,6 +2,7 @@
 import { RefreshCw } from 'lucide-react'
 import { Button, Skeleton } from '@/components/ui'
 import { useDashboardReports } from '../hooks/useDashboardReports'
+import { AiForecastTeaser } from '@/features/ai/components/AiForecastTeaser'
 import { SalesSummaryCard, TopProductsTable } from './ReportTables'
 import { TopProductsBarChart } from './ReportCharts'
 
@@ -48,6 +49,7 @@ export function DashboardPage() {
                         sales={dailyReport.sales}
                         loading={state.loading}
                     />
+                    <AiForecastTeaser />
                     <TopProductsBarChart
                         data={dailyReport.topProducts}
                         loading={state.loading}

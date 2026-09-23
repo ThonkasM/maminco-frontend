@@ -23,14 +23,19 @@ export const CURRENCY_CONFIG = {
  * formatCurrency(1000) // "Bs. 1.000,00"
  * formatCurrency(500.5) // "Bs. 500,50"
  */
-export const formatCurrency = (amount: number, showDecimals: boolean = true): string => {
+export const formatCurrency = (
+    amount: number | null | undefined,
+    showDecimals: boolean = true,
+): string => {
+    const value =
+        typeof amount === 'number' && Number.isFinite(amount) ? amount : 0
     const formatter = new Intl.NumberFormat(CURRENCY_CONFIG.locale, {
         style: 'decimal',
         minimumFractionDigits: showDecimals ? CURRENCY_CONFIG.decimals : 0,
         maximumFractionDigits: CURRENCY_CONFIG.decimals,
     })
 
-    const formatted = formatter.format(Math.max(0, amount))
+    const formatted = formatter.format(Math.max(0, value))
     return `${CURRENCY_CONFIG.symbol}${formatted}`
 }
 
