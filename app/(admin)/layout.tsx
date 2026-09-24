@@ -44,6 +44,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const user = useAuth((s) => s.user)
   const logout = useAuth((s) => s.logout)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  // Computed on the client only to avoid SSR/locale hydration mismatches.
+  const [today, setToday] = useState('')
+
+  useEffect(() => {
+    setToday(
+      new Date().toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+    )
+  }, [])
 
   // Cerrar sidebar en mobile cuando se navega
   useEffect(() => {
@@ -179,12 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div className="flex items-center gap-3">
                 <p className="text-sm text-muted-foreground hidden sm:block">
-                  {new Date().toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {today}
                 </p>
 
                 <ModeToggleButton />

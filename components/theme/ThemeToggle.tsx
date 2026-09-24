@@ -15,13 +15,22 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   const isDark = resolvedTheme === 'dark'
 
+  // Keep the label stable during SSR / first paint (resolvedTheme is unknown on
+  // the server) to avoid a hydration mismatch.
+  const label = !mounted
+    ? 'Cambiar tema'
+    : isDark
+      ? 'Cambiar a tema claro'
+      : 'Cambiar a tema oscuro'
+  const title = !mounted ? 'Tema' : isDark ? 'Tema claro' : 'Tema oscuro'
+
   return (
     <Button
       variant="ghost"
       size="icon"
       className={className}
-      aria-label={isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
-      title={isDark ? 'Tema claro' : 'Tema oscuro'}
+      aria-label={label}
+      title={title}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
       {mounted ? (
