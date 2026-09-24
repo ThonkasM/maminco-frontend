@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, Banknote } from 'lucide-react'
+import { AlertCircle, Banknote, Coins } from 'lucide-react'
 import { Button, EmptyState, Skeleton } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
+import { roundMoney } from '@/lib/utils/money'
 import { listCashDenominations } from '@/features/payments/api'
 
 export interface CashDenomination {
@@ -20,9 +21,57 @@ interface CashPaymentFormProps {
     onSubmit?: (data: {
         method: string
         amount: number
-        denominations: CashDenomination[]
+    denominations: { id: string; value: number }[]
     }) => void
     onBack?: () => void
+}
+
+interface DenominationSectionProps {
+    title: string
+    icon: React.ReactNode
+    denominations: { id: string; value: number }[]
+    onAdd: (value: number) => void
+}
+
+const formatDenominationValue = (value: number): string =>
+    new Intl.NumberFormat('es-BO', {
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+        maximumFractionDigits: 2,
+    }).format(value)
+
+const DenominationSection: React.FC<DenominationSectionProps> = ({
+    title,
+    icon,
+    denominations,
+    onAdd,
+}) => {
+    if (denominations.length === 0) {
+        return null
+    }
+
+    return (
+        <div className="space-y-2">
+            <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                {icon}
+                {title}
+            </h4>
+            <div className="grid grid-cols-3 gap-2">
+                {denominations.map((denomination) => (
+                    <Button
+                        key={denomination.id}
+                        variant="secondary"
+                        onClick={() => onAdd(denomination.value)}
+                        className="aspect-square h-auto flex-col"
+                        title={`Agregar Bs ${denomination.value}`}
+                    >
+                        <span className="text-lg font-bold">
+                            {formatDenominationValue(denomination.value)}
+                        </span>
+                    </Button>
+                ))}
+            </div>
+        </div>
+    )
 }
 
 export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({
@@ -52,28 +101,41 @@ export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({
                     <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <Banknote className="size-6" />
                     </div>
-                    <div>
-                        <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
-                            Pago en efectivo
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                            Total a cobrar: {formatCurrency(total)}
-                        </p>
-                    </div>
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
+                        Pago en efectivo
+                    </h3>
                 </div>
             </div>
 
             <div className="flex-1 space-y-6 overflow-y-auto p-4">
                 <div className="rounded-lg border border-border bg-surface-muted p-4">
-                    <p className="text-xs text-muted-foreground">Monto recibido:</p>
-                    <p className="text-3xl font-bold font-mono text-foreground">
-                        {receivedAmount > 0 ? formatCurrency(receivedAmount) : '—'}
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Total a cobrar
                     </p>
-                    <div className="mt-2 flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Cambio:</span>
-                        <span className="font-semibold text-success">
-                            {formatCurrency(Math.max(0, receivedAmount - total))}
-                        </span>
+                    <p className="text-4xl font-extrabold font-mono text-primary">
+                        {formatCurrency(total)}
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-3">
+                        <div>
+                            <p className="text-xs text-muted-foreground">
+                                Monto recibido
+                            </p>
+                            <p className="text-xl font-bold font-mono text-foreground">
+                                {receivedAmount > 0
+                                    ? formatCurrency(receivedAmount)
+                                    : '—'}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">
+                                Cambio
+                            </p>
+                            <p className="text-xl font-bold font-mono text-success">
+                                {formatCurrency(
+                                    Math.max(0, receivedAmount - total),
+                                )}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -98,61 +160,28 @@ export const CashPaymentForm: React.FC<CashPaymentFormProps> = ({
                         description="Configura denominaciones en el panel de gestión."
                     />
                 ) : (
-                    <>
-                        {billDenoms.length > 0 && (
-                            <div>
-                                <h4 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
-                                    Billetes
-                                </h4>
-                                <div className="grid grid-cols-4 gap-3">
-                                    {billDenoms.map((denomination) => (
-                                        <Button
-                                            key={denomination.id}
-                                            variant="secondary"
-                                            onClick={() =>
-                                                setReceivedAmount(
-                                                    (prev) => prev + denomination.value,
-                                                )
-                                            }
-                                            className="aspect-square h-auto flex-col"
-                                            title={`Agregar Bs ${denomination.value}`}
-                                        >
-                                            <span className="text-lg font-bold">
-                                                {denomination.value}
-                                            </span>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {coinDenoms.length > 0 && (
-                            <div>
-                                <h4 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
-                                    Monedas
-                                </h4>
-                                <div className="grid grid-cols-4 gap-3">
-                                    {coinDenoms.map((denomination) => (
-                                        <Button
-                                            key={denomination.id}
-                                            variant="secondary"
-                                            onClick={() =>
-                                                setReceivedAmount(
-                                                    (prev) => prev + denomination.value,
-                                                )
-                                            }
-                                            className="aspect-square h-auto flex-col"
-                                            title={`Agregar Bs ${denomination.value}`}
-                                        >
-                                            <span className="text-base font-bold">
-                                                {denomination.value}
-                                            </span>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <DenominationSection
+                            title="Billetes"
+                            icon={<Banknote className="size-4" />}
+                            denominations={billDenoms}
+                            onAdd={(value) =>
+                                setReceivedAmount((prev) =>
+                                    roundMoney(prev + value),
+                                )
+                            }
+                        />
+                        <DenominationSection
+                            title="Monedas"
+                            icon={<Coins className="size-4" />}
+                            denominations={coinDenoms}
+                            onAdd={(value) =>
+                                setReceivedAmount((prev) =>
+                                    roundMoney(prev + value),
+                                )
+                            }
+                        />
+                    </div>
                 )}
             </div>
 

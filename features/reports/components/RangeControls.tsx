@@ -1,5 +1,5 @@
 'use client'
-import { Button, Card, CardContent, Input, Label, Select } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select } from '@/components/ui'
 import type { AreaResponse } from '@/features/areas/api'
 import type { TableResponse } from '@/features/tables/api'
 import {
@@ -42,7 +42,13 @@ export function RangeControls({
 }: RangeControlsProps) {
     return (
         <Card>
-            <CardContent className="space-y-4 p-4">
+            <CardHeader>
+                <CardTitle className="text-base">Filtros</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                    Rango de fechas, área y mesa — aplican a todas las secciones
+                </p>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-0">
                 <div className="flex flex-wrap gap-2">
                     {REPORT_PRESETS.map((item) => (
                         <Button

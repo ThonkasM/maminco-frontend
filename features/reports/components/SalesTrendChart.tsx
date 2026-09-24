@@ -53,19 +53,24 @@ export function SalesTrendChart({
                     <BarChart3 className="size-5 text-muted-foreground" />
                     Tendencia de ventas
                 </CardTitle>
-                <div className="flex gap-1">
-                    {GROUP_OPTIONS.map((option) => (
-                        <Button
-                            key={option.id}
-                            variant={
-                                groupBy === option.id ? 'primary' : 'ghost'
-                            }
-                            size="sm"
-                            onClick={() => onGroupByChange(option.id)}
-                        >
-                            {option.label}
-                        </Button>
-                    ))}
+                <div className="flex items-center gap-2">
+                    <span className="hidden text-xs font-medium uppercase tracking-wide text-muted-foreground sm:inline">
+                        Agrupar
+                    </span>
+                    <div className="flex gap-1">
+                        {GROUP_OPTIONS.map((option) => (
+                            <Button
+                                key={option.id}
+                                variant={
+                                    groupBy === option.id ? 'primary' : 'ghost'
+                                }
+                                size="sm"
+                                onClick={() => onGroupByChange(option.id)}
+                            >
+                                {option.label}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>

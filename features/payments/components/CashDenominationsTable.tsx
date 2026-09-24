@@ -8,6 +8,7 @@ import {
     Skeleton,
 } from '@/components/ui'
 import type { CashDenominationDto } from '../api'
+import { formatCurrency } from '@/lib/utils/currency'
 
 interface CashDenominationsTableProps {
     denominations: CashDenominationDto[]
@@ -46,7 +47,7 @@ function DenominationGroup({
                     <Card key={denomination.id}>
                         <CardContent className="flex flex-col items-center gap-1 p-4">
                             <p className="text-2xl font-bold text-foreground">
-                                Bs. {denomination.value}
+                                {formatCurrency(denomination.value)}
                             </p>
                             <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                 {denomination.type === 'COIN'

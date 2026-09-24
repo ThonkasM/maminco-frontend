@@ -58,21 +58,26 @@ export function BreakdownCard({
                     <PieChart className="size-5 text-muted-foreground" />
                     Desglose
                 </CardTitle>
-                <div className="w-48">
-                    <Select
-                        value={dimension}
-                        onChange={(e) =>
-                            onDimensionChange(
-                                e.target.value as BreakdownDimension,
-                            )
-                        }
-                    >
-                        {DIMENSION_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </Select>
+                <div className="flex items-center gap-2">
+                    <span className="hidden text-xs font-medium uppercase tracking-wide text-muted-foreground sm:inline">
+                        Ver por
+                    </span>
+                    <div className="w-48">
+                        <Select
+                            value={dimension}
+                            onChange={(e) =>
+                                onDimensionChange(
+                                    e.target.value as BreakdownDimension,
+                                )
+                            }
+                        >
+                            {DIMENSION_OPTIONS.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </Select>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>

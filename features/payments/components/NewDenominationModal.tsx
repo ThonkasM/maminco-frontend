@@ -11,6 +11,7 @@ import {
     FormField,
     Input,
 } from '@/components/ui'
+import { formatCurrency } from '@/lib/utils/currency'
 
 interface NewDenominationModalProps {
     isOpen: boolean
@@ -35,7 +36,9 @@ export function NewDenominationModal({
         setType('COIN')
     }, [isOpen])
 
-    const isValid = Boolean(value.trim()) && value !== '0'
+    const numericValue = Number(value.replace(',', '.'))
+    const isValid =
+        value.trim() !== '' && Number.isFinite(numericValue) && numericValue > 0
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
@@ -92,18 +95,19 @@ export function NewDenominationModal({
 
                     <FormField
                         label="Valor (Bs.)"
-                        description='Ingresa solo el número, sin "Bs."'
+                        description='Ingresa solo el número, sin "Bs.". Para centavos usa decimales (Ej: 0.20, 0.50)'
                     >
                         <Input
                             type="number"
-                            min="1"
+                            min="0.01"
+                            step="0.01"
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             disabled={loading}
                             placeholder={
                                 type === 'COIN'
-                                    ? 'Ej: 1, 5, 10'
-                                    : 'Ej: 50, 100, 200'
+                                    ? 'Ej: 0.20, 0.50, 1, 5'
+                                    : 'Ej: 10, 20, 50, 100'
                             }
                         />
                     </FormField>
@@ -114,7 +118,7 @@ export function NewDenominationModal({
                                 Vista previa
                             </p>
                             <p className="text-2xl font-bold text-foreground">
-                                Bs. {value}
+                                {formatCurrency(numericValue)}
                             </p>
                         </div>
                     )}

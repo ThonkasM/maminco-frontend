@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { parseMoney, roundMoney } from '@/lib/utils/money'
 import {
     createCashDenomination,
     deleteCashDenomination,
@@ -56,12 +57,13 @@ export function useCashDenominations() {
         value: string,
         type: 'COIN' | 'BILL',
     ): Promise<boolean> => {
-        if (!value.trim() || value === '0') {
+        const numericValue = roundMoney(parseMoney(value.replace(',', '.')))
+        if (!Number.isFinite(numericValue) || numericValue <= 0) {
             toast.error('Ingresa un valor válido')
             return false
         }
         try {
-            await createMutation.mutateAsync({ value: parseInt(value), type })
+            await createMutation.mutateAsync({ value: numericValue, type })
             return true
         } catch {
             return false
