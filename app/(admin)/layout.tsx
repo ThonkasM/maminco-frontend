@@ -184,7 +184,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     type="button"
                     onClick={() => toggleGroup(group.label)}
                     aria-expanded={isOpen}
-                    className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wider text-white/40 transition-colors hover:text-white/70"
+                    className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/50 transition-colors hover:text-white/80"
                   >
                     {group.label}
                     <ChevronDown
