@@ -9,6 +9,7 @@ const ADMIN_PREFIXES = [
     '/orders',
     '/payments',
     '/users',
+    '/reports',
     '/ai',
     '/settings',
 ]
@@ -48,6 +49,7 @@ export const config = {
         '/orders/:path*',
         '/payments/:path*',
         '/users/:path*',
+        '/reports/:path*',
         '/ai/:path*',
         '/settings/:path*',
         '/pos/tables/:path*',

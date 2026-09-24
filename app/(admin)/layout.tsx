@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   Armchair,
+  BarChart3,
   Brain,
   Building2,
   ClipboardList,
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { href: '/products', label: 'Productos', icon: Package },
   { href: '/orders', label: 'Órdenes', icon: ClipboardList },
   { href: '/payments', label: 'Pagos', icon: CreditCard },
+  { href: '/reports', label: 'Reportes', icon: BarChart3 },
   { href: '/ai', label: 'IA', icon: Brain },
   { href: '/settings', label: 'Configuración', icon: Settings },
 ]
