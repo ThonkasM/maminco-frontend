@@ -7,6 +7,7 @@ import {
   BarChart3,
   Brain,
   Building2,
+  ChevronDown,
   ClipboardList,
   CreditCard,
   LayoutDashboard,
@@ -70,6 +71,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   // Computed on the client only to avoid SSR/locale hydration mismatches.
   const [today, setToday] = useState('')
+
+  // Collapsible nav groups: everything starts collapsed except the group that
+  // contains the active route.
+  const activeGroup = NAV_GROUPS.find((group) =>
+    group.items.some((item) => item.href === pathname),
+  )
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    () => (activeGroup ? { [activeGroup.label]: true } : {}),
+  )
+
+  useEffect(() => {
+    if (!activeGroup) return
+    setExpandedGroups((prev) =>
+      prev[activeGroup.label] ? prev : { ...prev, [activeGroup.label]: true },
+    )
+  }, [activeGroup])
+
+  const toggleGroup = (label: string) =>
+    setExpandedGroups((prev) => ({ ...prev, [label]: !prev[label] }))
 
   useEffect(() => {
     setToday(
@@ -155,35 +175,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          <nav className="mt-4 space-y-4 px-4 flex-1 overflow-y-auto">
-            {NAV_GROUPS.map((group) => (
-              <div key={group.label}>
-                <p className="px-3 pb-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white/40">
-                  {group.label}
-                </p>
-                <div className="space-y-1">
-                  {group.items.map(({ href, label, icon: Icon }) => {
-                    const active = isActive(href)
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        aria-current={active ? 'page' : undefined}
-                        className={cn(
-                          'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors font-medium text-sm',
-                          active
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-white/70 hover:bg-white/10 hover:text-white',
-                        )}
-                      >
-                        <Icon className="w-4 h-4 shrink-0" />
-                        {label}
-                      </Link>
-                    )
-                  })}
+          <nav className="mt-4 space-y-2 px-4 flex-1 overflow-y-auto">
+            {NAV_GROUPS.map((group) => {
+              const isOpen = Boolean(expandedGroups[group.label])
+              return (
+                <div key={group.label}>
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.label)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wider text-white/40 transition-colors hover:text-white/70"
+                  >
+                    {group.label}
+                    <ChevronDown
+                      className={cn(
+                        'h-3.5 w-3.5 transition-transform',
+                        isOpen && 'rotate-180',
+                      )}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="mt-1 space-y-1">
+                      {group.items.map(({ href, label, icon: Icon }) => {
+                        const active = isActive(href)
+                        return (
+                          <Link
+                            key={href}
+                            href={href}
+                            aria-current={active ? 'page' : undefined}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors font-medium text-sm',
+                              active
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-white/70 hover:bg-white/10 hover:text-white',
+                            )}
+                          >
+                            <Icon className="w-4 h-4 shrink-0" />
+                            {label}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </nav>
 
           <div className="p-4 border-t border-white/10 mt-auto">
