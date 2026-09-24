@@ -15,6 +15,7 @@ import {
   Package,
   Settings,
   Tags,
+  ToggleRight,
   Users,
   X,
 } from 'lucide-react'
@@ -26,18 +27,39 @@ import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils/cn'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/users', label: 'Usuarios', icon: Users },
-  { href: '/areas', label: 'Áreas', icon: Building2 },
-  { href: '/tables', label: 'Mesas', icon: Armchair },
-  { href: '/categories', label: 'Categorías', icon: Tags },
-  { href: '/products', label: 'Productos', icon: Package },
-  { href: '/orders', label: 'Órdenes', icon: ClipboardList },
-  { href: '/payments', label: 'Pagos', icon: CreditCard },
-  { href: '/reports', label: 'Reportes', icon: BarChart3 },
-  { href: '/ai', label: 'IA', icon: Brain },
-  { href: '/settings', label: 'Configuración', icon: Settings },
+const NAV_GROUPS = [
+  {
+    label: 'Operación',
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/tables', label: 'Mesas', icon: Armchair },
+      { href: '/orders', label: 'Órdenes', icon: ClipboardList },
+    ],
+  },
+  {
+    label: 'Catálogo',
+    items: [
+      { href: '/areas', label: 'Áreas', icon: Building2 },
+      { href: '/categories', label: 'Categorías', icon: Tags },
+      { href: '/products', label: 'Productos', icon: Package },
+    ],
+  },
+  {
+    label: 'Análisis',
+    items: [
+      { href: '/reports', label: 'Reportes', icon: BarChart3 },
+      { href: '/ai', label: 'IA', icon: Brain },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { href: '/users', label: 'Usuarios', icon: Users },
+      { href: '/payments', label: 'Pagos', icon: CreditCard },
+      { href: '/features', label: 'Features', icon: ToggleRight },
+      { href: '/settings', label: 'Configuración', icon: Settings },
+    ],
+  },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -133,26 +155,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          <nav className="mt-4 space-y-1 px-4 flex-1 overflow-y-auto">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const active = isActive(href)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors font-medium text-sm',
-                    active
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white',
-                  )}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {label}
-                </Link>
-              )
-            })}
+          <nav className="mt-4 space-y-4 px-4 flex-1 overflow-y-auto">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label}>
+                <p className="px-3 pb-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white/40">
+                  {group.label}
+                </p>
+                <div className="space-y-1">
+                  {group.items.map(({ href, label, icon: Icon }) => {
+                    const active = isActive(href)
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors font-medium text-sm',
+                          active
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-white/70 hover:bg-white/10 hover:text-white',
+                        )}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           <div className="p-4 border-t border-white/10 mt-auto">

@@ -11,6 +11,7 @@ const ADMIN_PREFIXES = [
     '/users',
     '/reports',
     '/ai',
+    '/features',
     '/settings',
 ]
 
@@ -51,6 +52,7 @@ export const config = {
         '/users/:path*',
         '/reports/:path*',
         '/ai/:path*',
+        '/features/:path*',
         '/settings/:path*',
         '/pos/tables/:path*',
         '/pos/orders/:path*',
