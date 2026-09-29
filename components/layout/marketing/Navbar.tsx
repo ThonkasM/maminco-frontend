@@ -9,9 +9,11 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils/cn'
 
 const LINKS = [
+  { href: '#productos', label: 'Productos' },
   { href: '#caracteristicas', label: 'Características' },
-  { href: '#como-funciona', label: 'Cómo funciona' },
-  { href: '#equipo', label: 'Equipo' },
+  { href: '#planes', label: 'Planes' },
+  { href: '#faq', label: 'FAQ' },
+  { href: '#contacto', label: 'Contacto' },
 ]
 
 export function Navbar() {
@@ -51,11 +53,11 @@ export function Navbar() {
               Iniciar sesión
             </Button>
           </Link>
-          <Link href="/dashboard">
+          <a href="#contacto">
             <Button size="sm" shape="pill">
-              Ir al panel
+              Solicitar demo
             </Button>
-          </Link>
+          </a>
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
@@ -95,11 +97,11 @@ export function Navbar() {
                 Iniciar sesión
               </Button>
             </Link>
-            <Link href="/dashboard" onClick={() => setOpen(false)}>
+            <a href="#contacto" onClick={() => setOpen(false)}>
               <Button shape="pill" className="w-full">
-                Ir al panel
+                Solicitar demo
               </Button>
-            </Link>
+            </a>
           </div>
         </nav>
       </div>

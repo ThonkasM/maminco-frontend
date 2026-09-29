@@ -5,19 +5,20 @@ const FOOTER_LINKS = [
   {
     title: 'Producto',
     links: [
+      { href: '#productos', label: 'Productos y servicios' },
       { href: '#caracteristicas', label: 'Características' },
-      { href: '#como-funciona', label: 'Cómo funciona' },
-      { href: '/auth/login', label: 'Iniciar sesión' },
-      { href: '/dashboard', label: 'Ir al panel' },
+      { href: '#planes', label: 'Planes' },
+      { href: '#faq', label: 'Preguntas frecuentes' },
+      { href: '#contacto', label: 'Contacto' },
     ],
   },
   {
     title: 'Módulos',
     links: [
+      { href: '/auth/login', label: 'Iniciar sesión' },
+      { href: '/dashboard', label: 'Panel administrativo' },
       { href: '/pos/tables', label: 'Punto de venta' },
-      { href: '/orders', label: 'Órdenes' },
       { href: '/payments', label: 'Pagos y caja' },
-      { href: '/dashboard', label: 'Reportes' },
     ],
   },
 ]
@@ -38,8 +39,9 @@ export function Footer() {
             <span className="text-lg font-semibold tracking-tight">Maminco</span>
           </div>
           <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-            El sistema integral para restaurantes: punto de venta, mesas y órdenes
-            en tiempo real, pagos, caja y reportes con pronósticos de ventas.
+            Maminco Software S.R.L. desarrolla el sistema integral para
+            restaurantes: punto de venta, mesas y órdenes en tiempo real, pagos,
+            caja y reportes con pronósticos de ventas.
           </p>
         </div>
 
@@ -64,7 +66,19 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
-          <p>© {new Date().getFullYear()} Maminco. Todos los derechos reservados.</p>
+          <p className="flex items-center gap-1">
+            <Link
+              href="/tools/basis-path"
+              aria-label="Abrir herramienta de camino básico"
+              className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              ©
+            </Link>
+            <span>
+              {new Date().getFullYear()} Maminco Software S.R.L. Todos los derechos
+              reservados.
+            </span>
+          </p>
           <p>Hecho para restaurantes de Bolivia · Precios en Bolivianos (Bs.)</p>
         </div>
       </div>
