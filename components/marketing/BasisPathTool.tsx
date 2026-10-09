@@ -13,15 +13,61 @@ import {
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
+import { DataTable } from '@/components/ui/DataTable'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Table, TableWrapper, TBody, Td, Th, THead, Tr } from '@/components/ui/Table'
 import { Textarea } from '@/components/ui/Textarea'
+import type { ColumnDef } from '@tanstack/react-table'
 import {
   MAX_PATHS,
   analyzeBasisPath,
+  type BasicPath,
   type BasisPathOutcome,
 } from '@/lib/utils/basisPath'
+
+const testCaseColumns: ColumnDef<BasicPath>[] = [
+  {
+    id: 'case',
+    header: 'Caso',
+    cell: ({ row }) => (
+      <span className="font-mono text-xs">{row.original.testCase.id}</span>
+    ),
+  },
+  {
+    id: 'path',
+    header: 'Camino',
+    cell: ({ row }) => (
+      <span className="font-mono text-xs">{row.original.testCase.path}</span>
+    ),
+  },
+  {
+    id: 'precondition',
+    header: 'Precondición',
+    cell: ({ row }) => (
+      <span className="text-xs text-muted-foreground">
+        {row.original.testCase.precondition}
+      </span>
+    ),
+  },
+  {
+    id: 'input',
+    header: 'Entrada',
+    cell: ({ row }) => (
+      <span className="text-xs text-muted-foreground">
+        {row.original.testCase.input}
+      </span>
+    ),
+  },
+  {
+    id: 'expected',
+    header: 'Resultado esperado',
+    cell: ({ row }) => (
+      <span className="text-xs text-muted-foreground">
+        {row.original.testCase.expected}
+      </span>
+    ),
+  },
+]
 
 const DEFAULT_EDGES = `inicio -> D1
 D1 -> FIN
@@ -306,36 +352,12 @@ function BasisPathResults({
         </p>
 
         <div className="mt-6">
-          <TableWrapper>
-            <Table>
-              <THead>
-                <Tr>
-                  <Th>Caso</Th>
-                  <Th>Camino</Th>
-                  <Th>Precondición</Th>
-                  <Th>Entrada</Th>
-                  <Th>Resultado esperado</Th>
-                </Tr>
-              </THead>
-              <TBody>
-                {result.paths.map((path) => (
-                  <Tr key={path.testCase.id}>
-                    <Td className="font-mono text-xs">{path.testCase.id}</Td>
-                    <Td className="font-mono text-xs">{path.testCase.path}</Td>
-                    <Td className="text-xs text-muted-foreground">
-                      {path.testCase.precondition}
-                    </Td>
-                    <Td className="text-xs text-muted-foreground">
-                      {path.testCase.input}
-                    </Td>
-                    <Td className="text-xs text-muted-foreground">
-                      {path.testCase.expected}
-                    </Td>
-                  </Tr>
-                ))}
-              </TBody>
-            </Table>
-          </TableWrapper>
+          <DataTable
+            columns={testCaseColumns}
+            data={result.paths}
+            enableSorting={false}
+            getRowId={(path) => path.testCase.id}
+          />
         </div>
       </div>
     </div>

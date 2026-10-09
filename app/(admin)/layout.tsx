@@ -7,6 +7,7 @@ import {
   BarChart3,
   Brain,
   Building2,
+  ChefHat,
   ChevronDown,
   ClipboardList,
   CreditCard,
@@ -24,9 +25,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { useRouter, usePathname } from 'next/navigation'
 import AdminGuard from '@/features/auth/components/AdminGuard'
 import ModeToggleButton from '@/components/layout/ModeToggleButton'
+import { useFeatureFlag } from '@/features/flags/hooks/useFlags'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils/cn'
+
+const ADMIN_ROLES = ['ADMINISTRATOR', 'MANAGER', 'CASHIER', 'WAITER']
 
 const NAV_GROUPS = [
   {
@@ -35,6 +39,7 @@ const NAV_GROUPS = [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/tables', label: 'Mesas', icon: Armchair },
       { href: '/orders', label: 'Órdenes', icon: ClipboardList },
+      { href: '/kitchen', label: 'Cocina', icon: ChefHat },
     ],
   },
   {
@@ -68,6 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const user = useAuth((s) => s.user)
   const logout = useAuth((s) => s.logout)
+  const { enabled: digitalKitchen } = useFeatureFlag('digital_kitchen')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   // Computed on the client only to avoid SSR/locale hydration mismatches.
   const [today, setToday] = useState('')
@@ -131,7 +137,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isActive = (path: string) => pathname === path
 
   return (
-    <AdminGuard>
+    <AdminGuard allowedRoles={ADMIN_ROLES}>
       <div className="min-h-screen bg-background">
         {/* Overlay para mobile */}
         {isSidebarOpen && (
@@ -196,7 +202,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
                   {isOpen && (
                     <div className="mt-1 space-y-1">
-                      {group.items.map(({ href, label, icon: Icon }) => {
+                      {group.items
+                        .filter(
+                          (item) =>
+                            item.href !== '/kitchen' || digitalKitchen,
+                        )
+                        .map(({ href, label, icon: Icon }) => {
                         const active = isActive(href)
                         return (
                           <Link

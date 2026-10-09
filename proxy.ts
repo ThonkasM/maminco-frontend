@@ -17,8 +17,10 @@ const ADMIN_PREFIXES = [
 
 const POS_PREFIXES = ['/pos/tables', '/pos/orders']
 
+const KITCHEN_PREFIXES = ['/kitchen']
+
 function isProtected(pathname: string): boolean {
-    return [...ADMIN_PREFIXES, ...POS_PREFIXES].some(
+    return [...ADMIN_PREFIXES, ...POS_PREFIXES, ...KITCHEN_PREFIXES].some(
         (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
 }
@@ -56,5 +58,6 @@ export const config = {
         '/settings/:path*',
         '/pos/tables/:path*',
         '/pos/orders/:path*',
+        '/kitchen/:path*',
     ],
 }

@@ -32,7 +32,7 @@ export const FAQS: FaqItem[] = [
     id: 'que-es-maminco',
     question: '¿Qué es Maminco?',
     answer:
-      'Es un sistema de punto de venta (POS) y gestión para restaurantes: mesas y órdenes en tiempo real, pagos y caja, reportes y pronósticos de ventas con IA. Incluye panel web administrativo, POS web y una app móvil para gerentes y meseros.',
+      'Es un sistema de punto de venta (POS) y gestión para restaurantes: mesas y órdenes en tiempo real, pagos y caja, reportes y pronósticos de ventas con IA. Incluye panel web administrativo, POS web, pantalla de cocina (Cocina Digitalizada) y una app móvil para gerentes, meseros y cocina.',
     category: 'general',
     keywords: [
       'maminco',
@@ -169,7 +169,7 @@ export const FAQS: FaqItem[] = [
     id: 'seguridad',
     question: '¿Mis datos están seguros?',
     answer:
-      'Sí. Autenticación con JWT, control de acceso por roles (administrador, gerente, cajero y mesero), validación de todas las entradas y cifrado de disco en la nube. Los datos operativos pertenecen a tu restaurante.',
+      'Sí. Autenticación con JWT, control de acceso por roles (administrador, gerente, cajero, mesero y cocinero), validación de todas las entradas y cifrado de disco en la nube. Los datos operativos pertenecen a tu restaurante.',
     category: 'seguridad',
     keywords: [
       'seguridad',
@@ -207,7 +207,7 @@ export const FAQS: FaqItem[] = [
     id: 'celular',
     question: '¿Puedo usarlo desde el celular?',
     answer:
-      'Sí. La app móvil tiene dos experiencias: gerencial (dashboard, métricas y pronósticos) y POS/mesero (mesas, órdenes y cobro).',
+      'Sí. La app móvil tiene tres experiencias: gerencial (dashboard, métricas y pronósticos), POS/mesero (mesas, órdenes y cobro) y cocina (Cocina Digitalizada).',
     category: 'funcionalidad',
     keywords: [
       'celular',
@@ -220,6 +220,30 @@ export const FAQS: FaqItem[] = [
       'mesero',
       'gerente',
       'gerencial',
+      'cocina',
+      'cocinero',
+    ],
+  },
+  {
+    id: 'cocina',
+    question: '¿Tienen pantalla para la cocina?',
+    answer:
+      'Sí, con la función Cocina Digitalizada. El equipo de cocina entra con el rol Cocinero y ve una pantalla con las órdenes abiertas y su avance (Pendiente, En preparación y Listo), sincronizada en tiempo real con el salón y la caja. Es opcional: se activa con un interruptor y, si está apagada, se mantiene el flujo actual.',
+    category: 'funcionalidad',
+    keywords: [
+      'cocina',
+      'cocinero',
+      'cocineros',
+      'pantalla',
+      'kds',
+      'preparacion',
+      'preparación',
+      'listo',
+      'pedidos',
+      'comanda',
+      'orden',
+      'rol',
+      'digitalizada',
     ],
   },
   {

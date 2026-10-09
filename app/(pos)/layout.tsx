@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
+const POS_ROLES = ['ADMINISTRATOR', 'MANAGER', 'CASHIER', 'WAITER']
+
 function PosLayoutContent({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const user = useAuth((s) => s.user)
@@ -27,7 +29,7 @@ function PosLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <AdminGuard>
+        <AdminGuard allowedRoles={POS_ROLES}>
             <div className="h-screen bg-background flex flex-col">
                 {/* Header */}
                 <header className="bg-surface border-b border-border sticky top-0 z-40 shrink-0">

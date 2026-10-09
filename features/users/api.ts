@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/http/client'
 
-export type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER'
+export type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER' | 'COOK'
 
 export interface CreateUserPayload {
     email: string

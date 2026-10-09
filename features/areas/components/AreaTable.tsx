@@ -1,15 +1,8 @@
+'use client'
+
 import { Pencil, Trash2 } from 'lucide-react'
-import {
-    TableWrapper,
-    Table,
-    THead,
-    TBody,
-    Tr,
-    Th,
-    Td,
-    Badge,
-    Button,
-} from '@/components/ui'
+import type { ColumnDef } from '@tanstack/react-table'
+import { Badge, Button, DataTable } from '@/components/ui'
 import type { AreaResponse, PaginatedAreasResponse } from '../api'
 
 interface AreaTableProps {
@@ -19,62 +12,88 @@ interface AreaTableProps {
 }
 
 export function AreaTable({ areas, onEdit, onDelete }: AreaTableProps) {
+    const columns: ColumnDef<AreaResponse>[] = [
+        {
+            accessorKey: 'name',
+            header: 'Nombre',
+            cell: ({ row }) => (
+                <span className="font-medium text-foreground">
+                    {row.original.name}
+                </span>
+            ),
+        },
+        {
+            accessorKey: 'description',
+            header: 'Descripción',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.description || '—'}
+                </span>
+            ),
+        },
+        {
+            id: 'type',
+            header: 'Tipo',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <Badge variant={row.original.isVirtual ? 'info' : 'neutral'}>
+                    {row.original.isVirtual ? 'Virtual' : 'Física'}
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: 'tablesCount',
+            header: 'Mesas',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.tablesCount || 0}
+                </span>
+            ),
+        },
+        {
+            id: 'status',
+            header: 'Estado',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <Badge variant={row.original.isActive ? 'success' : 'danger'}>
+                    {row.original.isActive ? 'Activa' : 'Inactiva'}
+                </Badge>
+            ),
+        },
+        {
+            id: 'actions',
+            header: 'Acciones',
+            enableSorting: false,
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <div className="flex justify-end gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(row.original)}
+                    >
+                        <Pencil />
+                        Editar
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-danger hover:bg-danger/10"
+                        onClick={() => onDelete(row.original)}
+                    >
+                        <Trash2 />
+                        Desactivar
+                    </Button>
+                </div>
+            ),
+        },
+    ]
+
     return (
-        <TableWrapper>
-            <Table>
-                <THead>
-                    <Tr>
-                        <Th>Nombre</Th>
-                        <Th>Descripción</Th>
-                        <Th>Tipo</Th>
-                        <Th>Mesas</Th>
-                        <Th>Estado</Th>
-                        <Th className="text-right">Acciones</Th>
-                    </Tr>
-                </THead>
-                <TBody>
-                    {areas.data.map((area) => (
-                        <Tr key={area.id}>
-                            <Td className="font-medium text-foreground">{area.name}</Td>
-                            <Td className="text-muted-foreground">
-                                {area.description || '—'}
-                            </Td>
-                            <Td>
-                                <Badge variant={area.isVirtual ? 'info' : 'neutral'}>
-                                    {area.isVirtual ? 'Virtual' : 'Física'}
-                                </Badge>
-                            </Td>
-                            <Td className="text-muted-foreground">{area.tablesCount || 0}</Td>
-                            <Td>
-                                <Badge variant={area.isActive ? 'success' : 'danger'}>
-                                    {area.isActive ? 'Activa' : 'Inactiva'}
-                                </Badge>
-                            </Td>
-                            <Td>
-                                <div className="flex justify-end gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onEdit(area)}
-                                    >
-                                        <Pencil />
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-danger hover:bg-danger/10"
-                                        onClick={() => onDelete(area)}
-                                    >
-                                        <Trash2 />
-                                        Desactivar
-                                    </Button>
-                                </div>
-                            </Td>
-                        </Tr>
-                    ))}
-                </TBody>
-            </Table>
-        </TableWrapper>
+        <DataTable
+            columns={columns}
+            data={areas.data}
+            getRowId={(area) => area.id}
+        />
     )
 }

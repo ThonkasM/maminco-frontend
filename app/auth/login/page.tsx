@@ -10,6 +10,11 @@ import { FormField } from '@/components/ui/FormField'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
 
+function landingPathFor(role?: string): string {
+  // COOK solo tiene la pantalla de cocina; el resto entra al panel.
+  return role === 'COOK' ? '/kitchen' : '/dashboard'
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const login = useAuth((s) => s.login)
@@ -24,11 +29,11 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState('')
   const [passwordError, setPasswordError] = useState('')
 
-  // Si ya hay sesión activa, redirige al dashboard (solo una vez)
+  // Si ya hay sesión activa, redirige según el rol (solo una vez)
   useEffect(() => {
     if (token && !redirectedRef.current && !loading) {
       redirectedRef.current = true
-      router.push('/dashboard')
+      router.push(landingPathFor(useAuth.getState().user?.role))
     }
   }, [token, loading, router])
 
@@ -65,7 +70,7 @@ export default function LoginPage() {
     try {
       await login(email, password)
       setSuccess(true)
-      router.push('/dashboard')
+      router.push(landingPathFor(useAuth.getState().user?.role))
     } catch (err: unknown) {
       const message =
         err instanceof Error

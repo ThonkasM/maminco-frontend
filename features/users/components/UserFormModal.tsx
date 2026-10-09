@@ -14,6 +14,7 @@ import type { CreateUserPayload, UserResponse } from '../api'
 
 const ROLES = [
     { value: 'WAITER', label: 'Mesero' },
+    { value: 'COOK', label: 'Cocinero' },
     { value: 'CASHIER', label: 'Cajero' },
     { value: 'MANAGER', label: 'Gerente' },
     { value: 'ADMINISTRATOR', label: 'Administrador' },

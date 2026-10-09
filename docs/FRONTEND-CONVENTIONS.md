@@ -49,12 +49,58 @@ const mutation = useMutation({
 - `toast` comes from `@/components/shared/ToastProvider`.
 - `getErrorMessage` comes from `@/lib/utils/errors`.
 - No `useEffect` fetching; React Query owns server state.
+- `QueryClient` defaults (`components/providers/ReactQueryProvider.tsx`): `staleTime` 30 s,
+  `gcTime` 5 min, `retry` 1, `refetchOnWindowFocus` false. The client is created per instance
+  (not module scope) to avoid cross-request state on the server. Realtime updates come from
+  socket.io invalidations, not from aggressive refetching.
+
+## Tables
+
+Data tables use **`DataTable`** (`@/components/ui`), built on **`@tanstack/react-table`** and the
+`Table*` primitives. Define **columns** (`ColumnDef<T>[]`) and render:
+
+```tsx
+import type { ColumnDef } from '@tanstack/react-table'
+import { Badge, Button, DataTable } from '@/components/ui'
+
+const columns: ColumnDef<Thing>[] = [
+  { accessorKey: 'name', header: 'Nombre' },
+  {
+    id: 'total',
+    header: 'Total',
+    accessorFn: (row) => Number(row.total),   // accessorFn for computed/numeric sorting
+    meta: { align: 'right' },                 // left (default) | center | right
+    cell: ({ row }) => formatCurrency(Number(row.original.total)),
+  },
+  {
+    id: 'actions',
+    header: 'Acciones',
+    enableSorting: false,
+    meta: { align: 'right' },
+    cell: ({ row }) => <Button onClick={() => onEdit(row.original)}>Editar</Button>,
+  },
+]
+
+<DataTable columns={columns} data={things} getRowId={(thing) => thing.id} />
+```
+
+- **Client-only:** `DataTable` is `'use client'`; columns with `cell` render functions must be
+  defined in a client component.
+- Sortable headers are enabled by default (click to cycle asc/desc). Opt a column out with
+  `enableSorting: false` (actions, badges, pre-formatted/chronological columns).
+- Sorting is **client-side over the current page**; pagination/search still live on the server via
+  React Query (see `Pagination` + `features/<d>/hooks`).
+- Extra props: `loading` (skeleton rows), `emptyState` (defaults to an `EmptyState`), `onRowClick`,
+  `initialSorting`, `skeletonRows`.
+- Column `meta`: `align`, `headerClassName`, `cellClassName`.
+- Do **not** hand-roll `<Table>` markup for data lists — use `DataTable`. The raw `Table*`
+  primitives remain for static/mockup layouts (e.g. marketing mockups).
 
 ## UI
 
 - Use primitives from `@/components/ui`: `Button`, `Input`, `Textarea`, `Select`, `Label`,
-  `FormField`, `Card`, `Badge`, `TableWrapper/Table/THead/TBody/Tr/Th/Td`, `Dialog*`,
-  `EmptyState`, `Skeleton`, `Spinner`, `Pagination`.
+  `FormField`, `Card`, `Badge`, `DataTable`, `TableWrapper/Table/THead/TBody/Tr/Th/Td`, `Dialog*`,
+  `EmptyState`, `Skeleton`, `Spinner`, `Pagination`, `Switch`.
 - Use **semantic tokens**, never raw palette: `bg-background`, `bg-surface`, `bg-surface-muted`,
   `text-foreground`, `text-muted-foreground`, `border-border`, `bg-primary text-primary-foreground`,
   `bg-accent text-accent-foreground`, `text-danger`, `text-success`.

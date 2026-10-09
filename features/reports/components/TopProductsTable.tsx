@@ -1,19 +1,14 @@
 'use client'
 import { Package } from 'lucide-react'
+import type { ColumnDef } from '@tanstack/react-table'
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
+    DataTable,
     EmptyState,
     Skeleton,
-    Table,
-    TableWrapper,
-    TBody,
-    Td,
-    Th,
-    THead,
-    Tr,
 } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { ReportTopProduct } from '../api'
@@ -29,6 +24,68 @@ export function TopProductsTable({
     loading,
     error,
 }: TopProductsTableProps) {
+    const columns: ColumnDef<ReportTopProduct>[] = [
+        {
+            id: 'rank',
+            header: '#',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">{row.index + 1}</span>
+            ),
+        },
+        {
+            accessorKey: 'productName',
+            header: 'Producto',
+            cell: ({ row }) => (
+                <span className="font-medium text-foreground">
+                    {row.original.productName}
+                </span>
+            ),
+        },
+        {
+            accessorKey: 'categoryName',
+            header: 'Categoría',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.categoryName}
+                </span>
+            ),
+        },
+        {
+            id: 'quantitySold',
+            header: 'Cantidad',
+            accessorFn: (row) => Number(row.quantitySold),
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <span className="text-foreground">
+                    {row.original.quantitySold}
+                </span>
+            ),
+        },
+        {
+            id: 'unitPrice',
+            header: 'Precio unit.',
+            accessorFn: (row) => Number(row.unitPrice),
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <span className="text-foreground">
+                    {formatCurrency(Number(row.original.unitPrice))}
+                </span>
+            ),
+        },
+        {
+            id: 'totalRevenue',
+            header: 'Ingresos',
+            accessorFn: (row) => Number(row.totalRevenue),
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <span className="font-semibold text-success">
+                    {formatCurrency(Number(row.original.totalRevenue))}
+                </span>
+            ),
+        },
+    ]
+
     return (
         <Card>
             <CardHeader>
@@ -48,55 +105,19 @@ export function TopProductsTable({
                         <Skeleton className="h-12 w-full" />
                         <Skeleton className="h-12 w-full" />
                     </div>
-                ) : products.length === 0 ? (
-                    <EmptyState
-                        icon={<Package />}
-                        title="Sin datos"
-                        description="No hay productos vendidos para mostrar."
-                    />
                 ) : (
-                    <TableWrapper>
-                        <Table>
-                            <THead>
-                                <Tr>
-                                    <Th>#</Th>
-                                    <Th>Producto</Th>
-                                    <Th>Categoría</Th>
-                                    <Th className="text-right">Cantidad</Th>
-                                    <Th className="text-right">
-                                        Precio unit.
-                                    </Th>
-                                    <Th className="text-right">Ingresos</Th>
-                                </Tr>
-                            </THead>
-                            <TBody>
-                                {products.map((product, index) => (
-                                    <Tr key={product.productId}>
-                                        <Td className="text-muted-foreground">
-                                            {index + 1}
-                                        </Td>
-                                        <Td className="font-medium text-foreground">
-                                            {product.productName}
-                                        </Td>
-                                        <Td className="text-muted-foreground">
-                                            {product.categoryName}
-                                        </Td>
-                                        <Td className="text-right text-foreground">
-                                            {product.quantitySold}
-                                        </Td>
-                                        <Td className="text-right text-foreground">
-                                            {formatCurrency(product.unitPrice)}
-                                        </Td>
-                                        <Td className="text-right font-semibold text-success">
-                                            {formatCurrency(
-                                                product.totalRevenue,
-                                            )}
-                                        </Td>
-                                    </Tr>
-                                ))}
-                            </TBody>
-                        </Table>
-                    </TableWrapper>
+                    <DataTable
+                        columns={columns}
+                        data={products}
+                        getRowId={(product) => product.productId}
+                        emptyState={
+                            <EmptyState
+                                icon={<Package />}
+                                title="Sin datos"
+                                description="No hay productos vendidos para mostrar."
+                            />
+                        }
+                    />
                 )}
             </CardContent>
         </Card>

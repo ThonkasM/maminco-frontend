@@ -14,6 +14,14 @@ export function getFeatureFlags(signal?: AbortSignal): Promise<FeatureFlag[]> {
     return apiFetch('/api/features', { signal })
 }
 
+export type FeatureFlagEvaluation = Record<string, boolean>
+
+export function getFeatureFlagEvaluation(
+    signal?: AbortSignal,
+): Promise<FeatureFlagEvaluation> {
+    return apiFetch('/api/features/evaluate', { signal })
+}
+
 export function updateFeatureFlag(
     key: string,
     enabled: boolean,

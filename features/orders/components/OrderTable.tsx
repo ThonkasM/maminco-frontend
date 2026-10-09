@@ -1,16 +1,7 @@
 'use client'
 import { Eye } from 'lucide-react'
-import {
-    Badge,
-    Button,
-    Table,
-    TableWrapper,
-    TBody,
-    Td,
-    Th,
-    THead,
-    Tr,
-} from '@/components/ui'
+import type { ColumnDef } from '@tanstack/react-table'
+import { Badge, Button, DataTable } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils/currency'
 import type {
     OrderResponseDto,
@@ -61,66 +52,90 @@ interface OrderTableProps {
 }
 
 export function OrderTable({ orders, onViewDetail }: OrderTableProps) {
+    const columns: ColumnDef<OrderResponseDto>[] = [
+        {
+            accessorKey: 'orderNumber',
+            header: 'Orden',
+            cell: ({ row }) => (
+                <span className="font-medium text-foreground">
+                    {row.original.orderNumber}
+                </span>
+            ),
+        },
+        {
+            accessorKey: 'tableName',
+            header: 'Mesa',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.tableName || '—'}
+                </span>
+            ),
+        },
+        {
+            id: 'serviceType',
+            header: 'Tipo',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <Badge variant={serviceTypeVariant(row.original.serviceType)}>
+                    {SERVICE_TYPE_LABELS[row.original.serviceType] ??
+                        row.original.serviceType}
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: 'itemCount',
+            header: 'Items',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.itemCount}
+                </span>
+            ),
+        },
+        {
+            id: 'total',
+            header: 'Total',
+            accessorFn: (row) => Number(row.total),
+            cell: ({ row }) => (
+                <span className="font-medium text-foreground">
+                    {formatCurrency(Number(row.original.total))}
+                </span>
+            ),
+        },
+        {
+            id: 'status',
+            header: 'Estado',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <Badge variant={STATUS_VARIANTS[row.original.status]}>
+                    {STATUS_LABELS[row.original.status] ?? row.original.status}
+                </Badge>
+            ),
+        },
+        {
+            id: 'actions',
+            header: 'Acciones',
+            enableSorting: false,
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <div className="flex justify-end">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewDetail(row.original)}
+                    >
+                        <Eye />
+                        Ver
+                    </Button>
+                </div>
+            ),
+        },
+    ]
+
     return (
-        <TableWrapper>
-            <Table>
-                <THead>
-                    <Tr>
-                        <Th>Orden</Th>
-                        <Th>Mesa</Th>
-                        <Th>Tipo</Th>
-                        <Th>Items</Th>
-                        <Th>Total</Th>
-                        <Th>Estado</Th>
-                        <Th className="text-right">Acciones</Th>
-                    </Tr>
-                </THead>
-                <TBody>
-                    {orders.data.map((order) => (
-                        <Tr key={order.id}>
-                            <Td className="font-medium text-foreground">
-                                {order.orderNumber}
-                            </Td>
-                            <Td className="text-muted-foreground">
-                                {order.tableName || '—'}
-                            </Td>
-                            <Td>
-                                <Badge
-                                    variant={serviceTypeVariant(
-                                        order.serviceType,
-                                    )}
-                                >
-                                    {SERVICE_TYPE_LABELS[order.serviceType] ??
-                                        order.serviceType}
-                                </Badge>
-                            </Td>
-                            <Td className="text-muted-foreground">
-                                {order.itemCount}
-                            </Td>
-                            <Td className="font-medium text-foreground">
-                                {formatCurrency(Number(order.total))}
-                            </Td>
-                            <Td>
-                                <Badge variant={STATUS_VARIANTS[order.status]}>
-                                    {STATUS_LABELS[order.status] ?? order.status}
-                                </Badge>
-                            </Td>
-                            <Td>
-                                <div className="flex justify-end">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onViewDetail(order)}
-                                    >
-                                        <Eye />
-                                        Ver
-                                    </Button>
-                                </div>
-                            </Td>
-                        </Tr>
-                    ))}
-                </TBody>
-            </Table>
-        </TableWrapper>
+        <DataTable
+            columns={columns}
+            data={orders.data}
+            getRowId={(order) => order.id}
+        />
     )
 }

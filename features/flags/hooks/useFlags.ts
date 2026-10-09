@@ -2,15 +2,39 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
 import { getErrorMessage } from '@/lib/utils/errors'
-import { getFeatureFlags, updateFeatureFlag } from '../api'
+import {
+    getFeatureFlagEvaluation,
+    getFeatureFlags,
+    updateFeatureFlag,
+} from '../api'
 
-const KEYS = { all: ['features'] as const }
+const KEYS = {
+    all: ['features'] as const,
+    evaluate: ['features', 'evaluate'] as const,
+}
 
 export function useFeatureFlags() {
     return useQuery({
         queryKey: KEYS.all,
         queryFn: ({ signal }) => getFeatureFlags(signal),
     })
+}
+
+/**
+ * Evalúa una sola flag (`key -> enabled`) usando `GET /api/features/evaluate`.
+ * Si la flag no existe, `enabled` es `false`.
+ */
+export function useFeatureFlag(key: string) {
+    const query = useQuery({
+        queryKey: KEYS.evaluate,
+        queryFn: ({ signal }) => getFeatureFlagEvaluation(signal),
+        staleTime: 60_000,
+    })
+
+    return {
+        enabled: query.data?.[key] ?? false,
+        isLoading: query.isLoading,
+    }
 }
 
 export function useUpdateFeatureFlag() {
@@ -25,6 +49,7 @@ export function useUpdateFeatureFlag() {
                     : `Desactivado: ${flag.name}`,
             )
             await queryClient.invalidateQueries({ queryKey: KEYS.all })
+            await queryClient.invalidateQueries({ queryKey: KEYS.evaluate })
         },
         onError: (error) =>
             toast.error(

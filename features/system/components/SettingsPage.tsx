@@ -18,18 +18,13 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    DataTable,
     Input,
     Select,
     Skeleton,
-    Table,
-    TableWrapper,
-    TBody,
-    Td,
-    Th,
-    THead,
-    Tr,
 } from '@/components/ui'
-import type { LogLevel, ServiceHealth } from '../api'
+import type { ColumnDef } from '@tanstack/react-table'
+import type { LogEntry, LogLevel, ServiceHealth } from '../api'
 import {
     usePruneSystemLogs,
     useSystemConfig,
@@ -96,6 +91,50 @@ const LEVEL_VARIANT: Record<LogLevel, 'neutral' | 'danger' | 'warning' | 'info'>
     debug: 'info',
     verbose: 'info',
 }
+
+const logColumns: ColumnDef<LogEntry>[] = [
+    {
+        id: 'timestamp',
+        header: 'Hora',
+        accessorFn: (row) => row.timestamp,
+        meta: { headerClassName: 'w-40' },
+        cell: ({ row }) => (
+            <span className="whitespace-nowrap font-mono text-xs text-muted-foreground">
+                {new Date(row.original.timestamp).toLocaleTimeString('es-BO')}
+            </span>
+        ),
+    },
+    {
+        id: 'level',
+        header: 'Nivel',
+        enableSorting: false,
+        meta: { headerClassName: 'w-28' },
+        cell: ({ row }) => (
+            <Badge variant={LEVEL_VARIANT[row.original.level]}>
+                {row.original.level}
+            </Badge>
+        ),
+    },
+    {
+        id: 'context',
+        header: 'Contexto',
+        accessorFn: (row) => row.context ?? '',
+        meta: { headerClassName: 'w-40' },
+        cell: ({ row }) => (
+            <span className="text-xs text-muted-foreground">
+                {row.original.context ?? '—'}
+            </span>
+        ),
+    },
+    {
+        id: 'message',
+        header: 'Mensaje',
+        accessorFn: (row) => row.message,
+        cell: ({ row }) => (
+            <span className="font-mono text-xs">{row.original.message}</span>
+        ),
+    },
+]
 
 export function SettingsPage() {
     const [level, setLevel] = useState<'' | LogLevel>('')
@@ -275,40 +314,12 @@ export function SettingsPage() {
                             No hay registros para mostrar.
                         </p>
                     ) : (
-                        <TableWrapper>
-                            <Table>
-                                <THead>
-                                    <Tr>
-                                        <Th className="w-40">Hora</Th>
-                                        <Th className="w-28">Nivel</Th>
-                                        <Th className="w-40">Contexto</Th>
-                                        <Th>Mensaje</Th>
-                                    </Tr>
-                                </THead>
-                                <TBody>
-                                    {logs.data?.data.map((entry, index) => (
-                                        <Tr key={`${entry.timestamp}-${index}`}>
-                                            <Td className="whitespace-nowrap font-mono text-xs text-muted-foreground">
-                                                {new Date(entry.timestamp).toLocaleTimeString(
-                                                    'es-BO',
-                                                )}
-                                            </Td>
-                                            <Td>
-                                                <Badge variant={LEVEL_VARIANT[entry.level]}>
-                                                    {entry.level}
-                                                </Badge>
-                                            </Td>
-                                            <Td className="text-xs text-muted-foreground">
-                                                {entry.context ?? '—'}
-                                            </Td>
-                                            <Td className="font-mono text-xs">
-                                                {entry.message}
-                                            </Td>
-                                        </Tr>
-                                    ))}
-                                </TBody>
-                            </Table>
-                        </TableWrapper>
+                        <DataTable
+                            columns={logColumns}
+                            data={logs.data?.data ?? []}
+                            enableSorting={false}
+                            getRowId={(entry) => `${entry.timestamp}-${entry.message}`}
+                        />
                     )}
                 </CardContent>
             </Card>

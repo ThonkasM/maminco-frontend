@@ -1,15 +1,8 @@
+'use client'
+
 import { Pencil, Trash2 } from 'lucide-react'
-import {
-    TableWrapper,
-    Table,
-    THead,
-    TBody,
-    Tr,
-    Th,
-    Td,
-    Badge,
-    Button,
-} from '@/components/ui'
+import type { ColumnDef } from '@tanstack/react-table'
+import { Badge, Button, DataTable } from '@/components/ui'
 import type { BadgeProps } from '@/components/ui'
 import type {
     PaginatedTablesResponse,
@@ -42,76 +35,96 @@ export function TableTable({
     onDelete,
     onStatusChange,
 }: TableTableProps) {
+    const columns: ColumnDef<TableResponse>[] = [
+        {
+            accessorKey: 'number',
+            header: '#',
+            cell: ({ row }) => (
+                <span className="font-medium text-foreground">
+                    #{row.original.number}
+                </span>
+            ),
+        },
+        {
+            accessorKey: 'areaName',
+            header: 'Área',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.areaName || '—'}
+                </span>
+            ),
+        },
+        {
+            id: 'status',
+            header: 'Estado',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-0"
+                    onClick={() => onStatusChange(row.original)}
+                    title="Cambiar estado"
+                >
+                    <Badge variant={statusVariants[row.original.status]}>
+                        {statusLabels[row.original.status]}
+                    </Badge>
+                </Button>
+            ),
+        },
+        {
+            accessorKey: 'ordersCount',
+            header: 'Pedidos',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    {row.original.ordersCount || 0}
+                </span>
+            ),
+        },
+        {
+            id: 'active',
+            header: 'Activa',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <Badge variant={row.original.isActive ? 'success' : 'danger'}>
+                    {row.original.isActive ? 'Activa' : 'Inactiva'}
+                </Badge>
+            ),
+        },
+        {
+            id: 'actions',
+            header: 'Acciones',
+            enableSorting: false,
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <div className="flex justify-end gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(row.original)}
+                    >
+                        <Pencil />
+                        Editar
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-danger hover:bg-danger/10"
+                        onClick={() => onDelete(row.original)}
+                    >
+                        <Trash2 />
+                        Desactivar
+                    </Button>
+                </div>
+            ),
+        },
+    ]
+
     return (
-        <TableWrapper>
-            <Table>
-                <THead>
-                    <Tr>
-                        <Th>#</Th>
-                        <Th>Área</Th>
-                        <Th>Estado</Th>
-                        <Th>Pedidos</Th>
-                        <Th>Activa</Th>
-                        <Th className="text-right">Acciones</Th>
-                    </Tr>
-                </THead>
-                <TBody>
-                    {tables.data.map((table) => (
-                        <Tr key={table.id}>
-                            <Td className="font-medium text-foreground">
-                                #{table.number}
-                            </Td>
-                            <Td className="text-muted-foreground">
-                                {table.areaName || '—'}
-                            </Td>
-                            <Td>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-auto p-0"
-                                    onClick={() => onStatusChange(table)}
-                                    title="Cambiar estado"
-                                >
-                                    <Badge variant={statusVariants[table.status]}>
-                                        {statusLabels[table.status]}
-                                    </Badge>
-                                </Button>
-                            </Td>
-                            <Td className="text-muted-foreground">
-                                {table.ordersCount || 0}
-                            </Td>
-                            <Td>
-                                <Badge
-                                    variant={table.isActive ? 'success' : 'danger'}
-                                >
-                                    {table.isActive ? 'Activa' : 'Inactiva'}
-                                </Badge>
-                            </Td>
-                            <Td>
-                                <div className="flex justify-end gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onEdit(table)}
-                                    >
-                                        <Pencil />
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-danger hover:bg-danger/10"
-                                        onClick={() => onDelete(table)}
-                                    >
-                                        <Trash2 />
-                                        Desactivar
-                                    </Button>
-                                </div>
-                            </Td>
-                        </Tr>
-                    ))}
-                </TBody>
-            </Table>
-        </TableWrapper>
+        <DataTable
+            columns={columns}
+            data={tables.data}
+            getRowId={(table) => table.id}
+        />
     )
 }

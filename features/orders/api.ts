@@ -1,6 +1,7 @@
 import { apiFetch } from '@/lib/http/client'
 
 export type OrderStatus = 'DRAFT' | 'CLOSED' | 'CANCELLED'
+export type OrderKitchenStatus = 'PENDING' | 'PREPARING' | 'READY'
 export type ServiceType = 'MESA' | 'DELIVERY' | 'RECOGER'
 
 export interface OrderItemResponseDto {
@@ -21,6 +22,7 @@ export interface OrderResponseDto {
     id: string
     orderNumber: string
     status: OrderStatus
+    kitchenStatus: OrderKitchenStatus
     serviceType: ServiceType
     subtotal: number
     discountAmount: number
@@ -68,6 +70,7 @@ export interface ApplyDiscountPayload {
 
 export interface OrderFilters {
     status?: OrderStatus
+    kitchenStatus?: OrderKitchenStatus
     tableId?: string
     serviceType?: ServiceType
     createdById?: string
@@ -145,6 +148,7 @@ export function getOrders(
             page,
             limit,
             status: filters?.status,
+            kitchenStatus: filters?.kitchenStatus,
             tableId: filters?.tableId,
             serviceType: filters?.serviceType,
             createdById: filters?.createdById,

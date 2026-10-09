@@ -14,16 +14,11 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    DataTable,
     EmptyState,
     Skeleton,
-    Table,
-    TableWrapper,
-    TBody,
-    Td,
-    Th,
-    THead,
-    Tr,
 } from '@/components/ui'
+import type { ColumnDef } from '@tanstack/react-table'
 import { useAuth } from '@/hooks/useAuth'
 import { formatCurrency } from '@/lib/utils/currency'
 import {
@@ -35,6 +30,7 @@ import {
     useSalesForecast,
     useTrainModels,
 } from '../hooks/useAi'
+import type { AnomalyPoint, ProductForecastPoint } from '../api'
 import { PeakHoursChart } from './PeakHoursChart'
 import { SalesForecastChart } from './SalesForecastChart'
 
@@ -45,6 +41,75 @@ function formatNumber(value: number | null | undefined, digits = 0): string {
         maximumFractionDigits: digits,
     })
 }
+
+const productForecastColumns: ColumnDef<ProductForecastPoint>[] = [
+    {
+        accessorKey: 'product_name',
+        header: 'Producto',
+        cell: ({ row }) => (
+            <>
+                <span className="font-medium text-foreground">
+                    {row.original.product_name}
+                </span>
+                {row.original.category_name && (
+                    <span className="block text-xs text-muted-foreground">
+                        {row.original.category_name}
+                    </span>
+                )}
+            </>
+        ),
+    },
+    {
+        id: 'average_daily_quantity',
+        header: 'Media/día',
+        accessorFn: (row) => row.average_daily_quantity,
+        meta: { align: 'right' },
+        cell: ({ row }) => formatNumber(row.original.average_daily_quantity, 1),
+    },
+    {
+        id: 'predicted_quantity',
+        header: 'Proyectado 7d',
+        accessorFn: (row) => row.predicted_quantity,
+        meta: { align: 'right' },
+        cell: ({ row }) => (
+            <span className="font-medium text-foreground">
+                {formatNumber(row.original.predicted_quantity, 1)}
+            </span>
+        ),
+    },
+]
+
+const anomalyColumns: ColumnDef<AnomalyPoint>[] = [
+    { accessorKey: 'date', header: 'Fecha' },
+    {
+        id: 'value',
+        header: 'Ventas',
+        accessorFn: (row) => row.value,
+        meta: { align: 'right' },
+        cell: ({ row }) => formatCurrency(row.original.value),
+    },
+    {
+        id: 'z_score',
+        header: 'Z-score',
+        accessorFn: (row) => row.z_score,
+        meta: { align: 'right' },
+        cell: ({ row }) => formatNumber(row.original.z_score, 2),
+    },
+    {
+        id: 'direction',
+        header: 'Tendencia',
+        enableSorting: false,
+        cell: ({ row }) => (
+            <Badge
+                variant={row.original.direction === 'high' ? 'success' : 'danger'}
+            >
+                {row.original.direction === 'high'
+                    ? 'Por encima'
+                    : 'Por debajo'}
+            </Badge>
+        ),
+    },
+]
 
 interface StatProps {
     label: string
@@ -201,49 +266,11 @@ export function AiPage() {
                                         Sin datos de demanda
                                     </div>
                                 ) : (
-                                    <TableWrapper>
-                                        <Table>
-                                            <THead>
-                                                <Tr>
-                                                    <Th>Producto</Th>
-                                                    <Th className="text-right">
-                                                        Media/día
-                                                    </Th>
-                                                    <Th className="text-right">
-                                                        Proyectado 7d
-                                                    </Th>
-                                                </Tr>
-                                            </THead>
-                                            <TBody>
-                                                {products.data?.forecast.map((item) => (
-                                                    <Tr key={item.product_id}>
-                                                        <Td>
-                                                            <span className="font-medium text-foreground">
-                                                                {item.product_name}
-                                                            </span>
-                                                            {item.category_name && (
-                                                                <span className="block text-xs text-muted-foreground">
-                                                                    {item.category_name}
-                                                                </span>
-                                                            )}
-                                                        </Td>
-                                                        <Td className="text-right">
-                                                            {formatNumber(
-                                                                item.average_daily_quantity,
-                                                                1,
-                                                            )}
-                                                        </Td>
-                                                        <Td className="text-right font-medium">
-                                                            {formatNumber(
-                                                                item.predicted_quantity,
-                                                                1,
-                                                            )}
-                                                        </Td>
-                                                    </Tr>
-                                                ))}
-                                            </TBody>
-                                        </Table>
-                                    </TableWrapper>
+                                    <DataTable
+                                        columns={productForecastColumns}
+                                        data={products.data?.forecast ?? []}
+                                        getRowId={(item) => item.product_id}
+                                    />
                                 )}
                             </CardContent>
                         </Card>
@@ -263,46 +290,13 @@ export function AiPage() {
                                 <p className="py-6 text-center text-sm text-muted-foreground">
                                     No se detectaron anomalías en el histórico reciente.
                                 </p>
-                            ) : (
-                                <TableWrapper>
-                                    <Table>
-                                        <THead>
-                                            <Tr>
-                                                <Th>Fecha</Th>
-                                                <Th className="text-right">Ventas</Th>
-                                                <Th className="text-right">Z-score</Th>
-                                                <Th>Tendencia</Th>
-                                            </Tr>
-                                        </THead>
-                                        <TBody>
-                                            {anomalies.data?.anomalies.map((item) => (
-                                                <Tr key={item.date}>
-                                                    <Td>{item.date}</Td>
-                                                    <Td className="text-right">
-                                                        {formatCurrency(item.value)}
-                                                    </Td>
-                                                    <Td className="text-right">
-                                                        {formatNumber(item.z_score, 2)}
-                                                    </Td>
-                                                    <Td>
-                                                        <Badge
-                                                            variant={
-                                                                item.direction === 'high'
-                                                                    ? 'success'
-                                                                    : 'danger'
-                                                            }
-                                                        >
-                                                            {item.direction === 'high'
-                                                                ? 'Por encima'
-                                                                : 'Por debajo'}
-                                                        </Badge>
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </TBody>
-                                    </Table>
-                                </TableWrapper>
-                            )}
+                                ) : (
+                                    <DataTable
+                                        columns={anomalyColumns}
+                                        data={anomalies.data?.anomalies ?? []}
+                                        getRowId={(item) => item.date}
+                                    />
+                                )}
                         </CardContent>
                     </Card>
                 </>
