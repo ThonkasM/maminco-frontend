@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Search,
   Settings,
   Tags,
   ToggleRight,
@@ -28,6 +29,7 @@ import ModeToggleButton from '@/components/layout/ModeToggleButton'
 import { useFeatureFlag } from '@/features/flags/hooks/useFlags'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { CommandPalette } from '@/components/shared/CommandPalette'
 import { cn } from '@/lib/utils/cn'
 
 const ADMIN_ROLES = ['ADMINISTRATOR', 'MANAGER', 'CASHIER', 'WAITER']
@@ -75,6 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const logout = useAuth((s) => s.logout)
   const { enabled: digitalKitchen } = useFeatureFlag('digital_kitchen')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [commandOpen, setCommandOpen] = useState(false)
   // Computed on the client only to avoid SSR/locale hydration mismatches.
   const [today, setToday] = useState('')
 
@@ -135,6 +138,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isActive = (path: string) => pathname === path
+
+  const commandItems = NAV_GROUPS.flatMap((group) =>
+    group.items
+      .filter((item) => item.href !== '/kitchen' || digitalKitchen)
+      .map((item) => ({
+        href: item.href,
+        label: item.label,
+        group: group.label,
+        icon: item.icon,
+      })),
+  )
 
   return (
     <AdminGuard allowedRoles={ADMIN_ROLES}>
@@ -275,6 +289,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {today}
                 </p>
 
+                <button
+                  type="button"
+                  onClick={() => setCommandOpen(true)}
+                  aria-label="Buscar (Ctrl+K)"
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-2.5 text-sm text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
+                >
+                  <Search className="size-4" />
+                  <span className="hidden sm:inline">Buscar…</span>
+                  <kbd className="hidden rounded border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium sm:inline-block">
+                    ⌘K
+                  </kbd>
+                </button>
+
                 <ModeToggleButton />
                 <ThemeToggle />
 
@@ -294,6 +321,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Page Content */}
           <div className="p-6">{children}</div>
         </main>
+
+        <CommandPalette
+          items={commandItems}
+          open={commandOpen}
+          onOpenChange={setCommandOpen}
+          onLogout={handleLogout}
+        />
       </div>
     </AdminGuard>
   )

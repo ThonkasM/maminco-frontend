@@ -1,7 +1,31 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Button, FormField, Input, Textarea } from '@/components/ui'
 import type { CategoryResponse, CreateCategoryPayload } from '../api'
+
+function makeSchema(existingNames: Set<string>, currentName?: string) {
+    return z.object({
+        name: z
+            .string()
+            .trim()
+            .min(1, 'El nombre de la categoría es requerido')
+            .min(2, 'Mínimo 2 caracteres')
+            .refine(
+                (value) =>
+                    !(
+                        existingNames.has(value.toLowerCase()) &&
+                        value.toLowerCase() !== currentName?.toLowerCase()
+                    ),
+                'Ya existe una categoría con este nombre',
+            ),
+        description: z.string(),
+    })
+}
+
+type FormValues = z.infer<ReturnType<typeof makeSchema>>
 
 interface CategoryFormProps {
     category?: CategoryResponse
@@ -18,72 +42,49 @@ export function CategoryForm({
     onCancel,
     submitting = false,
 }: CategoryFormProps) {
-    const [formData, setFormData] = useState<CreateCategoryPayload>(() => ({
-        name: category?.name ?? '',
-        description: category?.description ?? '',
-    }))
-    const [errors, setErrors] = useState<Record<string, string>>({})
+    const schema = useMemo(
+        () => makeSchema(existingNames, category?.name),
+        [existingNames, category?.name],
+    )
 
-    useEffect(() => {
-        setFormData({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormValues>({
+        resolver: zodResolver(schema),
+        defaultValues: {
             name: category?.name ?? '',
             description: category?.description ?? '',
-        })
-        setErrors({})
-    }, [category])
+        },
+    })
 
-    const validate = (): boolean => {
-        const next: Record<string, string> = {}
-        const name = formData.name.trim()
-        if (!name) {
-            next.name = 'El nombre de la categoría es requerido'
-        } else if (name.length < 2) {
-            next.name = 'Mínimo 2 caracteres'
-        } else if (
-            (!category || name.toLowerCase() !== category.name.toLowerCase()) &&
-            existingNames.has(name.toLowerCase())
-        ) {
-            next.name = 'Ya existe una categoría con este nombre'
-        }
-        setErrors(next)
-        return Object.keys(next).length === 0
-    }
-
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault()
-        if (!validate()) return
+    const submit = handleSubmit(async (values) => {
         await onSubmit({
-            name: formData.name.trim(),
-            description: formData.description?.trim() || undefined,
+            name: values.name,
+            description: values.description.trim() || undefined,
         })
-    }
+    })
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4">
             <FormField
                 label="Nombre de la categoría"
                 required
-                error={errors.name}
+                error={errors.name?.message}
             >
                 <Input
                     autoFocus
-                    value={formData.name}
                     placeholder="Ej: Bebidas, Postres, Platos principales"
-                    onChange={(e) => {
-                        setFormData({ ...formData, name: e.target.value })
-                        if (errors.name) setErrors({ ...errors, name: '' })
-                    }}
+                    {...register('name')}
                 />
             </FormField>
 
             <FormField label="Descripción" description="Opcional">
                 <Textarea
-                    value={formData.description}
                     placeholder="Descripción de la categoría..."
                     rows={3}
-                    onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                    }
+                    {...register('description')}
                 />
             </FormField>
 

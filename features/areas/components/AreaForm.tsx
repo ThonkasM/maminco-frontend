@@ -1,7 +1,28 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Button, FormField, Input, Textarea } from '@/components/ui'
 import type { AreaResponse, CreateAreaPayload } from '../api'
+
+function makeSchema(existingNames: Set<string>, currentName?: string) {
+    return z.object({
+        name: z
+            .string()
+            .trim()
+            .min(1, 'El nombre del área es requerido')
+            .min(2, 'Mínimo 2 caracteres')
+            .refine(
+                (value) => !(existingNames.has(value) && value !== currentName),
+                'Ya existe un área con este nombre',
+            ),
+        description: z.string(),
+        isVirtual: z.boolean(),
+    })
+}
+
+type FormValues = z.infer<ReturnType<typeof makeSchema>>
 
 interface AreaFormProps {
     area?: AreaResponse
@@ -18,75 +39,51 @@ export function AreaForm({
     onCancel,
     submitting = false,
 }: AreaFormProps) {
-    const [formData, setFormData] = useState<CreateAreaPayload>(() => ({
-        name: area?.name ?? '',
-        description: area?.description ?? '',
-        isVirtual: area?.isVirtual ?? false,
-    }))
-    const [errors, setErrors] = useState<Record<string, string>>({})
+    const schema = useMemo(
+        () => makeSchema(existingNames, area?.name),
+        [existingNames, area?.name],
+    )
 
-    useEffect(() => {
-        setFormData({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormValues>({
+        resolver: zodResolver(schema),
+        defaultValues: {
             name: area?.name ?? '',
             description: area?.description ?? '',
             isVirtual: area?.isVirtual ?? false,
-        })
-        setErrors({})
-    }, [area])
+        },
+    })
 
-    const validate = (): boolean => {
-        const next: Record<string, string> = {}
-        const name = formData.name.trim()
-        if (!name) {
-            next.name = 'El nombre del área es requerido'
-        } else if (name.length < 2) {
-            next.name = 'Mínimo 2 caracteres'
-        } else if ((!area || name !== area.name) && existingNames.has(name)) {
-            next.name = 'Ya existe un área con este nombre'
-        }
-        setErrors(next)
-        return Object.keys(next).length === 0
-    }
-
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault()
-        if (!validate()) return
-        await onSubmit(formData)
-    }
+    const submit = handleSubmit(async (values) => {
+        await onSubmit(values)
+    })
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField label="Nombre del área" required error={errors.name}>
+        <form onSubmit={submit} className="space-y-4">
+            <FormField label="Nombre del área" required error={errors.name?.message}>
                 <Input
                     autoFocus
-                    value={formData.name}
                     placeholder="Ej: Salón, Exterior, VIP"
-                    onChange={(e) => {
-                        setFormData({ ...formData, name: e.target.value })
-                        if (errors.name) setErrors({ ...errors, name: '' })
-                    }}
+                    {...register('name')}
                 />
             </FormField>
 
             <FormField label="Descripción" description="Opcional">
                 <Textarea
-                    value={formData.description}
                     placeholder="Descripción del área..."
                     rows={3}
-                    onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                    }
+                    {...register('description')}
                 />
             </FormField>
 
             <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-surface-muted/50 p-3">
                 <input
                     type="checkbox"
-                    checked={formData.isVirtual || false}
-                    onChange={(e) =>
-                        setFormData({ ...formData, isVirtual: e.target.checked })
-                    }
                     className="mt-0.5 size-4 rounded border-border accent-primary"
+                    {...register('isVirtual')}
                 />
                 <span className="text-sm">
                     <span className="font-medium text-foreground">Área virtual</span>

@@ -96,6 +96,34 @@ const columns: ColumnDef<Thing>[] = [
 - Do **not** hand-roll `<Table>` markup for data lists — use `DataTable`. The raw `Table*`
   primitives remain for static/mockup layouts (e.g. marketing mockups).
 
+## Forms
+
+Forms use **React Hook Form** + **Zod** (`@hookform/resolvers/zod`):
+
+```tsx
+const schema = z.object({
+  name: z.string().trim().min(1, 'Requerido').min(2, 'Mínimo 2 caracteres'),
+})
+type FormValues = z.infer<typeof schema>
+
+const { register, control, handleSubmit, reset, formState: { errors } } =
+  useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { ... } })
+```
+
+- Native inputs (`Input`, `Textarea`) bind with `register('field')`.
+- `Select` is **Radix-based**, so wrap it with RHF `Controller`:
+  `<Controller control={control} name="x" render={({ field }) => <Select value={field.value} onChange={(e) => field.onChange(e.target.value)} />} />`.
+- Wrap every control in `FormField` and pass `error={errors.field?.message}` for a11y.
+- Schemas that depend on context (uniqueness against `existingNames`/`existingEmails`,
+  create-vs-edit rules) are built with a **factory + `useMemo`**.
+- Modal forms reset on open: `useEffect(() => { if (open) reset(...) }, [open, entity, reset])`.
+
+## Command palette
+
+The admin shell mounts a **cmdk** command palette (`components/shared/CommandPalette.tsx`) opened
+with **Ctrl/Cmd+K** or the top-bar "Buscar…" button. It navigates to nav routes and exposes actions
+(toggle theme, logout). To add entries, extend the `items` passed from `app/(admin)/layout.tsx`.
+
 ## UI
 
 - Use primitives from `@/components/ui`: `Button`, `Input`, `Textarea`, `Select`, `Label`,

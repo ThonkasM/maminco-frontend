@@ -1,8 +1,24 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Button, FormField, Input, Select } from '@/components/ui'
 import type { TableResponse, CreateTablePayload } from '../api'
 import type { AreaResponse } from '@/features/areas/api'
+
+function makeSchema() {
+    return z.object({
+        number: z
+            .string()
+            .min(1, 'El número de mesa es requerido')
+            .refine((value) => !Number.isNaN(Number(value)), 'Debe ser un número')
+            .refine((value) => Number(value) >= 0, 'El número no puede ser negativo'),
+        areaId: z.string().min(1, 'El área es requerida'),
+    })
+}
+
+type FormValues = z.infer<ReturnType<typeof makeSchema>>
 
 interface TableFormProps {
     table?: TableResponse
@@ -19,80 +35,59 @@ export function TableForm({
     onCancel,
     submitting = false,
 }: TableFormProps) {
-    const [formData, setFormData] = useState<CreateTablePayload>(() => ({
-        number: table?.number ?? 0,
-        areaId: table?.areaId ?? '',
-    }))
-    const [errors, setErrors] = useState<Record<string, string>>({})
+    const schema = useMemo(() => makeSchema(), [])
 
-    useEffect(() => {
-        setFormData({
-            number: table?.number ?? 0,
+    const {
+        register,
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormValues>({
+        resolver: zodResolver(schema),
+        defaultValues: {
+            number: table ? String(table.number) : '',
             areaId: table?.areaId ?? '',
+        },
+    })
+
+    const submit = handleSubmit(async (values) => {
+        await onSubmit({
+            number: Number(values.number),
+            areaId: values.areaId,
         })
-        setErrors({})
-    }, [table])
-
-    const validate = (): boolean => {
-        const next: Record<string, string> = {}
-        if (!formData.number) {
-            next.number = 'El número de mesa es requerido'
-        } else if (isNaN(formData.number)) {
-            next.number = 'Debe ser un número'
-        } else if (formData.number < 0) {
-            next.number = 'El número no puede ser negativo'
-        }
-        if (!formData.areaId) {
-            next.areaId = 'El área es requerida'
-        }
-        setErrors(next)
-        return Object.keys(next).length === 0
-    }
-
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault()
-        if (!validate()) return
-        await onSubmit(formData)
-    }
+    })
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField
-                label="Número de mesa"
-                required
-                error={errors.number}
-            >
+        <form onSubmit={submit} className="space-y-4">
+            <FormField label="Número de mesa" required error={errors.number?.message}>
                 <Input
                     autoFocus
                     type="number"
-                    value={formData.number || ''}
                     placeholder="Ej: 1, 2, 3..."
-                    onChange={(e) => {
-                        setFormData({
-                            ...formData,
-                            number: e.target.value ? Number(e.target.value) : 0,
-                        })
-                        if (errors.number) setErrors({ ...errors, number: '' })
-                    }}
+                    {...register('number')}
                 />
             </FormField>
 
-            <FormField label="Área" required error={errors.areaId}>
-                <Select
-                    value={formData.areaId}
-                    onChange={(e) => {
-                        setFormData({ ...formData, areaId: e.target.value })
-                        if (errors.areaId) setErrors({ ...errors, areaId: '' })
-                    }}
-                >
-                    <option value="">Selecciona un área</option>
-                    {areas.map((area) => (
-                        <option key={area.id} value={area.id}>
-                            {area.name}
-                        </option>
-                    ))}
-                </Select>
-            </FormField>
+            <Controller
+                control={control}
+                name="areaId"
+                render={({ field, fieldState }) => (
+                    <FormField label="Área" required error={fieldState.error?.message}>
+                        <Select
+                            value={field.value}
+                            onChange={(event) => field.onChange(event.target.value)}
+                            placeholder="Selecciona un área"
+                        >
+                            <option value="">Selecciona un área</option>
+                            {areas.map((area) => (
+                                <option key={area.id} value={area.id}>
+                                    {area.name}
+                                </option>
+                            ))}
+                        </Select>
+                    </FormField>
+                )}
+            />
 
             <div className="flex gap-3 pt-2">
                 <Button
