@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useTheme } from 'next-themes'
 import { Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { applyThemeWithTransition } from '@/lib/utils/themeTransition'
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme()
@@ -24,6 +25,14 @@ export function ThemeToggle({ className }: { className?: string }) {
       : 'Cambiar a tema oscuro'
   const title = !mounted ? 'Tema' : isDark ? 'Tema claro' : 'Tema oscuro'
 
+  const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const next = isDark ? 'light' : 'dark'
+    applyThemeWithTransition(() => setTheme(next), {
+      x: event.clientX,
+      y: event.clientY,
+    })
+  }
+
   return (
     <Button
       variant="ghost"
@@ -31,7 +40,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       className={className}
       aria-label={label}
       title={title}
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      onClick={handleToggle}
     >
       {mounted ? (
         isDark ? (

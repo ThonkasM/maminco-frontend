@@ -206,6 +206,44 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Theme switch animation                                              */
+/* Circular reveal from the toggle origin via the View Transitions API; */
+/* falls back to a brief color transition (.theme-transition).         */
+/* ------------------------------------------------------------------ */
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+  to {
+    clip-path: circle(
+      var(--theme-radius, 150vmax) at var(--theme-x, 50%) var(--theme-y, 50%)
+    );
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: none;
+  }
+
+  ::view-transition-new(root) {
+    animation: theme-reveal 480ms ease-in-out;
+  }
+}
+
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition:
+    background-color 320ms ease,
+    border-color 320ms ease,
+    color 320ms ease,
+    fill 320ms ease,
+    stroke 320ms ease !important;
+}
+
+/* ------------------------------------------------------------------ */
 /* Native input clean-up                                               */
 /* ------------------------------------------------------------------ */
 input[type="number"]::-webkit-outer-spin-button,
