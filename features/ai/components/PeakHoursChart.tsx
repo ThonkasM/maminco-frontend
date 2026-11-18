@@ -1,14 +1,10 @@
 'use client'
 import { useMemo } from 'react'
-import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts'
+import { barY, defineChart } from '@tanstack/charts'
+import { scaleBand } from '@tanstack/charts/scales/band'
+import { scaleLinear } from '@tanstack/charts/scales/linear'
+import { tooltip } from '@tanstack/charts/tooltip'
+import { Chart } from '@tanstack/charts/react'
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/ui'
 import type { PeakHours } from '../api'
 
@@ -27,6 +23,26 @@ export function PeakHoursChart({ peakHours, loading }: PeakHoursChartProps) {
         [peakHours],
     )
 
+    const definition = useMemo(
+        () =>
+            defineChart({
+                marks: [
+                    barY(data, {
+                        x: 'hour',
+                        y: 'orders',
+                        fill: 'var(--primary)',
+                        radius: 6,
+                    }),
+                ],
+                scales: {
+                    x: { scale: () => scaleBand<string>().padding(0.25) },
+                    y: { scale: scaleLinear, nice: true, grid: true },
+                },
+                tooltip,
+            }),
+        [data],
+    )
+
     return (
         <Card>
             <CardHeader>
@@ -43,29 +59,13 @@ export function PeakHoursChart({ peakHours, loading }: PeakHoursChartProps) {
                         Sin datos de horas pico
                     </div>
                 ) : (
-                    <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                            <XAxis
-                                dataKey="hour"
-                                tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
-                                width={40}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'var(--surface)',
-                                    border: '1px solid var(--border)',
-                                    borderRadius: '8px',
-                                    color: 'var(--foreground)',
-                                }}
-                                formatter={(value: number) => [`${value} órdenes`, 'Promedio']}
-                            />
-                            <Bar dataKey="orders" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div data-export-chart="ai-peak-hours">
+                    <Chart
+                        definition={definition}
+                        height={260}
+                        ariaLabel="Promedio de órdenes por hora del día"
+                    />
+                    </div>
                 )}
             </CardContent>
         </Card>

@@ -33,6 +33,8 @@
 | **react** | 19.2.0 | Librería UI | Components, hooks |
 | **react-dom** | 19.2.0 | Renderizador React | DOM rendering |
 | **@tanstack/react-query** | ^5.0.0 | Data fetching | Queries, mutations, caching |
+| **@tanstack/react-table** | ^8.21 | Tables | `DataTable` (ordenamiento, columnas tipadas); todas las tablas de la app lo usan |
+| **@tanstack/charts** | ^1.5 | Gráficas | Todas las gráficas de la app (Recharts se eliminó). Envoltorios en `components/charts`: `TrendChart` (barras, líneas, áreas, eje secundario), `DonutChart`, `BarListChart`, `ColumnChart` |
 | **zustand** | ^4.4.0 | State management | Global state (auth, UI) |
 | **socket.io-client** | ^4.7.2 | WebSocket client | Real-time communication |
 | **react-hot-toast** | ^2.6.0 | Notifications | Toast messages (error, success) |

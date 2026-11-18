@@ -8,15 +8,15 @@ type Status = 'Ocupada' | 'Disponible' | 'Reservada'
 type TableEvent = { table: number; to: Status }
 
 const STATUS_STYLE: Record<Status, string> = {
-  Disponible: 'bg-success text-white',
-  Ocupada: 'bg-danger text-white',
-  Reservada: 'bg-warning text-white',
+  Disponible: 'bg-success-fill',
+  Ocupada: 'bg-danger-fill',
+  Reservada: 'bg-warning-fill',
 }
 
 const STATUS_DOT: Record<Status, string> = {
-  Disponible: 'bg-success',
-  Ocupada: 'bg-danger',
-  Reservada: 'bg-warning',
+  Disponible: 'bg-success-fill',
+  Ocupada: 'bg-danger-fill',
+  Reservada: 'bg-warning-fill',
 }
 
 const INITIAL: Status[] = [
@@ -46,7 +46,6 @@ const EVENTS: TableEvent[] = [
   { table: 5, to: 'Ocupada' },
 ]
 
-// La demo corre 3 vueltas y se detiene: no gasta batería ni CPU en segundo plano.
 const MAX_TICKS = EVENTS.length * 3
 
 function stateAt(tick: number) {
@@ -85,7 +84,7 @@ export function LiveAppPreview() {
         className="p-5 sm:p-6"
       >
         <div className="mb-4 flex items-center gap-2 text-sm font-medium text-foreground">
-          <MonitorSmartphone className="size-4 text-primary" />
+          <MonitorSmartphone className="size-4 text-primary-ink" />
           Centro de órdenes
         </div>
 
@@ -95,7 +94,7 @@ export function LiveAppPreview() {
               key={i}
               className={`relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-lg text-center font-bold text-white shadow-elevated transition-colors duration-500 ${
                 STATUS_STYLE[status]
-              } ${i === lastTable ? 'ring-2 ring-white/70' : ''}`}
+              } ${i === lastTable ? 'ring-2 ring-foreground/30 ring-offset-2 ring-offset-surface' : ''}`}
             >
               {status === 'Ocupada' && (
                 <span className="absolute right-2 top-2 rounded-full bg-white/25 p-1">

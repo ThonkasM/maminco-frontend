@@ -152,7 +152,6 @@ export function FeaturesBento() {
           </CardContent>
         </Card>
 
-        {/* Móvil */}
         <Card className="flex flex-col overflow-hidden lg:col-span-2 lg:row-span-2">
           <CardContent className="flex flex-1 flex-col p-6 pb-0">
             <IconBadge>

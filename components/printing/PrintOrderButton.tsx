@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Printer } from 'lucide-react'
 import { Button, Spinner } from '@/components/ui'
 import { toast } from '@/components/shared/ToastProvider'
+import { printOrder } from '@/features/printing/api'
 import { getErrorMessage } from '@/lib/utils/errors'
 
 interface PrintOrderButtonProps {
@@ -23,22 +24,7 @@ export function PrintOrderButton({
         try {
             setLoading(true)
 
-            const response = await fetch(`/api/printing/order/${orderId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            })
-
-            if (!response.ok) {
-                const errorData = await response
-                    .json()
-                    .catch(() => ({ error: 'Error desconocido' }))
-                throw new Error(
-                    errorData.error ||
-                        `Error ${response.status}: ${response.statusText}`,
-                )
-            }
-
-            const data = await response.json()
+            const data = await printOrder(orderId)
             if (data.success) {
                 toast.success(data.message)
             } else {

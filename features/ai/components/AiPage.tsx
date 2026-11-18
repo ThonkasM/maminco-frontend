@@ -1,15 +1,21 @@
 'use client'
+import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { ChartSkeleton } from '@/components/shared/ChartSkeleton'
 import {
     Activity,
     AlertTriangle,
+    BarChart3,
     Brain,
     Database,
+    Sparkles,
     RefreshCw,
     TrendingUp,
 } from 'lucide-react'
 import {
     Badge,
     Button,
+    buttonVariants,
     Card,
     CardContent,
     CardHeader,
@@ -20,6 +26,8 @@ import {
 } from '@/components/ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useAuth } from '@/hooks/useAuth'
+import { ExportButton } from '@/features/export/components/ExportButton'
+import { buildAiExport } from '../export'
 import { formatCurrency } from '@/lib/utils/currency'
 import {
     useAiHealth,
@@ -31,8 +39,15 @@ import {
     useTrainModels,
 } from '../hooks/useAi'
 import type { AnomalyPoint, ProductForecastPoint } from '../api'
-import { PeakHoursChart } from './PeakHoursChart'
-import { SalesForecastChart } from './SalesForecastChart'
+import { PeakByShiftCard } from './PeakByShiftCard'
+const SalesForecastChart = dynamic(
+    () => import('./SalesForecastChart').then((m) => m.SalesForecastChart),
+    { ssr: false, loading: () => <ChartSkeleton height={380} /> },
+)
+const PeakHoursChart = dynamic(
+    () => import('./PeakHoursChart').then((m) => m.PeakHoursChart),
+    { ssr: false, loading: () => <ChartSkeleton height={340} /> },
+)
 
 function formatNumber(value: number | null | undefined, digits = 0): string {
     if (value === null || value === undefined) return '—'
@@ -159,14 +174,41 @@ export function AiPage() {
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                    <h2 className="font-display text-3xl font-normal uppercase tracking-wide text-foreground">
                         Inteligencia artificial
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Métricas del modelo, pronósticos y detección de anomalías
+                        Lo que viene: pronósticos, demanda proyectada y anomalías. Para lo que ya ocurrió usa Reportes.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <ExportButton
+                        label="Exportar"
+                        disabled={!summary || summary.insufficient_data}
+                        build={() =>
+                            buildAiExport({
+                                metrics: metrics.data,
+                                sales: sales.data,
+                                peakHours: peakHours.data,
+                                products: products.data,
+                                anomalies: anomalies.data,
+                            })
+                        }
+                    />
+                    <Link
+                        href="/reports"
+                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                    >
+                        <BarChart3 />
+                        Ver ventas reales
+                    </Link>
+                    <Link
+                        href="/insights"
+                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                    >
+                        <Sparkles />
+                        Preguntar en Insights
+                    </Link>
                     <Badge variant={health.isSuccess ? 'success' : 'danger'}>
                         {health.isSuccess ? 'Servicio activo' : 'Servicio no disponible'}
                     </Badge>
@@ -275,6 +317,8 @@ export function AiPage() {
                             </CardContent>
                         </Card>
                     </div>
+
+                    <PeakByShiftCard peakHours={peakHours.data} loading={peakHours.isLoading} />
 
                     <Card>
                         <CardHeader>

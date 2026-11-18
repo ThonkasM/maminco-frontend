@@ -1,9 +1,5 @@
 import type { ReactNode } from 'react'
 
-/**
- * Marco tipo ventana de navegador para los mockups de la landing.
- * Es un componente de servidor (sin estado), se puede usar desde cualquier lado.
- */
 export function AppFrame({
   url,
   children,

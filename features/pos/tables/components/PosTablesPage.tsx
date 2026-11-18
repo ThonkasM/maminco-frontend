@@ -14,14 +14,15 @@ import {
 import { Badge, Button, EmptyState, Skeleton } from '@/components/ui'
 import { cn } from '@/lib/utils/cn'
 import type { TableResponse } from '@/features/tables/api'
-import { useOrderSocket } from '@/features/pos/orders/hooks/useOrderSocket'
+import { useOrdersSocket } from '@/lib/realtime/useOrdersSocket'
+import { VoiceDock } from '@/features/voice/components/VoiceDock'
 import { usePosTables } from '../hooks/usePosTables'
 import { usePosTablesUI } from '../hooks/usePosTablesUI'
 
 const STATUS_STYLES: Record<string, string> = {
-    AVAILABLE: 'bg-success text-white',
-    OCCUPIED: 'bg-danger text-white',
-    RESERVED: 'bg-warning text-white',
+    AVAILABLE: 'bg-success-fill text-white',
+    OCCUPIED: 'bg-danger-fill text-white',
+    RESERVED: 'bg-warning-fill text-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -43,23 +44,25 @@ export function PosTablesPage() {
         setActiveOrders,
     } = usePosTables()
 
-    useOrderSocket({
+    useOrdersSocket({
         subscribeToTablesStatus: true,
-        onTablesStateSnapshot: (data) => {
-            if (!Array.isArray(data?.tables)) return
-            const states: Record<string, boolean> = {}
-            for (const table of data.tables) {
-                states[table.id] = Boolean(table.hasActiveOrder)
-            }
-            setActiveOrders(states)
-        },
-        onTableStatusChanged: (data) => {
-            if (!data?.tableId || !data?.status) return
-            setActiveOrder(data.tableId, data.status === 'OCCUPIED')
-        },
-        onTableStateUpdated: (data) => {
-            if (!data?.tableId || !data?.orderState) return
-            setActiveOrder(data.tableId, data.orderState.status === 'DRAFT')
+        on: {
+            'tables:state:snapshot': ({ tables: snapshot }) => {
+                if (!Array.isArray(snapshot)) return
+                const states: Record<string, boolean> = {}
+                for (const table of snapshot) {
+                    states[table.id] = Boolean(table.hasActiveOrder)
+                }
+                setActiveOrders(states)
+            },
+            'tables:status:changed': ({ tableId, status }) => {
+                if (!tableId || !status) return
+                setActiveOrder(tableId, status === 'OCCUPIED')
+            },
+            'table:state:updated': ({ tableId, orderState }) => {
+                if (!tableId || !orderState) return
+                setActiveOrder(tableId, orderState.status === 'DRAFT')
+            },
         },
     })
 
@@ -247,7 +250,7 @@ export function PosTablesPage() {
 
                 <div className="p-6">
                     <div className="mb-8">
-                        <h1 className="mb-2 text-3xl font-bold text-foreground">
+                        <h1 className="mb-2 font-display text-4xl font-normal uppercase tracking-wide text-foreground">
                             Centro de órdenes
                         </h1>
                         <p className="text-muted-foreground">
@@ -326,19 +329,19 @@ export function PosTablesPage() {
                         </p>
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                             <div className="flex items-center gap-2">
-                                <span className="size-4 rounded bg-success" />
+                                <span className="size-4 rounded bg-success-fill" />
                                 <span className="text-sm text-foreground">
                                     Disponible
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="size-4 rounded bg-danger" />
+                                <span className="size-4 rounded bg-danger-fill" />
                                 <span className="text-sm text-foreground">
                                     Ocupada
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="size-4 rounded bg-warning" />
+                                <span className="size-4 rounded bg-warning-fill" />
                                 <span className="text-sm text-foreground">
                                     Reservada
                                 </span>
@@ -356,6 +359,7 @@ export function PosTablesPage() {
                     </div>
                 </div>
             </main>
+            <VoiceDock areaId={activeAreaId ?? undefined} />
         </div>
     )
 }

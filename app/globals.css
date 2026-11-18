@@ -13,6 +13,11 @@
   --color-brand-charcoal: #191919;
   --color-brand-yellow: #fcbe28;
   --color-brand-orange: #f26c1e;
+  --color-brand-leaf: #4c8f21;
+  --color-brand-emerald: #0a5c33;
+  --color-brand-ink: #0b100d;
+  --color-wood: #1b110d;
+  --color-wood-ink: #14100d;
 
   /* Squared, in-app radii (6–12px) */
   --radius-sm: 0.375rem;
@@ -34,17 +39,31 @@
 /* Semantic tokens — light (default)                                   */
 /* ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
+  --background: #faf7f0;
   --surface: #ffffff;
-  --surface-muted: #f5f7f5;
-  --foreground: #191919;
-  --muted-foreground: #5c6660;
-  --border: #e4e7e3;
-  --primary: #143f29;
+  --surface-muted: #f2ecdf;
+  --foreground: #1a1713;
+  --muted-foreground: #5a5348;
+  --border: #e5dccb;
+  --primary: #35701a;
   --primary-foreground: #ffffff;
   --accent: #fcbe28;
   --accent-foreground: #191919;
-  --ring: #143f29;
+  --ring: #35701a;
+  --nav: #121212;
+  --nav-foreground: #f4efe4;
+  --menu-green: #457e20;
+  --cream: #ece4d3;
+  --primary-ink: #35701a;
+  --tone-leaf: #337d1f;
+  --chart-1: #35701a;
+  --chart-2: #e6a21a;
+  --chart-3: #d9561a;
+  --chart-4: #0f7a52;
+  --chart-5: #7a6a55;
+  --success-fill: #15803d;
+  --warning-fill: #b45309;
+  --danger-fill: #c62828;
   --success: #16a34a;
   --warning: #f59e0b;
   --danger: #dc2626;
@@ -56,13 +75,24 @@
 /* Semantic tokens — dark                                              */
 /* ------------------------------------------------------------------ */
 .dark {
-  --background: #0f1411;
-  --surface: #161d18;
-  --surface-muted: #1c241e;
-  --foreground: #f4f6f4;
-  --muted-foreground: #9aa79e;
-  --border: #2a352d;
-  --primary: #2f7a52;
+  --success-fill: #1d7f45;
+  --warning-fill: #b45309;
+  --danger-fill: #c0392b;
+  --primary-ink: #7bc65a;
+  --tone-leaf: #86d268;
+  --chart-1: #7bc65a;
+  --chart-2: #f2c14e;
+  --chart-3: #f59a5b;
+  --chart-4: #62c28d;
+  --chart-5: #b3a58f;
+
+  --background: #131110;
+  --surface: #1b1815;
+  --surface-muted: #221f1b;
+  --foreground: #f1ece0;
+  --muted-foreground: #a79f90;
+  --border: #2f2a23;
+  --primary: #417d1c;
   --primary-foreground: #ffffff;
   --accent: #fcbe28;
   --accent-foreground: #191919;
@@ -72,6 +102,98 @@
   --danger: #f87171;
 
   color-scheme: dark;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Landing brand layer (scoped: POS and admin keep the global tokens)  */
+/* Derived from the logo: forest/emerald green, leaf green, bill       */
+/* yellow, tail orange. Light is the primary identity; dark is a       */
+/* tuned variant (deeper surfaces, softer yellow), not an inversion.   */
+/* ------------------------------------------------------------------ */
+.landing {
+  --background: #faf7f0;
+  --surface: #ffffff;
+  --surface-muted: #f2ecdf;
+  --foreground: #1a1713;
+  --muted-foreground: #5a5348;
+  --border: #e5dccb;
+  --primary: #35701a;
+  --primary-ink: #35701a;
+  --accent: #fcbe28;
+
+  --hero: #0e2a1b;
+  --hero-foreground: #f6f8f2;
+  --hero-muted: #c9d8cd;
+  --hero-accent: #fcbe28;
+
+  --tone-leaf: #337d1f;
+  --tone-amber: #a15c00;
+  --tone-orange: #c2500f;
+  --tone-emerald: #0a5c33;
+  --cream: #ece4d3;
+
+  --nav: #121212;
+  --nav-foreground: #f4efe4;
+  --menu-green: #457e20;
+}
+
+.dark .landing,
+.landing .dark,
+.landing.dark {
+  --success-fill: #1d7f45;
+  --warning-fill: #b45309;
+  --danger-fill: #c0392b;
+
+  --background: #131110;
+  --surface: #1b1815;
+  --surface-muted: #221f1b;
+  --foreground: #f1ece0;
+  --muted-foreground: #a79f90;
+  --border: #2f2a23;
+  --primary: #417d1c;
+  --primary-ink: #7bc65a;
+  --accent: #f2c14e;
+
+  --hero: #0e2a1b;
+  --hero-foreground: #f1f4ee;
+  --hero-muted: #a9bdb0;
+  --hero-accent: #f2c14e;
+
+  --tone-leaf: #86d268;
+  --tone-amber: #f2c14e;
+  --tone-orange: #f59a5b;
+  --tone-emerald: #62c28d;
+  --cream: #ece4d3;
+
+  --nav: #121212;
+  --nav-foreground: #f4efe4;
+  --menu-green: #457e20;
+
+  color-scheme: dark;
+}
+
+/* Faithful preview of the real app (POS/admin) inside the landing. */
+.app-theme {
+  --background: #faf7f0;
+  --surface: #ffffff;
+  --surface-muted: #f2ecdf;
+  --foreground: #1a1713;
+  --muted-foreground: #5a5348;
+  --border: #e5dccb;
+  --primary: #35701a;
+  --primary-foreground: #ffffff;
+  --accent: #fcbe28;
+  --accent-foreground: #191919;
+  --ring: #35701a;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+  --success-fill: #15803d;
+  --warning-fill: #b45309;
+  --danger-fill: #c62828;
+
+  color-scheme: light;
 }
 
 /* ------------------------------------------------------------------ */
@@ -131,9 +253,26 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-success-fill: var(--success-fill);
+  --color-warning-fill: var(--warning-fill);
+  --color-danger-fill: var(--danger-fill);
+  --color-primary-ink: var(--primary-ink, var(--primary));
+  --color-cream: var(--cream);
+  --color-menu-green: var(--menu-green);
+  --color-nav: var(--nav);
+  --color-nav-foreground: var(--nav-foreground);
+  --color-tone-leaf: var(--tone-leaf);
+  --color-tone-amber: var(--tone-amber);
+  --color-tone-orange: var(--tone-orange);
+  --color-tone-emerald: var(--tone-emerald);
+  --color-hero: var(--hero);
+  --color-hero-foreground: var(--hero-foreground);
+  --color-hero-muted: var(--hero-muted);
+  --color-hero-accent: var(--hero-accent);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-anton), var(--font-geist-sans), sans-serif;
 }
 
 /* ------------------------------------------------------------------ */
@@ -269,6 +408,150 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Marketing motion primitives                                         */
+/* All motion is opt-in via no-preference; reduced motion = static.    */
+/* ------------------------------------------------------------------ */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@utility mask-fade-y {
+  mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);
+}
+
+@utility mask-fade-x {
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+
+@utility mask-radial {
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 75%);
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes ping-soft {
+  75%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes role-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-marquee {
+    animation: marquee var(--marquee-duration, 40s) linear infinite;
+  }
+
+  .group:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 7s ease-in-out 1.5s infinite;
+  }
+
+  .animate-ping-soft {
+    animation: ping-soft 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .animate-progress {
+    animation: progress-fill var(--progress-duration, 6s) linear forwards;
+    transform-origin: left;
+  }
+
+  .text-shine {
+    background-size: 200% auto;
+    animation: shine 6s linear infinite;
+  }
+
+  .animate-enter {
+    animation: enter 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter-delay, 0ms);
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    filter: blur(4px);
+    transition:
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .reveal[data-visible="true"] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Native input clean-up                                               */
 /* ------------------------------------------------------------------ */
 input[type="number"]::-webkit-outer-spin-button,
@@ -281,3 +564,73 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes toast-progress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+.toast-enter { animation: toast-in 180ms ease-out; }
+.toast-progress { animation: toast-progress linear forwards; }
+@media (prefers-reduced-motion: reduce) {
+    .toast-enter, .toast-progress { animation: none; }
+}
+
+/* Light palette used only to rasterize charts for exported reports. */
+.export-theme {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f2ecdf;
+  --foreground: #1a1713;
+  --muted-foreground: #5a5348;
+  --border: #e5dccb;
+  --primary: #35701a;
+  --primary-foreground: #ffffff;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+  --chart-1: #35701a;
+  --chart-2: #e6a21a;
+  --chart-3: #d9561a;
+  --chart-4: #0f7a52;
+  --chart-5: #7a6a55;
+  color: #1a1713;
+  color-scheme: light;
+}
+
+/* Public menu: product modal animations (enter and exit, driven by Radix data-state). */
+@keyframes menu-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes menu-fade-out { from { opacity: 1; } to { opacity: 0; } }
+/* Centering comes from Tailwind's `translate` property, so these only animate `transform`. */
+@keyframes menu-pop-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.95); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes menu-pop-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(14px) scale(0.95); }
+}
+.menu-overlay[data-state='open'] { animation: menu-fade-in 200ms ease-out both; }
+.menu-overlay[data-state='closed'] { animation: menu-fade-out 180ms ease-in both; }
+.menu-modal[data-state='open'] { animation: menu-pop-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.menu-modal[data-state='closed'] { animation: menu-pop-out 180ms ease-in both; }
+@media (prefers-reduced-motion: reduce) {
+  .menu-overlay, .menu-modal { animation-duration: 1ms !important; }
+}
+
+@keyframes menu-note-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.menu-note-in { animation: menu-note-in 420ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both; }
+@media (prefers-reduced-motion: reduce) { .menu-note-in { animation: none; } }
+
+/* Slim scrollbar that blends with dark surfaces (sidebar, lists, dialogs). */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3631 transparent;
+}
+.scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #3a3631; border-radius: 999px; }
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: #55504a; }

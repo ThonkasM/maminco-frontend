@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getActiveAreas } from '@/features/areas/api'
 import { getTables } from '@/features/tables/api'
 import { getActiveOrderByTable } from '@/features/pos/orders/api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = {
     areas: ['pos', 'areas'] as const,
@@ -16,11 +17,13 @@ export function usePosTables() {
 
     const areasQuery = useQuery({
         queryKey: KEYS.areas,
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getActiveAreas(signal),
     })
 
     const tablesQuery = useQuery({
         queryKey: KEYS.tables,
+        staleTime: STALE_TIME.live,
         queryFn: ({ signal }) => getTables(1, 1000, undefined, signal),
     })
 
@@ -28,6 +31,7 @@ export function usePosTables() {
 
     const activeOrdersQuery = useQuery({
         queryKey: KEYS.activeOrders,
+        staleTime: STALE_TIME.live,
         enabled: tables.length > 0,
         refetchInterval: 120000,
         queryFn: async ({ signal }) => {

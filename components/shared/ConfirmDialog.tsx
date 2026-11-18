@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import {
     Button,
     Dialog,
@@ -22,7 +23,7 @@ interface ConfirmDialogProps {
 
 export function useConfirmDialog() {
     const [open, setOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [loading] = useState(false)
     const [config, setConfig] = useState<ConfirmDialogProps | null>(null)
     const [resolveFn, setResolveFn] = useState<((value: boolean) => void) | null>(
         null,
@@ -45,13 +46,16 @@ export function useConfirmDialog() {
     const ConfirmDialogComponent = config ? (
         <Dialog open={open} onOpenChange={(next) => !next && finish(false)}>
             <DialogContent className="max-w-sm">
-                <DialogHeader>
+                <DialogHeader className="items-center text-center">
+                    <span className="mb-1 flex size-12 items-center justify-center rounded-full bg-danger/15 text-danger">
+                        <AlertTriangle className="size-6" aria-hidden="true" />
+                    </span>
                     <DialogTitle>{config.title}</DialogTitle>
                     <DialogDescription className="whitespace-pre-wrap">
                         {config.message}
                     </DialogDescription>
                 </DialogHeader>
-                <DialogFooter>
+                <DialogFooter className="sm:justify-center">
                     <Button
                         variant="secondary"
                         onClick={() => finish(false)}

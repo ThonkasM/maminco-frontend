@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Check, ChefHat, Clock, Play, Undo2 } from 'lucide-react'
 import {
     Badge,
@@ -40,15 +40,21 @@ const PREVIOUS: Partial<
     READY: { to: 'PREPARING', label: 'Volver' },
 }
 
-// `null` hasta montar en cliente: evita desajustes de hidratación con la hora.
-function useNow() {
-    const [now, setNow] = useState<number | null>(null)
-    useEffect(() => {
-        setNow(Date.now())
-        const id = setInterval(() => setNow(Date.now()), 60_000)
-        return () => clearInterval(id)
-    }, [])
-    return now
+function subscribeMinute(onChange: () => void) {
+    const id = setInterval(onChange, 60_000)
+    return () => clearInterval(id)
+}
+
+let minuteSnapshot = 0
+
+function getNowSnapshot() {
+    const current = Math.floor(Date.now() / 60_000) * 60_000
+    if (current !== minuteSnapshot) minuteSnapshot = current
+    return minuteSnapshot
+}
+
+function useNow(): number | null {
+    return useSyncExternalStore(subscribeMinute, getNowSnapshot, () => null)
 }
 
 function Elapsed({ since, now }: { since: string; now: number | null }) {
@@ -191,7 +197,7 @@ export function KitchenPage() {
         <div className="h-full overflow-auto p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                    <h1 className="font-display text-3xl font-normal uppercase tracking-wide text-foreground">
                         Cocina
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">

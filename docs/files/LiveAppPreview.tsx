@@ -26,10 +26,6 @@ const INITIAL: Status[] = [
 const BASE_TOTAL = 2480
 const TICK_MS = 2400
 
-/**
- * Guion de la demo. Está pensado para que, al aplicar todos los eventos,
- * las mesas vuelvan al estado INITIAL y el ciclo se pueda repetir sin saltos.
- */
 const EVENTS: TableEvent[] = [
   { table: 1, to: 'Ocupada', message: 'Mesa 2 abrió una orden', amount: 0 },
   { table: 0, to: 'Disponible', message: 'Mesa 1 pagó', amount: 186 },
@@ -47,10 +43,8 @@ const EVENTS: TableEvent[] = [
 ]
 
 const CYCLE_AMOUNT = EVENTS.reduce((sum, e) => sum + e.amount, 0)
-// La demo corre 3 vueltas y se detiene: no gasta batería ni CPU en segundo plano.
 const MAX_TICKS = EVENTS.length * 3
 
-// Formato manual (no toLocaleString) para evitar diferencias servidor/cliente al hidratar.
 function formatBs(value: number) {
   const [int, dec] = value.toFixed(2).split('.')
   return `Bs. ${int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${dec}`

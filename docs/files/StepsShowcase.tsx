@@ -261,7 +261,6 @@ export function StepsShowcase() {
       </div>
 
       <AppFrame url={current.url}>
-        {/* Los tres paneles comparten la misma celda: la altura no salta y el cambio es un fundido. */}
         <div className="grid">
           {(
             [

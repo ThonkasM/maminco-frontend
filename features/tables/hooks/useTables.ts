@@ -13,6 +13,7 @@ import {
     type TableStatus,
 } from '../api'
 import { getActiveAreas } from '@/features/areas/api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 interface TableFilters {
     areaId: string
@@ -37,6 +38,7 @@ export function useTables() {
 
     const query = useQuery({
         queryKey: [...KEYS.all, { page, ...filters }],
+        staleTime: STALE_TIME.live,
         queryFn: ({ signal }) =>
             getTables(
                 page,
@@ -51,6 +53,7 @@ export function useTables() {
 
     const areasQuery = useQuery({
         queryKey: KEYS.activeAreas,
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getActiveAreas(signal),
     })
 

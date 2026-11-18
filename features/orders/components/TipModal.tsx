@@ -1,5 +1,8 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+
+import { useResetOnChange } from '@/hooks/useResetOnChange'
+import { roundMoney } from '@/lib/utils/money'
+import { useMemo, useState } from 'react'
 import {
     Button,
     Dialog,
@@ -31,11 +34,10 @@ export function TipModal({
     const [tipPercentage, setTipPercentage] = useState(10)
     const [submitting, setSubmitting] = useState(false)
 
-    useEffect(() => {
-        if (!isOpen) return
+    useResetOnChange(isOpen, () => {
         setTipAmount(0)
         setTipPercentage(10)
-    }, [isOpen])
+    })
 
     const totalWithTip = useMemo(
         () => totalAmount + tipAmount,
@@ -43,7 +45,7 @@ export function TipModal({
     )
 
     const quickTip = (percentage: number) => {
-        const calculated = Math.round((totalAmount * percentage) / 100)
+        const calculated = roundMoney((totalAmount * percentage) / 100)
         setTipPercentage(percentage)
         setTipAmount(calculated)
     }

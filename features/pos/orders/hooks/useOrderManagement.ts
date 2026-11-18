@@ -4,7 +4,7 @@ import type { User } from '@/hooks/useAuth'
 import { useOrderQuery, usePosTable } from './useOrderQuery'
 import { useCart } from './useCart'
 import { useOrderMutations } from './useOrderMutations'
-import { useOrderSocket } from './useOrderSocket'
+import { useOrdersSocket } from '@/lib/realtime/useOrdersSocket'
 
 export function useOrderManagement(tableId: string, user: User | null) {
     const { table, loading: tableLoading, refetch: refetchTable } = usePosTable(tableId)
@@ -37,28 +37,32 @@ export function useOrderManagement(tableId: string, user: User | null) {
         return updated
     }, [refetchOrder, setOrder, applyServerOrder])
 
-    useOrderSocket({
+    useOrdersSocket({
         tableId,
-        onOrderItemAdded: () => {
-            void refreshOrder()
+        on: {
+            'order:item:added': () => {
+                void refreshOrder()
+            },
+            'order:item:removed': () => {
+                void refreshOrder()
+            },
+            'order:updated': () => {
+                void refreshOrder()
+            },
+            'order:status:changed': ({ newStatus }) => {
+                if (newStatus === 'CLOSED' || newStatus === 'CANCELLED') {
+                    setOrder(null)
+                    onOrderClosedRef.current?.(newStatus)
+                    return
+                }
+                void refreshOrder()
+            },
+            'table:state:updated': () => {
+                if (isRecentLocalChange()) return
+                void refreshOrder()
+            },
         },
-        onOrderItemRemoved: () => {
-            void refreshOrder()
-        },
-        onOrderUpdated: () => {
-            void refreshOrder()
-        },
-        onOrderStatusChanged: (data) => {
-            const status = data?.newStatus
-            if (status === 'CLOSED' || status === 'CANCELLED') {
-                setOrder(null)
-                onOrderClosedRef.current?.(status)
-                return
-            }
-            void refreshOrder()
-        },
-        onTableStateUpdated: () => {
-            if (isRecentLocalChange()) return
+        onConnect: () => {
             void refreshOrder()
         },
     })

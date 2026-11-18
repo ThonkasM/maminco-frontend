@@ -2,7 +2,9 @@ import { ApiError, apiFetch } from '@/lib/http/client'
 
 // ============ TYPES ============
 
-export type OrderStatus = 'DRAFT' | 'CLOSED' | 'CANCELLED'
+import type { OrderStatus } from '@/lib/types/enums'
+
+export type { OrderStatus }
 export type ServiceType = 'MESA' | 'DELIVERY' | 'RECOGER'
 
 export interface OrderItemResponseDto {
@@ -31,7 +33,6 @@ export interface OrderResponseDto {
     tipAmount: number
     total: number
 
-    // Mesa
     tableId: string
     tableName: string
     areaId: string
@@ -107,10 +108,6 @@ export function createOrder(
     return apiFetch('/api/orders', { method: 'POST', body: payload })
 }
 
-/**
- * Crea la orden si no existe, o retorna la activa de la mesa.
- * El serviceType se asigna automáticamente en el backend según table.area.name.
- */
 export async function createOrderIfNotExists(
     tableId: string,
     userId: string,
@@ -165,10 +162,6 @@ export function getOrderById(
     return apiFetch(`/api/orders/${id}`, { signal })
 }
 
-/**
- * Obtiene la orden activa (DRAFT) de una mesa.
- * Retorna null si no hay orden abierta.
- */
 export async function getActiveOrderByTable(
     tableId: string,
     signal?: AbortSignal,

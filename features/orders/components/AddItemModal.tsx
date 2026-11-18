@@ -1,5 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+
+import { useResetOnChange } from '@/hooks/useResetOnChange'
+import { useState } from 'react'
 import {
     Button,
     Dialog,
@@ -39,12 +41,11 @@ export function AddItemModal({
     const [notes, setNotes] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
-    useEffect(() => {
-        if (!isOpen) return
+    useResetOnChange(isOpen, () => {
         setProductId('')
         setQuantity(1)
         setNotes('')
-    }, [isOpen])
+    })
 
     const selectedProduct = products.find((p) => p.id === productId)
     const loading = submitting || isLoading

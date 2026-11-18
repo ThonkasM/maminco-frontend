@@ -1,5 +1,6 @@
 'use client'
 
+import { paymentMethodLabel } from '@/lib/utils/paymentMethod'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -10,11 +11,15 @@ import { useConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { formatCurrency } from '@/lib/utils/currency'
 import { getErrorMessage } from '@/lib/utils/errors'
-import { listPaymentMethods, type PaymentMethodDto } from '@/features/payments/api'
+import {
+    getPaymentMethods,
+    type PaymentMethodResponseDto as PaymentMethodDto,
+} from '@/features/pos/payments/api'
 import { useOrderManagement } from '@/features/pos/orders/hooks/useOrderManagement'
 import { usePaymentPosUI } from '@/features/pos/orders/hooks/usePaymentPosUI'
 import { usePosCatalog } from '@/features/pos/orders/hooks/usePosCatalog'
 import { processPayment } from '@/features/pos/payments/api'
+import { VoiceDock } from '@/features/voice/components/VoiceDock'
 import { CartItemsList } from './CartItemsList'
 import { CartSummary } from './CartSummary'
 import { ProductCatalog } from './ProductCatalog'
@@ -24,6 +29,7 @@ import { PaymentDetailView } from './PaymentDetailView'
 import { CashPaymentForm } from './CashPaymentForm'
 import { TransferPaymentForm } from './TransferPaymentForm'
 import { CardPaymentForm } from './CardPaymentForm'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 interface RegisteredPayment {
     paymentMethodId: string
@@ -74,7 +80,8 @@ export function PosOrderPage() {
 
     const { data: paymentMethods = [] } = useQuery({
         queryKey: ['pos', 'payment-methods'],
-        queryFn: ({ signal }) => listPaymentMethods(true, signal),
+        staleTime: STALE_TIME.reference,
+        queryFn: ({ signal }) => getPaymentMethods(signal),
         enabled: paymentMode,
     })
 
@@ -123,7 +130,7 @@ export function PosOrderPage() {
             ...prev,
             {
                 paymentMethodId: method.id,
-                methodName: method.name,
+                methodName: paymentMethodLabel(method.code, method.name),
                 methodCode: method.code,
                 amount,
             },
@@ -420,6 +427,7 @@ export function PosOrderPage() {
             </div>
 
             {ConfirmDialogComponent}
+            <VoiceDock tableNumber={table?.number} areaId={table?.areaId ?? undefined} />
         </div>
     )
 }

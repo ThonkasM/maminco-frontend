@@ -1,16 +1,6 @@
 'use client'
 import { BarChart3 } from 'lucide-react'
-import {
-    Bar,
-    CartesianGrid,
-    ComposedChart,
-    Legend,
-    Line,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts'
+import { TrendChart, type TrendRow } from '@/components/charts'
 import {
     Button,
     Card,
@@ -20,7 +10,6 @@ import {
     EmptyState,
     Skeleton,
 } from '@/components/ui'
-import { formatCurrency } from '@/lib/utils/currency'
 import type { TimeSeriesPoint } from '../api'
 
 type TrendGroupBy = 'day' | 'week' | 'month'
@@ -33,6 +22,9 @@ const GROUP_OPTIONS: { id: TrendGroupBy; label: string }[] = [
 
 interface SalesTrendChartProps {
     data: TimeSeriesPoint[]
+    previous?: TimeSeriesPoint[]
+    compare: boolean
+    onCompareChange: (value: boolean) => void
     loading: boolean
     error: string | null
     groupBy: TrendGroupBy
@@ -41,11 +33,21 @@ interface SalesTrendChartProps {
 
 export function SalesTrendChart({
     data,
+    previous,
+    compare,
+    onCompareChange,
     loading,
     error,
     groupBy,
     onGroupByChange,
 }: SalesTrendChartProps) {
+    const merged: TrendRow[] = data.map((point, index) => ({
+        label: point.period,
+        totalSales: point.totalSales,
+        totalOrders: point.totalOrders,
+        previousSales: compare ? (previous?.[index]?.totalSales ?? null) : null,
+    }))
+
     return (
         <Card>
             <CardHeader className="flex-row items-center justify-between gap-4">
@@ -54,6 +56,15 @@ export function SalesTrendChart({
                     Tendencia de ventas
                 </CardTitle>
                 <div className="flex items-center gap-2">
+                    <label className="mr-2 flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                        <input
+                            type="checkbox"
+                            checked={compare}
+                            onChange={(event) => onCompareChange(event.target.checked)}
+                            className="size-3.5 accent-[var(--primary)]"
+                        />
+                        Comparar con el periodo anterior
+                    </label>
                     <span className="hidden text-xs font-medium uppercase tracking-wide text-muted-foreground sm:inline">
                         Agrupar
                     </span>
@@ -87,79 +98,19 @@ export function SalesTrendChart({
                         description="No hay ventas para graficar en el rango seleccionado."
                     />
                 ) : (
-                    <ResponsiveContainer width="100%" height={340}>
-                        <ComposedChart
-                            data={data}
-                            margin={{
-                                top: 20,
-                                right: 20,
-                                left: 0,
-                                bottom: 20,
-                            }}
-                        >
-                            <CartesianGrid
-                                strokeDasharray="3 3"
-                                stroke="var(--border)"
-                            />
-                            <XAxis
-                                dataKey="period"
-                                tick={{
-                                    fontSize: 12,
-                                    fill: 'var(--muted-foreground)',
-                                }}
-                            />
-                            <YAxis
-                                yAxisId="sales"
-                                tick={{
-                                    fontSize: 12,
-                                    fill: 'var(--muted-foreground)',
-                                }}
-                            />
-                            <YAxis
-                                yAxisId="orders"
-                                orientation="right"
-                                allowDecimals={false}
-                                tick={{
-                                    fontSize: 12,
-                                    fill: 'var(--muted-foreground)',
-                                }}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'var(--surface)',
-                                    border: '1px solid var(--border)',
-                                    borderRadius: '8px',
-                                    color: 'var(--foreground)',
-                                }}
-                                formatter={(value, name) =>
-                                    name === 'Órdenes'
-                                        ? [String(value), name]
-                                        : [formatCurrency(Number(value)), name]
-                                }
-                            />
-                            <Legend
-                                wrapperStyle={{
-                                    color: 'var(--muted-foreground)',
-                                }}
-                            />
-                            <Bar
-                                yAxisId="sales"
-                                dataKey="totalSales"
-                                name="Ventas (Bs.)"
-                                fill="var(--primary)"
-                                radius={[8, 8, 0, 0]}
-                            />
-                            <Line
-                                yAxisId="orders"
-                                type="monotone"
-                                dataKey="totalOrders"
-                                name="Órdenes"
-                                stroke="var(--accent)"
-                                strokeWidth={2}
-                                dot={false}
-                            />
-                        </ComposedChart>
-                    </ResponsiveContainer>
+                    <TrendChart
+                        exportId="reports-trend"
+                        ariaLabel="Tendencia de ventas y órdenes"
+                        height={340}
+                        rows={merged}
+                        series={[
+                            { key: 'totalSales', label: 'Ventas (Bs.)', color: 'var(--chart-1)', kind: 'bar', format: 'currency' },
+                            ...(compare
+                                ? [{ key: 'previousSales', label: 'Periodo anterior (Bs.)', color: 'var(--chart-3)', kind: 'line' as const, format: 'currency' as const, dashed: true }]
+                                : []),
+                            { key: 'totalOrders', label: 'Órdenes', color: 'var(--chart-2)', kind: 'line', axis: 'right' },
+                        ]}
+                    />
                 )}
             </CardContent>
         </Card>

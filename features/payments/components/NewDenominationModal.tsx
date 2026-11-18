@@ -1,5 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+
+import { useResetOnChange } from '@/hooks/useResetOnChange'
+import { useState } from 'react'
 import { Banknote, Coins } from 'lucide-react'
 import {
     Button,
@@ -30,11 +32,10 @@ export function NewDenominationModal({
     const [type, setType] = useState<'COIN' | 'BILL'>('COIN')
     const [submitting, setSubmitting] = useState(false)
 
-    useEffect(() => {
-        if (!isOpen) return
+    useResetOnChange(isOpen, () => {
         setValue('')
         setType('COIN')
-    }, [isOpen])
+    })
 
     const numericValue = Number(value.replace(',', '.'))
     const isValid =

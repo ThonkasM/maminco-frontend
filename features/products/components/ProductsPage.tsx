@@ -12,6 +12,7 @@ import type { ProductResponse, CreateProductPayload } from '../api'
 import { useProducts } from '../hooks/useProducts'
 import { useProductsUI } from '../hooks/useProductsUI'
 import { ProductsTable } from './ProductsTable'
+import type { ImageChange } from '../hooks/useProducts'
 import { ProductFormModal } from './ProductFormModal'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 
@@ -50,11 +51,11 @@ export function ProductsPage() {
         setShowFormModal(true)
     }
 
-    const handleSubmit = async (payload: CreateProductPayload) => {
+    const handleSubmit = async (payload: CreateProductPayload, image?: ImageChange) => {
         if (editingProduct) {
-            await updateExistingProduct(editingProduct.id, payload)
+            await updateExistingProduct(editingProduct.id, payload, image)
         } else {
-            await createNewProduct(payload)
+            await createNewProduct(payload, image)
         }
     }
 
@@ -72,7 +73,7 @@ export function ProductsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                    <h2 className="font-display text-3xl font-normal uppercase tracking-wide text-foreground">
                         Gestión de productos
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">

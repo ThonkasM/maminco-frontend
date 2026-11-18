@@ -11,6 +11,7 @@ import {
     type CreateCategoryPayload,
     type UpdateCategoryPayload,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = { all: ['categories'] as const }
 
@@ -21,11 +22,13 @@ export function useCategories() {
 
     const query = useQuery({
         queryKey: [...KEYS.all, { page, search }],
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getCategories(page, 10, search || undefined, signal),
     })
 
     const namesQuery = useQuery({
         queryKey: [...KEYS.all, 'names'],
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getCategories(1, 1000, undefined, signal),
     })
 

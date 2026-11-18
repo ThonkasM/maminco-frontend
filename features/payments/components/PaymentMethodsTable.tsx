@@ -1,4 +1,6 @@
 'use client'
+
+import { paymentMethodLabel } from '@/lib/utils/paymentMethod'
 import { Banknote, CreditCard } from 'lucide-react'
 import {
     Badge,
@@ -26,7 +28,7 @@ export function PaymentMethodsTable({
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                <h2 className="font-display text-3xl font-normal uppercase tracking-wide text-foreground">
                     Métodos de pago
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -71,7 +73,7 @@ export function PaymentMethodsTable({
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <h3 className="font-medium text-foreground">
-                                                    {method.name}
+                                                    {paymentMethodLabel(method.code, method.name)}
                                                 </h3>
                                                 <code className="rounded bg-surface-muted px-2 py-0.5 text-xs text-muted-foreground">
                                                     {method.code}

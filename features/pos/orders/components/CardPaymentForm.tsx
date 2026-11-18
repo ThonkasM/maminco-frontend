@@ -1,5 +1,6 @@
 'use client'
 
+import { parseMoney, roundMoney } from '@/lib/utils/money'
 import React, { useState } from 'react'
 import { CreditCard, Delete } from 'lucide-react'
 import { Button } from '@/components/ui'
@@ -25,7 +26,7 @@ export const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
 }) => {
     const [amountPaid, setAmountPaid] = useState('')
 
-    const paidAmount = parseFloat(amountPaid) || 0
+    const paidAmount = roundMoney(parseMoney(amountPaid))
     const canConfirm = paidAmount > 0
 
     const handleDigitClick = (digit: string) => {

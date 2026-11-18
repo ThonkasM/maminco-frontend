@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useSyncExternalStore } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Button, Spinner } from '@/components/ui'
 
@@ -11,6 +11,8 @@ interface AdminGuardProps {
      */
     allowedRoles?: string[]
 }
+
+const subscribeNoop = () => () => {}
 
 function DeniedMessage({ message }: { message: string }) {
     return (
@@ -36,11 +38,11 @@ export default function AdminGuard({
     allowedRoles,
 }: AdminGuardProps) {
     const user = useAuth((state) => state.user)
-    const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
+    const mounted = useSyncExternalStore(
+        subscribeNoop,
+        () => true,
+        () => false,
+    )
 
     if (!mounted) {
         return (

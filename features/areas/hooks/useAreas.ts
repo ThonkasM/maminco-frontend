@@ -10,6 +10,7 @@ import {
     updateArea,
     type CreateAreaPayload,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = { all: ['areas'] as const }
 
@@ -20,6 +21,7 @@ export function useAreas() {
 
     const query = useQuery({
         queryKey: [...KEYS.all, { page, search }],
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getAreas(page, 10, search || undefined, signal),
     })
 

@@ -113,3 +113,12 @@ export function buildPresetRange(
             return { from: today, to: today }
     }
 }
+
+export function previousRange(range: DateRange): DateRange {
+    const days = diffDays(range.from, range.to) + 1
+    const end = parseIsoDate(range.from)
+    end.setUTCDate(end.getUTCDate() - 1)
+    const start = new Date(end)
+    start.setUTCDate(start.getUTCDate() - (days - 1))
+    return { from: formatIsoDate(start), to: formatIsoDate(end) }
+}

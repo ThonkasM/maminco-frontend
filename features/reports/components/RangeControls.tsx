@@ -19,6 +19,9 @@ interface RangeControlsProps {
     onAreaIdChange: (value: string) => void
     tableId: string
     onTableIdChange: (value: string) => void
+    shiftId?: string
+    onShiftIdChange?: (value: string) => void
+    shifts?: { id: string; name: string; start: string; end: string }[]
     areas: AreaResponse[]
     tables: TableResponse[]
     loadingFilters: boolean
@@ -36,6 +39,9 @@ export function RangeControls({
     onAreaIdChange,
     tableId,
     onTableIdChange,
+    shiftId = '',
+    onShiftIdChange,
+    shifts = [],
     areas,
     tables,
     loadingFilters,
@@ -89,7 +95,7 @@ export function RangeControls({
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${onShiftIdChange ? 'lg:grid-cols-3' : ''}`}>
                     <div className="space-y-1.5">
                         <Label htmlFor="report-area">Área</Label>
                         <Select
@@ -123,6 +129,19 @@ export function RangeControls({
                             ))}
                         </Select>
                     </div>
+                    {onShiftIdChange && (
+                        <div className="space-y-1.5">
+                            <Label htmlFor="report-shift">Turno</Label>
+                            <Select id="report-shift" value={shiftId} disabled={loadingFilters} onChange={(e) => onShiftIdChange(e.target.value)}>
+                                <option value="">Todos los turnos</option>
+                                {shifts.map((shift) => (
+                                    <option key={shift.id} value={shift.id}>
+                                        {shift.name} · {shift.start}–{shift.end}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>

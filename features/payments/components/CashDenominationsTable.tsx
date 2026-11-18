@@ -87,7 +87,7 @@ export function CashDenominationsTable({
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                <h2 className="font-display text-3xl font-normal uppercase tracking-wide text-foreground">
                     Denominaciones de efectivo
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">

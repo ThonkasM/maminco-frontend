@@ -1,14 +1,14 @@
 import { apiFetch } from '@/lib/http/client'
 
-/**
- * DTOs para el flujo de pagos
- */
 
 export interface PaymentMethodResponseDto {
     id: string
     name: string
+    code: string
     description?: string
     isActive: boolean
+    createdAt: Date
+    updatedAt: Date
 }
 
 export interface ProcessPaymentDto {
@@ -23,7 +23,6 @@ export interface PaymentProcessResponseDto {
     status: 'PENDING_CONFIRMATION' | 'COMPLETED' | 'ERROR' | 'PARTIAL_PAYMENT'
     message: string
 
-    // Datos del pago (si fue completado o está pendiente)
     orderId?: string
     orderNumber?: string
     paymentId?: string
@@ -34,18 +33,14 @@ export interface PaymentProcessResponseDto {
     totalDue?: number
     paymentMethod?: string
 
-    // Estado de la orden después del pago
     orderStatus?: 'CLOSED' | 'DRAFT' | 'CANCELLED'
 
-    // Para múltiples pagos parciales
     totalPaidSoFar?: number // Total pagado hasta ahora (incluyendo este pago)
     pendingBalance?: number // Saldo pendiente después de este pago
     isPaid?: boolean // true si la orden está completamente pagada
 
-    // Para confirmación de propina
     difference?: number
 
-    // Para errores
     error?: string
 }
 
@@ -69,22 +64,12 @@ export interface PaymentResponseDto {
     createdAt: Date
 }
 
-/**
- * Obtiene todos los métodos de pago disponibles
- */
 export function getPaymentMethods(
     signal?: AbortSignal,
 ): Promise<PaymentMethodResponseDto[]> {
     return apiFetch('/api/payments/methods', { signal })
 }
 
-/**
- * Procesa un pago en una orden
- *
- * @param orderId - ID de la orden a pagar
- * @param dto - Datos del pago
- * @returns Información del pago procesado
- */
 export function processPayment(
     orderId: string,
     dto: ProcessPaymentDto,
@@ -95,9 +80,6 @@ export function processPayment(
     })
 }
 
-/**
- * Obtiene todos los pagos de una orden
- */
 export function getPaymentsByOrder(
     orderId: string,
     signal?: AbortSignal,

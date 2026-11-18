@@ -1,7 +1,8 @@
 import { apiFetch } from '@/lib/http/client'
 
-export type OrderStatus = 'DRAFT' | 'CLOSED' | 'CANCELLED'
-export type OrderKitchenStatus = 'PENDING' | 'PREPARING' | 'READY'
+import type { OrderKitchenStatus, OrderStatus } from '@/lib/types/enums'
+
+export type { OrderKitchenStatus, OrderStatus }
 export type ServiceType = 'MESA' | 'DELIVERY' | 'RECOGER'
 
 export interface OrderItemResponseDto {

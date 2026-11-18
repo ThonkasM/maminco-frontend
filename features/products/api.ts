@@ -21,6 +21,11 @@ export interface UpdateProductPayload {
     isActive?: boolean
 }
 
+export interface ProductImage {
+    thumb: string
+    large: string
+}
+
 export interface ProductResponse {
     id: string
     name: string
@@ -32,6 +37,7 @@ export interface ProductResponse {
     stockGroupName?: string
     individualStock?: number
     isAvailable: boolean
+    image?: ProductImage | null
     isActive: boolean
     createdAt: string
     updatedAt: string
@@ -103,4 +109,14 @@ export function updateProduct(
 
 export function deleteProduct(id: string): Promise<ProductResponse> {
     return apiFetch(`/api/products/${id}`, { method: 'DELETE' })
+}
+
+export function uploadProductImage(id: string, file: File): Promise<ProductResponse> {
+    const body = new FormData()
+    body.append('file', file)
+    return apiFetch(`/api/products/${id}/image`, { method: 'POST', body })
+}
+
+export function deleteProductImage(id: string): Promise<ProductResponse> {
+    return apiFetch(`/api/products/${id}/image`, { method: 'DELETE' })
 }

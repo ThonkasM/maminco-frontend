@@ -52,13 +52,11 @@ const Select = React.forwardRef<
         },
         ref,
     ) => {
-        let legacyOptions = false
         let legacyPlaceholder: React.ReactNode
         const items: React.ReactNode[] = []
 
         React.Children.forEach(children, (child) => {
             if (isOptionElement(child)) {
-                legacyOptions = true
                 const optionValue = String(child.props.value ?? '')
                 if (optionValue === '') {
                     legacyPlaceholder = child.props.children

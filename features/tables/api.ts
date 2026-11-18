@@ -1,6 +1,8 @@
 import { apiFetch } from '@/lib/http/client'
 
-export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED'
+import type { TableStatus } from '@/lib/types/enums'
+
+export type { TableStatus }
 
 export interface CreateTablePayload {
     number: number

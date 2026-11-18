@@ -9,6 +9,7 @@ import {
     listCashDenominations,
     type CashDenominationDto,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 export interface NewDenominationForm {
     value: string
@@ -27,6 +28,7 @@ export function useCashDenominations() {
 
     const query = useQuery({
         queryKey: KEYS.all,
+        staleTime: STALE_TIME.reference,
         queryFn: ({ signal }) => listCashDenominations(true, signal),
     })
 

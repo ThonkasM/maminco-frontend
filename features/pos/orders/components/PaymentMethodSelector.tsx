@@ -1,5 +1,6 @@
 'use client'
 
+import { paymentMethodLabel } from '@/lib/utils/paymentMethod'
 import React from 'react'
 import { Banknote, Building2, CreditCard } from 'lucide-react'
 import { Button, EmptyState } from '@/components/ui'
@@ -74,7 +75,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                         >
                             {getPaymentIcon(method.code)}
                             <span className="text-sm font-semibold">
-                                {method.name}
+                                {paymentMethodLabel(method.code, method.name)}
                             </span>
                         </Button>
                     ))

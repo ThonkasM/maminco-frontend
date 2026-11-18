@@ -3,6 +3,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiLogin, parseJwt } from '@/features/auth/api'
 import { resetSocket } from '@/lib/realtime/socket'
+import { clearAuthCookie, setAuthCookie } from '@/lib/auth/cookie'
+import { decodeJwt, isTokenExpired } from '@/lib/auth/jwt'
 
 export type User = {
     id: string
@@ -59,26 +61,26 @@ export const useAuth = create<AuthState>()(
                     throw new Error('Token inválido')
                 }
                 set({ token, user: userFromToken(token) })
-                try {
-                    const expires = new Date()
-                    expires.setDate(expires.getDate() + 7)
-                    document.cookie = `token=${token}; path=/; expires=${expires.toUTCString()}`
-                } catch {
-                    // cookie no disponible
-                }
+                setAuthCookie(token)
             },
             logout() {
                 set({ token: null, user: null })
-                try {
-                    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-                } catch {
-                    // ignore
-                }
+                clearAuthCookie()
                 resetSocket()
             },
         }),
         {
             name: 'maminco-auth',
+            partialize: (state) => ({ token: state.token, user: state.user }),
+            onRehydrateStorage: () => (state) => {
+                if (!state?.token) return
+                if (isTokenExpired(decodeJwt(state.token))) {
+                    state.setToken(null)
+                    clearAuthCookie()
+                    return
+                }
+                setAuthCookie(state.token)
+            },
         },
     ),
 )

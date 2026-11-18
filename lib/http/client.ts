@@ -39,6 +39,11 @@ export function getAuthToken(): string | null {
     }
 }
 
+function authHeaders(): Record<string, string> {
+    const token = getAuthToken()
+    return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export function getHeaders(additionalHeaders?: Record<string, string>) {
     const token = getAuthToken()
     const headers: Record<string, string> = {
@@ -89,15 +94,18 @@ export async function apiFetch<T = unknown>(
     options: ApiFetchOptions = {},
 ): Promise<T> {
     const { body, auth = true, query, headers, ...rest } = options
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData
 
     const response = await fetch(buildUrl(path, query), {
         ...rest,
-        headers: {
-            'Content-Type': 'application/json',
-            ...(auth ? getHeaders() : {}),
-            ...headers,
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: isForm
+            ? { ...(auth ? authHeaders() : {}), ...headers }
+            : {
+                  'Content-Type': 'application/json',
+                  ...(auth ? getHeaders() : {}),
+                  ...headers,
+              },
+        body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
     })
 
     if (response.status === 401) {

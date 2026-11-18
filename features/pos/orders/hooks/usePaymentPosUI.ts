@@ -1,25 +1,19 @@
 import { useState } from 'react'
 
 interface UsePaymentNegocioUIReturn {
-    // Estado de modal
     showPaymentModal: boolean
 
-    // Estado de flujo de pago
     paymentMode: boolean
     selectedPaymentMethod: string | null
     paymentLoading: boolean
 
-    // Handlers para abrir/cerrar
     handleOpenPaymentModal: () => void
     handleClosePaymentModal: () => void
 
-    // Handler para seleccionar método de pago
     handleSelectPaymentMethod: (methodId: string) => void
 
-    // Handler para resetear selección (permite agregar otro pago)
     handleResetPaymentSelection: () => void
 
-    // Setters para comunicación con componente padre
     setShowPaymentModal: (show: boolean) => void
     setPaymentMode: (mode: boolean) => void
     setSelectedPaymentMethod: (methodId: string | null) => void

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { ReceiptText } from 'lucide-react'
 import { Button, Spinner } from '@/components/ui'
 import { toast } from '@/components/shared/ToastProvider'
+import { printPaymentReceipt } from '@/features/printing/api'
 import { getErrorMessage } from '@/lib/utils/errors'
 
 interface PrintPaymentReceiptButtonProps {
@@ -23,25 +24,7 @@ export function PrintPaymentReceiptButton({
         try {
             setLoading(true)
 
-            const response = await fetch(
-                `/api/printing/payment-receipt/${orderId}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                },
-            )
-
-            if (!response.ok) {
-                const errorData = await response
-                    .json()
-                    .catch(() => ({ error: 'Error desconocido' }))
-                throw new Error(
-                    errorData.error ||
-                        `Error ${response.status}: ${response.statusText}`,
-                )
-            }
-
-            const data = await response.json()
+            const data = await printPaymentReceipt(orderId)
             if (data.success) {
                 toast.success(data.message)
             } else {

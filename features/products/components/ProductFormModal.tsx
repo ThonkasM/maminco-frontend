@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ImagePlus, Trash2 } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,7 +15,12 @@ import {
     Select,
     Textarea,
 } from '@/components/ui'
+import { ProductImage } from '@/components/shared/ProductImage'
+import { toast } from '@/components/shared/ToastProvider'
+import { ImageCropDialog } from '@/components/shared/ImageCropDialog'
+import { IMAGE_ACCEPT, ImageValidationError, validateImageFile } from '@/lib/image/prepare'
 import type { ProductResponse, CreateProductPayload } from '@/features/products/api'
+import type { ImageChange } from '@/features/products/hooks/useProducts'
 import type { CategoryResponse } from '@/features/categories/api'
 
 function makeSchema(existingNames: Set<string>, product: ProductResponse | null) {
@@ -52,7 +58,7 @@ interface ProductFormModalProps {
     product: ProductResponse | null
     categories: CategoryResponse[]
     existingNames: Set<string>
-    onSubmit: (payload: CreateProductPayload) => Promise<void>
+    onSubmit: (payload: CreateProductPayload, image?: ImageChange) => Promise<void>
     onClose: () => void
     isLoading?: boolean
 }
@@ -71,6 +77,10 @@ export function ProductFormModal({
         [existingNames, product],
     )
     const [submitting, setSubmitting] = useState(false)
+    const [photo, setPhoto] = useState<File | null>(null)
+    const [preview, setPreview] = useState<string | null>(null)
+    const [removePhoto, setRemovePhoto] = useState(false)
+    const fileInput = useRef<HTMLInputElement>(null)
 
     const {
         register,
@@ -90,6 +100,12 @@ export function ProductFormModal({
 
     useEffect(() => {
         if (!isOpen) return
+        setPhoto(null)
+        setRemovePhoto(false)
+        setPreview((current) => {
+            if (current) URL.revokeObjectURL(current)
+            return null
+        })
         reset({
             name: product?.name ?? '',
             description: product?.description ?? '',
@@ -98,15 +114,53 @@ export function ProductFormModal({
         })
     }, [isOpen, product, reset])
 
+    const [cropSource, setCropSource] = useState<File | null>(null)
+
+    const pickPhoto = (file: File | undefined) => {
+        if (!file) return
+        try {
+            validateImageFile(file)
+            setCropSource(file)
+        } catch (error) {
+            toast.error(error instanceof ImageValidationError ? error.message : 'No se pudo leer la imagen.')
+        } finally {
+            if (fileInput.current) fileInput.current.value = ''
+        }
+    }
+
+    const applyCrop = (cropped: File) => {
+        setPhoto(cropped)
+        setRemovePhoto(false)
+        setPreview((current) => {
+            if (current) URL.revokeObjectURL(current)
+            return URL.createObjectURL(cropped)
+        })
+        setCropSource(null)
+    }
+
+    const clearPhoto = () => {
+        setPhoto(null)
+        setPreview((current) => {
+            if (current) URL.revokeObjectURL(current)
+            return null
+        })
+        if (product?.image) setRemovePhoto(true)
+    }
+
+    const shownImage = preview ? { thumb: preview, large: preview } : removePhoto ? null : (product?.image ?? null)
+
     const submit = handleSubmit(async (values) => {
         setSubmitting(true)
         try {
-            await onSubmit({
-                name: values.name.trim(),
-                description: values.description.trim() || undefined,
-                price: Number(values.price),
-                categoryId: values.categoryId,
-            })
+            await onSubmit(
+                {
+                    name: values.name.trim(),
+                    description: values.description.trim() || undefined,
+                    price: Number(values.price),
+                    categoryId: values.categoryId,
+                },
+                photo ? { file: photo } : removePhoto ? { remove: true } : undefined,
+            )
             onClose()
         } finally {
             setSubmitting(false)
@@ -117,7 +171,7 @@ export function ProductFormModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-h-[92vh] max-w-md overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {product ? 'Editar producto' : 'Nuevo producto'}
@@ -125,6 +179,36 @@ export function ProductFormModal({
                 </DialogHeader>
 
                 <form onSubmit={submit} className="space-y-4">
+                    <div className="flex items-center gap-4 rounded-lg border border-border bg-surface-muted/50 p-3">
+                        <ProductImage image={shownImage} alt={product?.name ?? 'Foto del producto'} size={88} variant="large" />
+                        <div className="min-w-0 flex-1 space-y-2">
+                            <p className="text-sm font-medium text-foreground">Foto del producto</p>
+                            <p className="text-xs text-muted-foreground">
+                                JPG, PNG o WebP. Podrás ajustar el recorte circular. Se convierte a WebP automáticamente para que cargue rápido.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                <input
+                                    ref={fileInput}
+                                    type="file"
+                                    accept={IMAGE_ACCEPT}
+                                    className="sr-only"
+                                    aria-label="Elegir foto"
+                                    onChange={(event) => pickPhoto(event.target.files?.[0])}
+                                />
+                                <Button type="button" size="sm" variant="secondary" onClick={() => fileInput.current?.click()}>
+                                    <ImagePlus />
+                                    {shownImage ? 'Cambiar' : 'Subir foto'}
+                                </Button>
+                                {shownImage && (
+                                    <Button type="button" size="sm" variant="ghost" onClick={clearPhoto}>
+                                        <Trash2 />
+                                        Quitar
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     <FormField label="Nombre" required error={errors.name?.message}>
                         <Input
                             autoFocus
@@ -200,6 +284,7 @@ export function ProductFormModal({
                     </div>
                 </form>
             </DialogContent>
+            <ImageCropDialog file={cropSource} onCancel={() => setCropSource(null)} onConfirm={applyCrop} />
         </Dialog>
     )
 }

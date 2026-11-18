@@ -13,12 +13,24 @@ import {
   Store,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardContent } from '@/components/ui/Card'
+import { Reveal } from './Reveal'
+import { SpotlightCard } from './SpotlightCard'
 import { formatBs } from './formatBs'
 
-function IconBadge({ children }: { children: ReactNode }) {
+type Tone = 'leaf' | 'amber' | 'orange' | 'emerald'
+
+const TONE_STYLE: Record<Tone, string> = {
+  leaf: 'bg-tone-leaf/12 text-tone-leaf ring-tone-leaf/25',
+  amber: 'bg-tone-amber/12 text-tone-amber ring-tone-amber/30',
+  orange: 'bg-tone-orange/12 text-tone-orange ring-tone-orange/25',
+  emerald: 'bg-tone-emerald/12 text-tone-emerald ring-tone-emerald/25',
+}
+
+function IconBadge({ children, tone = 'leaf' }: { children: ReactNode; tone?: Tone }) {
   return (
-    <span className="flex size-11 items-center justify-center rounded-md bg-primary/10 text-primary">
+    <span
+      className={`flex size-11 items-center justify-center rounded-xl ring-1 ring-inset transition-transform duration-300 group-hover/spot:-rotate-6 group-hover/spot:scale-110 motion-reduce:transform-none ${TONE_STYLE[tone]}`}
+    >
       {children}
     </span>
   )
@@ -82,7 +94,7 @@ function PhonePreview() {
     >
       <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-border" />
       <p className="text-xs font-medium text-muted-foreground">Ventas de hoy</p>
-      <p className="font-mono text-lg font-semibold tabular-nums text-primary">
+      <p className="font-mono text-lg font-semibold tabular-nums text-primary-ink">
         {formatBs(2480)}
       </p>
       <ul className="mt-3 space-y-2">
@@ -190,24 +202,35 @@ function KitchenPreview() {
   )
 }
 
-const ALSO_INCLUDES = [
+const ALSO_ICON_TONE: Record<Tone, string> = {
+  leaf: 'text-tone-leaf',
+  amber: 'text-tone-amber',
+  orange: 'text-tone-orange',
+  emerald: 'text-tone-emerald',
+}
+
+const ALSO_INCLUDES: { icon: typeof Monitor; tone: Tone; title: string; text: string }[] = [
   {
     icon: Monitor,
+    tone: 'emerald',
     title: 'Panel web administrativo',
     text: 'Áreas, mesas, productos y usuarios en un solo lugar.',
   },
   {
     icon: CreditCard,
+    tone: 'leaf',
     title: 'Pagos y cierre de caja',
     text: 'Efectivo, tarjeta y transferencia, con cierre por turno.',
   },
   {
     icon: BarChart3,
+    tone: 'amber',
     title: 'Reportes',
     text: 'Ventas por producto, categoría y área.',
   },
   {
     icon: Server,
+    tone: 'orange',
     title: 'Nube u On-Premise',
     text: 'Con Docker, respaldos y monitoreo del servicio.',
   },
@@ -216,11 +239,12 @@ const ALSO_INCLUDES = [
 export function FeaturesBento() {
   return (
     <>
-      <div className="mt-14 grid gap-4 lg:grid-cols-6">
-        <Card className="overflow-hidden lg:col-span-4">
-          <CardContent className="grid gap-6 p-6 md:grid-cols-[1fr_16rem] md:items-center">
+      <div className="mt-16 grid gap-4 lg:grid-cols-6">
+        <Reveal className="lg:col-span-4">
+        <SpotlightCard className="h-full">
+          <div className="grid h-full gap-6 p-6 sm:p-8 md:grid-cols-[1fr_16rem] md:items-center">
             <div>
-              <IconBadge>
+              <IconBadge tone="leaf">
                 <Store className="size-5" />
               </IconBadge>
               <h3 className="mt-4 text-xl font-semibold tracking-tight">
@@ -232,12 +256,14 @@ export function FeaturesBento() {
               </p>
             </div>
             <TicketPreview />
-          </CardContent>
-        </Card>
+          </div>
+        </SpotlightCard>
+        </Reveal>
 
-        <Card className="flex flex-col overflow-hidden lg:col-span-2 lg:row-span-2">
-          <CardContent className="flex flex-1 flex-col p-6 pb-0">
-            <IconBadge>
+        <Reveal delay={90} className="lg:col-span-2 lg:row-span-2">
+        <SpotlightCard className="h-full">
+          <div className="flex h-full flex-col p-6 pb-0 sm:p-8 sm:pb-0">
+            <IconBadge tone="amber">
               <Smartphone className="size-5" />
             </IconBadge>
             <h3 className="mt-4 text-xl font-semibold tracking-tight">
@@ -249,12 +275,14 @@ export function FeaturesBento() {
             <div className="mt-auto">
               <PhonePreview />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </SpotlightCard>
+        </Reveal>
 
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <IconBadge>
+        <Reveal delay={120} className="lg:col-span-2">
+        <SpotlightCard className="h-full">
+          <div className="p-6 sm:p-8">
+            <IconBadge tone="emerald">
               <Radio className="size-5" />
             </IconBadge>
             <h3 className="mt-4 text-xl font-semibold tracking-tight">
@@ -272,19 +300,21 @@ export function FeaturesBento() {
                 Orden
               </span>
               <ArrowRight className="size-3.5 text-muted-foreground" />
-              <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-primary">
+              <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-primary-ink">
                 Pagada
               </span>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
               Mesas, órdenes y pagos sincronizados al instante: menos errores, más rotación.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </SpotlightCard>
+        </Reveal>
 
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <IconBadge>
+        <Reveal delay={180} className="lg:col-span-2">
+        <SpotlightCard className="h-full">
+          <div className="p-6 sm:p-8">
+            <IconBadge tone="orange">
               <Brain className="size-5" />
             </IconBadge>
             <h3 className="mt-4 text-xl font-semibold tracking-tight">
@@ -296,17 +326,15 @@ export function FeaturesBento() {
             <p className="mt-3 text-sm text-muted-foreground">
               Anticipa la demanda y las horas pico para planificar compras y personal.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </SpotlightCard>
+        </Reveal>
 
-        {/* Cocina Digitalizada */}
-        <Card
-          id="cocina"
-          className="scroll-mt-20 overflow-hidden lg:col-span-6"
-        >
-          <CardContent className="grid gap-6 p-6 md:grid-cols-[1fr_22rem] md:items-center">
+        <Reveal id="cocina" className="scroll-mt-24 lg:col-span-6">
+        <SpotlightCard>
+          <div className="grid gap-6 p-6 sm:p-8 md:grid-cols-[1fr_24rem] md:items-center">
             <div>
-              <IconBadge>
+              <IconBadge tone="leaf">
                 <ChefHat className="size-5" />
               </IconBadge>
               <h3 className="mt-4 text-xl font-semibold tracking-tight">
@@ -328,26 +356,27 @@ export function FeaturesBento() {
                     key={item}
                     className="flex items-start gap-2 text-sm text-muted-foreground"
                   >
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary-ink" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
             <KitchenPreview />
-          </CardContent>
-        </Card>
+          </div>
+        </SpotlightCard>
+        </Reveal>
       </div>
 
-      <ul className="mt-10 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-        {ALSO_INCLUDES.map(({ icon: Icon, title, text }) => (
-          <li key={title} className="flex gap-3 border-t border-border pt-4">
-            <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
+      <ul className="mt-12 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+        {ALSO_INCLUDES.map(({ icon: Icon, tone, title, text }, index) => (
+          <Reveal as="li" key={title} delay={index * 80} className="flex gap-3 border-t border-border pt-4">
+            <Icon className={`mt-0.5 size-5 shrink-0 ${ALSO_ICON_TONE[tone]}`} />
             <div>
               <p className="text-sm font-semibold text-foreground">{title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{text}</p>
             </div>
-          </li>
+          </Reveal>
         ))}
       </ul>
     </>

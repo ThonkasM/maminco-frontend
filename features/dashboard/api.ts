@@ -6,7 +6,7 @@ export interface DailySalesDto {
     averageOrderValue: number
     totalDiscount: number
     totalTips: number
-    mesaOrders: number
+    tableOrders: number
     virtualOrders: number
 }
 

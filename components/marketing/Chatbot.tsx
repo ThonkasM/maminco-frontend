@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { Bot, MessageCircle, Send, X } from 'lucide-react'
+import Image from 'next/image'
+import { MessageCircle, Send, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/lib/utils/cn'
@@ -13,6 +14,8 @@ interface ChatMessage {
   text: string
   suggestions?: FaqItem[]
 }
+
+export const OPEN_CHATBOT_EVENT = 'maminco:open-chatbot'
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
@@ -37,6 +40,12 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
   const [input, setInput] = React.useState('')
   const idRef = React.useRef(0)
   const listRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const handleOpen = () => setOpen(true)
+    window.addEventListener(OPEN_CHATBOT_EVENT, handleOpen)
+    return () => window.removeEventListener(OPEN_CHATBOT_EVENT, handleOpen)
+  }, [])
 
   React.useEffect(() => {
     if (!open) return
@@ -80,15 +89,13 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
           id="maminco-chatbot-panel"
           role="dialog"
           aria-label="Asistente de Maminco"
-          className="flex h-[30rem] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-float"
+          className="flex h-[30rem] w-[min(22rem,calc(100vw-2rem))] origin-bottom-right flex-col overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-float motion-safe:animate-[role-in_250ms_ease-out]"
         >
-          <div className="flex items-center gap-3 border-b border-border bg-primary px-4 py-3 text-primary-foreground">
-            <span className="flex size-8 items-center justify-center rounded-full bg-primary-foreground/15">
-              <Bot className="size-4" aria-hidden="true" />
-            </span>
+          <div className="flex items-center gap-3 border-b-[3px] border-brand-leaf bg-nav px-4 py-3 text-nav-foreground">
+            <Image src="/maminco-logo-128.png" alt="" width={36} height={36} className="size-9 rounded-lg" />
             <div className="flex-1">
               <p className="text-sm font-semibold">Asistente Maminco</p>
-              <p className="text-xs text-primary-foreground/70">
+              <p className="text-xs text-nav-foreground/70">
                 Respuestas sobre el producto
               </p>
             </div>
@@ -96,7 +103,7 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Cerrar asistente"
-              className="rounded-md p-1 transition-colors hover:bg-primary-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded-md p-1 transition-colors hover:bg-nav-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -117,10 +124,10 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
               >
                 <p
                   className={cn(
-                    'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                    'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
                     message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-surface-muted text-foreground',
+                      ? 'rounded-br-sm bg-menu-green text-white'
+                      : 'rounded-bl-sm border border-border bg-surface text-foreground',
                   )}
                 >
                   {message.text}
@@ -133,7 +140,7 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
                         key={suggestion.id}
                         type="button"
                         onClick={() => send(suggestion.question)}
-                        className="rounded-full border border-border bg-background px-3 py-1 text-left text-xs text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="rounded-full border border-menu-green/50 bg-transparent px-3 py-1 text-left text-xs text-primary-ink transition-colors hover:bg-menu-green/15 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {suggestion.question}
                       </button>
@@ -157,8 +164,10 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
             <Button
               type="submit"
               size="icon"
+              shape="pill"
               aria-label="Enviar pregunta"
               disabled={input.trim().length === 0}
+              className="shrink-0 bg-gradient-to-r from-brand-yellow to-brand-orange text-brand-ink hover:brightness-110"
             >
               <Send aria-hidden="true" />
             </Button>
@@ -174,7 +183,7 @@ export function Chatbot({ responder = respondWithFaq }: ChatbotProps) {
         aria-expanded={open}
         aria-controls="maminco-chatbot-panel"
         aria-label={open ? 'Cerrar asistente' : 'Abrir asistente de preguntas'}
-        className="shadow-float"
+        className="bg-gradient-to-r from-brand-yellow to-brand-orange font-semibold text-brand-ink shadow-float hover:brightness-110 focus-visible:ring-offset-background"
       >
         <MessageCircle aria-hidden="true" />
         <span className="hidden sm:inline">

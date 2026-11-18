@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Banknote, Brain, Building2, Check, CreditCard, Minus, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { AppFrame } from './AppFrame'
 import { formatBs } from './formatBs'
+import { SectionHeading } from './SectionHeading'
+
+const AUTOPLAY_MS = 6000
 
 type StepId = 'config' | 'pos' | 'data' | 'kitchen'
 
@@ -254,7 +257,7 @@ function DataPanel() {
       </div>
 
       <div className="mt-4 flex items-start gap-3 rounded-md border border-border bg-background p-3">
-        <Brain className="mt-0.5 size-4 shrink-0 text-primary" />
+        <Brain className="mt-0.5 size-4 shrink-0 text-primary-ink" />
         <p className="text-sm text-muted-foreground">
           El área sólida es el{' '}
           <span className="font-medium text-foreground">modelo</span>; la línea punteada, el{' '}
@@ -335,38 +338,66 @@ function KitchenPanel() {
 
 export function StepsShowcase() {
   const [active, setActive] = useState<StepId>('config')
+  const [autoplay, setAutoplay] = useState(true)
+  const [inView, setInView] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
   const current = STEPS.find((s) => s.id === active) ?? STEPS[0]
 
-  return (
-    <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-      <div>
-        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          En marcha en cuatro pasos
-        </h2>
-        <p className="mt-4 text-muted-foreground">
-          Elige un paso para ver cómo se ve en pantalla.
-        </p>
+  useEffect(() => {
+    const node = rootRef.current
+    if (!node || typeof IntersectionObserver === 'undefined') return undefined
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), {
+      threshold: 0.35,
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
 
-        <ol className="mt-8 space-y-3">
+  useEffect(() => {
+    if (!autoplay || !inView) return undefined
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+
+    const id = setTimeout(() => {
+      const index = STEPS.findIndex((s) => s.id === active)
+      setActive(STEPS[(index + 1) % STEPS.length].id)
+    }, AUTOPLAY_MS)
+    return () => clearTimeout(id)
+  }, [active, autoplay, inView])
+
+  const select = (id: StepId) => {
+    setAutoplay(false)
+    setActive(id)
+  }
+
+  return (
+    <div ref={rootRef} className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+      <div>
+        <SectionHeading
+          eyebrow="Cómo funciona"
+          title="En marcha en cuatro pasos"
+          description="Elige un paso para ver cómo se ve en pantalla."
+        />
+
+        <ol className="mt-10 space-y-3">
           {STEPS.map((step) => {
             const isActive = step.id === active
             return (
               <li key={step.id}>
                 <button
                   type="button"
-                  onClick={() => setActive(step.id)}
+                  onClick={() => select(step.id)}
                   aria-pressed={isActive}
-                  className={`flex w-full gap-4 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  className={`relative flex w-full gap-4 overflow-hidden rounded-xl border p-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     isActive
                       ? 'border-border bg-surface shadow-elevated'
                       : 'border-transparent hover:bg-surface/60'
                   }`}
                 >
                   <span
-                    className={`flex size-10 shrink-0 items-center justify-center rounded-full border font-mono text-sm font-medium ${
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-full border font-mono text-sm font-medium transition-colors ${
                       isActive
                         ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-surface text-primary'
+                        : 'border-border bg-surface text-primary-ink'
                     }`}
                   >
                     {isActive ? <Check className="size-4" /> : step.number}
@@ -383,6 +414,14 @@ export function StepsShowcase() {
                       {step.description}
                     </span>
                   </span>
+                  {isActive && autoplay && inView && (
+                    <span
+                      key={`progress-${step.id}`}
+                      aria-hidden="true"
+                      className="animate-progress absolute inset-x-0 bottom-0 h-0.5 bg-primary motion-reduce:hidden dark:bg-accent"
+                      style={{ ['--progress-duration' as string]: `${AUTOPLAY_MS}ms` }}
+                    />
+                  )}
                 </button>
               </li>
             )
@@ -391,7 +430,6 @@ export function StepsShowcase() {
       </div>
 
       <AppFrame url={current.url}>
-        {/* Los tres paneles comparten la misma celda: la altura no salta y el cambio es un fundido. */}
         <div className="grid">
           {(
             [
@@ -404,8 +442,10 @@ export function StepsShowcase() {
             <div
               key={id}
               aria-hidden={active !== id}
-              className={`col-start-1 row-start-1 transition-opacity duration-300 motion-reduce:transition-none ${
-                active === id ? 'opacity-100' : 'pointer-events-none opacity-0'
+              className={`col-start-1 row-start-1 transition-all duration-500 motion-reduce:transition-none ${
+                active === id
+                  ? 'translate-y-0 opacity-100 blur-0'
+                  : 'pointer-events-none translate-y-2 opacity-0 blur-[2px]'
               }`}
             >
               {panel}

@@ -1,20 +1,31 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
 import { getErrorMessage } from '@/lib/utils/errors'
 import {
     createProduct,
+    deleteProductImage,
+    uploadProductImage,
     deleteProduct,
     getProducts,
     updateProduct,
     type CreateProductPayload,
 } from '../api'
 import { getActiveCategories } from '@/features/categories/api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = {
     all: ['products'] as const,
     activeCategories: ['categories', 'active'] as const,
+}
+
+export type ImageChange = { file: File } | { remove: true }
+
+async function applyImage(productId: string, image?: ImageChange) {
+    if (!image) return
+    if ('file' in image) await uploadProductImage(productId, image.file)
+    else await deleteProductImage(productId)
 }
 
 export function useProducts() {
@@ -25,6 +36,8 @@ export function useProducts() {
 
     const query = useQuery({
         queryKey: [...KEYS.all, { page, search, categoryFilter }],
+        placeholderData: keepPreviousData,
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) =>
             getProducts(
                 page,
@@ -37,18 +50,24 @@ export function useProducts() {
 
     const categoriesQuery = useQuery({
         queryKey: KEYS.activeCategories,
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getActiveCategories(signal),
     })
 
     const namesQuery = useQuery({
         queryKey: [...KEYS.all, 'names'],
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getProducts(1, 1000, undefined, undefined, signal),
     })
 
     const invalidate = () => queryClient.invalidateQueries({ queryKey: KEYS.all })
 
     const createMutation = useMutation({
-        mutationFn: (payload: CreateProductPayload) => createProduct(payload),
+        mutationFn: async ({ payload, image }: { payload: CreateProductPayload; image?: ImageChange }) => {
+            const product = await createProduct(payload)
+            await applyImage(product.id, image)
+            return product
+        },
         onSuccess: async () => {
             toast.success('Producto creado correctamente')
             setPage(1)
@@ -59,13 +78,19 @@ export function useProducts() {
     })
 
     const updateMutation = useMutation({
-        mutationFn: ({
+        mutationFn: async ({
             id,
             payload,
+            image,
         }: {
             id: string
             payload: CreateProductPayload
-        }) => updateProduct(id, payload),
+            image?: ImageChange
+        }) => {
+            const product = await updateProduct(id, payload)
+            await applyImage(id, image)
+            return product
+        },
         onSuccess: async () => {
             toast.success('Producto actualizado correctamente')
             await invalidate()
@@ -114,9 +139,9 @@ export function useProducts() {
         loadProductNames: (_excludeProductId?: string) => {
             void namesQuery.refetch()
         },
-        createNewProduct: async (payload: CreateProductPayload) => {
+        createNewProduct: async (payload: CreateProductPayload, image?: ImageChange) => {
             try {
-                await createMutation.mutateAsync(payload)
+                await createMutation.mutateAsync({ payload, image })
                 return true
             } catch {
                 return false
@@ -125,9 +150,10 @@ export function useProducts() {
         updateExistingProduct: async (
             id: string,
             payload: CreateProductPayload,
+            image?: ImageChange,
         ) => {
             try {
-                await updateMutation.mutateAsync({ id, payload })
+                await updateMutation.mutateAsync({ id, payload, image })
                 return true
             } catch {
                 return false

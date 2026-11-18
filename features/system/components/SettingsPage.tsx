@@ -136,7 +136,7 @@ const logColumns: ColumnDef<LogEntry>[] = [
     },
 ]
 
-export function SettingsPage() {
+export function SystemPanel() {
     const [level, setLevel] = useState<'' | LogLevel>('')
     const [search, setSearch] = useState('')
     const status = useSystemStatus()
@@ -147,15 +147,6 @@ export function SettingsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                    Configuración del sistema
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Estado de servicios, configuración y registros del servidor
-                </p>
-            </div>
-
             {status.isLoading ? (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {Array.from({ length: 6 }).map((_, index) => (

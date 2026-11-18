@@ -1,15 +1,8 @@
 'use client'
-import { PieChart } from 'lucide-react'
+import { BarChart3, PieChart } from 'lucide-react'
+import { BarListChart, DonutChart } from '@/components/charts'
 import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts'
-import {
+    Button,
     Card,
     CardContent,
     CardHeader,
@@ -28,9 +21,14 @@ const DIMENSION_OPTIONS: { id: BreakdownDimension; label: string }[] = [
     { id: 'paymentMethod', label: 'Método de pago' },
     { id: 'hour', label: 'Hora' },
     { id: 'waiter', label: 'Mesero' },
+    { id: 'shift', label: 'Turno' },
 ]
 
+export type BreakdownView = 'bars' | 'donut'
+
 interface BreakdownCardProps {
+    view: BreakdownView
+    onViewChange: (view: BreakdownView) => void
     dimension: BreakdownDimension
     onDimensionChange: (dimension: BreakdownDimension) => void
     items: BreakdownItem[]
@@ -39,6 +37,8 @@ interface BreakdownCardProps {
 }
 
 export function BreakdownCard({
+    view,
+    onViewChange,
     dimension,
     onDimensionChange,
     items,
@@ -59,6 +59,16 @@ export function BreakdownCard({
                     Desglose
                 </CardTitle>
                 <div className="flex items-center gap-2">
+                    <div className="flex gap-1" role="group" aria-label="Tipo de gráfico">
+                        <Button size="sm" variant={view === 'bars' ? 'primary' : 'ghost'} aria-pressed={view === 'bars'} onClick={() => onViewChange('bars')}>
+                            <BarChart3 />
+                            Barras
+                        </Button>
+                        <Button size="sm" variant={view === 'donut' ? 'primary' : 'ghost'} aria-pressed={view === 'donut'} onClick={() => onViewChange('donut')}>
+                            <PieChart />
+                            Circular
+                        </Button>
+                    </div>
                     <span className="hidden text-xs font-medium uppercase tracking-wide text-muted-foreground sm:inline">
                         Ver por
                     </span>
@@ -95,57 +105,21 @@ export function BreakdownCard({
                     />
                 ) : (
                     <div className="space-y-4">
-                        <ResponsiveContainer width="100%" height={280}>
-                            <BarChart
-                                layout="vertical"
-                                data={chartData}
-                                margin={{
-                                    top: 8,
-                                    right: 24,
-                                    left: 8,
-                                    bottom: 8,
-                                }}
-                            >
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="var(--border)"
-                                    horizontal={false}
-                                />
-                                <XAxis
-                                    type="number"
-                                    tick={{
-                                        fontSize: 12,
-                                        fill: 'var(--muted-foreground)',
-                                    }}
-                                />
-                                <YAxis
-                                    type="category"
-                                    dataKey="label"
-                                    width={120}
-                                    tick={{
-                                        fontSize: 12,
-                                        fill: 'var(--muted-foreground)',
-                                    }}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'var(--surface)',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: '8px',
-                                        color: 'var(--foreground)',
-                                    }}
-                                    formatter={(value) =>
-                                        formatCurrency(Number(value))
-                                    }
-                                />
-                                <Bar
-                                    dataKey="totalSales"
-                                    name="Ventas (Bs.)"
-                                    fill="var(--primary)"
-                                    radius={[0, 8, 8, 0]}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {view === 'donut' ? (
+                            <DonutChart
+                                exportId="reports-breakdown"
+                                ariaLabel="Composición de las ventas"
+                                height={220}
+                                data={chartData.map((item) => ({ label: item.label, value: item.totalSales }))}
+                            />
+                        ) : (
+                            <BarListChart
+                                exportId="reports-breakdown"
+                                ariaLabel="Ventas por dimensión"
+                                data={chartData.map((item) => ({ label: item.label, value: item.totalSales }))}
+                                limit={12}
+                            />
+                        )}
 
                         <div className="space-y-1">
                             {items.map((item) => (

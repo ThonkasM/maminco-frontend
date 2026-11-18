@@ -7,6 +7,7 @@ import {
     togglePaymentMethodActive,
     type PaymentMethodDto,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = { all: ['payment-methods'] as const }
 
@@ -15,6 +16,7 @@ export function usePaymentMethods() {
 
     const query = useQuery({
         queryKey: KEYS.all,
+        staleTime: STALE_TIME.reference,
         queryFn: ({ signal }) => listPaymentMethods(true, signal),
     })
 

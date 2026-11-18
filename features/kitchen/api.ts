@@ -3,7 +3,6 @@ import type { OrderKitchenStatus, OrderResponseDto } from '@/features/orders/api
 
 export const KITCHEN_FLAG = 'digital_kitchen'
 
-/** Órdenes abiertas (DRAFT) para la pantalla de cocina. */
 export function getKitchenOrders(
     signal?: AbortSignal,
 ): Promise<OrderResponseDto[]> {

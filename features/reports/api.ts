@@ -5,6 +5,7 @@ export interface ReportRangeParams {
     to?: string
     areaId?: string
     tableId?: string
+    shiftId?: string
 }
 
 export interface ReportSummary {
@@ -15,7 +16,7 @@ export interface ReportSummary {
     averageOrderValue: number
     totalDiscount: number
     totalTips: number
-    mesaOrders: number
+    tableOrders: number
     virtualOrders: number
     totalItems: number
     averageItemsPerOrder: number
@@ -34,6 +35,7 @@ export const BREAKDOWN_DIMENSIONS = [
     'paymentMethod',
     'hour',
     'waiter',
+    'shift',
 ] as const
 
 export type BreakdownDimension = (typeof BREAKDOWN_DIMENSIONS)[number]
@@ -57,6 +59,47 @@ export interface ReportTopProduct {
 
 interface Envelope<T> {
     data: T
+}
+
+export type ComparedMetric =
+    | 'totalSales'
+    | 'totalOrders'
+    | 'averageOrderValue'
+    | 'totalDiscount'
+    | 'totalTips'
+    | 'totalItems'
+
+export interface ReportComparison {
+    current: ReportSummary
+    previous: ReportSummary
+    deltas: Record<ComparedMetric, number | null>
+}
+
+export interface HeatmapCell {
+    weekday: number
+    hour: number
+    totalSales: number
+    totalOrders: number
+}
+
+export function getReportComparison(
+    params: ReportRangeParams,
+    signal?: AbortSignal,
+): Promise<ReportComparison> {
+    return apiFetch<Envelope<ReportComparison>>('/api/reports/comparison', {
+        query: { ...params },
+        signal,
+    }).then((r) => r.data)
+}
+
+export function getReportHeatmap(
+    params: ReportRangeParams,
+    signal?: AbortSignal,
+): Promise<HeatmapCell[]> {
+    return apiFetch<Envelope<HeatmapCell[]>>('/api/reports/heatmap', {
+        query: { ...params },
+        signal,
+    }).then((r) => r.data)
 }
 
 export function getReportSummary(

@@ -6,6 +6,7 @@ import {
     type OrderResponseDto,
 } from '@/features/pos/orders/api'
 import { getTableById } from '@/features/tables/api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 export const posOrderKeys = {
     active: (tableId: string) => ['pos', 'orders', 'active', tableId] as const,
@@ -17,6 +18,7 @@ export function useOrderQuery(tableId: string) {
 
     const query = useQuery({
         queryKey: posOrderKeys.active(tableId),
+        staleTime: STALE_TIME.live,
         queryFn: ({ signal }) => getActiveOrderByTable(tableId, signal),
         enabled: Boolean(tableId),
     })
@@ -44,6 +46,7 @@ export function useOrderQuery(tableId: string) {
 export function usePosTable(tableId: string) {
     const query = useQuery({
         queryKey: posOrderKeys.table(tableId),
+        staleTime: STALE_TIME.list,
         queryFn: ({ signal }) => getTableById(tableId, signal),
         enabled: Boolean(tableId),
     })

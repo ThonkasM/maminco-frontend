@@ -1,5 +1,8 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+
+import { useResetOnChange } from '@/hooks/useResetOnChange'
+import { roundMoney } from '@/lib/utils/money'
+import { useMemo, useState } from 'react'
 import {
     Button,
     Dialog,
@@ -46,16 +49,15 @@ export function DiscountModal({
     const [reason, setReason] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
-    useEffect(() => {
-        if (!isOpen) return
+    useResetOnChange(isOpen, () => {
         setType('percentage')
         setAmount(0)
         setReason('')
-    }, [isOpen])
+    })
 
     const discountPreview = useMemo(() => {
         if (type === 'percentage') {
-            const discountAmount = (totalAmount * amount) / 100
+            const discountAmount = roundMoney((totalAmount * amount) / 100)
             return {
                 display: `${amount}%`,
                 finalTotal: totalAmount - discountAmount,

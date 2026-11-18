@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Chatbot } from '@/components/marketing/Chatbot'
-import { ContactSection } from '@/components/marketing/ContactSection'
 import { FaqSection } from '@/components/marketing/FaqSection'
 import { FeaturesBento } from '@/components/marketing/FeaturesBento'
 import { LiveAppPreview } from '@/components/marketing/LiveAppPreview'
@@ -28,7 +27,6 @@ export const metadata: Metadata = {
     'Maminco Software S.R.L. desarrolla POS, gestión de mesas, pagos y pronósticos con IA para restaurantes de Bolivia. Productos, planes y demo.',
 }
 
-// Datos que se pueden respaldar con lo que ya dice la página (planes, roles, modalidades).
 const FACTS = [
   { value: 'Bs 0', label: 'Plan Freemium, sin límite de tiempo' },
   { value: '3 roles', label: 'Gerente, cajero y mesero en un mismo sistema' },
@@ -86,11 +84,6 @@ const ON_PREMISE_FEATURES = [
   'Soporte anual',
 ]
 
-/**
- * Centraliza el patrón "enlace con aspecto de botón".
- * Hoy anida <Button> dentro de <Link>. Si tu Button soporta `asChild`
- * (o exportas `buttonVariants`), cambia SOLO esta función y se corrige en toda la página.
- */
 function LinkButton({
   href,
   children,
@@ -151,7 +144,6 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Lo memorable de la página: el POS funcionando desde el primer scroll */}
           <div className="relative [perspective:1600px]">
             <div className="transition-transform duration-700 motion-reduce:transition-none lg:[transform:rotateY(-6deg)_rotateX(3deg)] lg:hover:[transform:none]">
               <LiveAppPreview />
@@ -164,9 +156,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Productos y características (antes eran dos secciones con casi el mismo contenido) */}
       <section id="productos" className="scroll-mt-20 bg-background py-24">
-        {/* Ancla de compatibilidad: el Navbar puede seguir apuntando a #caracteristicas */}
         <div id="caracteristicas" className="scroll-mt-20" aria-hidden="true" />
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="max-w-2xl">
@@ -183,7 +173,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Cómo funciona */}
       <section
         id="como-funciona"
         className="scroll-mt-20 border-y border-border bg-surface-muted py-24"
@@ -193,7 +182,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Datos clave */}
       <section className="bg-brand-green py-14 text-white">
         <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 sm:px-6 lg:grid-cols-4">
           {FACTS.map((fact) => (
@@ -340,7 +328,6 @@ export default function LandingPage() {
       </section>
 
       {/* Contacto */}
-      <ContactSection />
 
       {/* CTA final */}
       <section className="border-t border-border bg-surface-muted py-20">

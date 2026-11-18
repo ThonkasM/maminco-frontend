@@ -12,24 +12,35 @@ export interface SuggestedTestCase {
   expected: string
 }
 
+export interface GraphEdge {
+  from: string
+  to: string
+}
+
 export interface BasicPath {
   index: number
   nodeSequence: string[]
   edgeSequence: string[]
+  edgeIndices: number[]
   length: number
   testCase: SuggestedTestCase
 }
 
 export interface BasisPathResult {
+  nodes: string[]
+  edges: GraphEdge[]
   nodeCount: number
   edgeCount: number
   componentCount: number
   cyclomaticComplexity: number
   entry: string
   exit: string
-  totalPaths: number
+  candidatesExplored: number
+  stepsUsed: number
   truncated: boolean
+  rank: number
   expectedPathCount: number
+  complete: boolean
   paths: BasicPath[]
 }
 
@@ -38,12 +49,12 @@ export type BasisPathOutcome =
   | { ok: false; error: string }
 
 export const MAX_PATHS = 5000
+export const MAX_STEPS = 200000
 export const MAX_EDGE_REUSE = 2
+export const MAX_EDGES = 400
 
-interface GraphEdge {
-  from: string
-  to: string
-}
+const ZERO = BigInt(0)
+const ONE = BigInt(1)
 
 interface Adjacency {
   to: string
@@ -84,6 +95,12 @@ function parseEdges(text: string): { edges: GraphEdge[]; nodes: string[] } {
 
   if (edges.length === 0) {
     throw new BasisPathError('Agrega al menos una arista con el formato "A -> B".')
+  }
+
+  if (edges.length > MAX_EDGES) {
+    throw new BasisPathError(
+      `El grafo tiene ${edges.length} aristas; el máximo admitido es ${MAX_EDGES}.`,
+    )
   }
 
   return { edges, nodes: [...nodes] }
@@ -138,33 +155,98 @@ function countComponents(nodes: string[], edges: GraphEdge[]): number {
     if (rootFrom !== rootTo) parent.set(rootFrom, rootTo)
   }
 
-  const roots = new Set(nodes.map((node) => find(node)))
-  return roots.size
+  return new Set(nodes.map((node) => find(node))).size
+}
+
+function bfs(
+  start: string,
+  neighbours: Map<string, Adjacency[]>,
+  blocked: string,
+): Map<string, { via: number | null }> {
+  const seen = new Map<string, { via: number | null }>([[start, { via: null }]])
+  const queue = [start]
+  for (let head = 0; head < queue.length; head++) {
+    const node = queue[head]
+    if (node === blocked && node !== start) continue
+    for (const next of neighbours.get(node) ?? []) {
+      if (seen.has(next.to)) continue
+      seen.set(next.to, { via: next.edgeIndex })
+      queue.push(next.to)
+    }
+  }
+  return seen
+}
+
+function shortestWalksThroughEachEdge(
+  edges: GraphEdge[],
+  adjacency: Map<string, Adjacency[]>,
+  reverse: Map<string, Adjacency[]>,
+  entry: string,
+  exit: string,
+): number[][] {
+  const forward = bfs(entry, adjacency, exit)
+  const backward = bfs(exit, reverse, '')
+
+  const prefixTo = (node: string): number[] => {
+    const walk: number[] = []
+    let current = node
+    while (current !== entry) {
+      const via = forward.get(current)!.via!
+      walk.push(via)
+      current = edges[via].from
+    }
+    return walk.reverse()
+  }
+
+  const suffixFrom = (node: string): number[] => {
+    const walk: number[] = []
+    let current = node
+    while (current !== exit) {
+      const via = backward.get(current)!.via!
+      walk.push(via)
+      current = edges[via].to
+    }
+    return walk
+  }
+
+  const walks: number[][] = []
+  edges.forEach((edge, edgeIndex) => {
+    if (edge.from === exit) return
+    if (!forward.has(edge.from) || !backward.has(edge.to)) return
+    const walk = [...prefixTo(edge.from), edgeIndex, ...suffixFrom(edge.to)]
+    const usage = new Map<number, number>()
+    for (const index of walk) usage.set(index, (usage.get(index) ?? 0) + 1)
+    if ([...usage.values()].some((count) => count > MAX_EDGE_REUSE)) return
+    walks.push(walk)
+  })
+  return walks
 }
 
 function enumeratePaths(
   adjacency: Map<string, Adjacency[]>,
   entry: string,
   exit: string,
-  cap: number,
-): { paths: number[][]; truncated: boolean } {
+): { paths: number[][]; steps: number; truncated: boolean } {
   const paths: number[][] = []
   const current: number[] = []
   const usage = new Map<number, number>()
+  let steps = 0
   let truncated = false
 
   const walk = (node: string): void => {
-    if (paths.length >= cap) {
-      truncated = true
-      return
-    }
-
+    if (truncated) return
     if (node === exit) {
       paths.push([...current])
+      if (paths.length >= MAX_PATHS) truncated = true
       return
     }
 
     for (const next of adjacency.get(node) ?? []) {
+      steps += 1
+      if (steps >= MAX_STEPS) {
+        truncated = true
+        return
+      }
       const used = usage.get(next.edgeIndex) ?? 0
       if (used >= MAX_EDGE_REUSE) continue
 
@@ -173,64 +255,66 @@ function enumeratePaths(
       walk(next.to)
       current.pop()
       usage.set(next.edgeIndex, used)
-
-      if (paths.length >= cap) {
-        truncated = true
-        return
-      }
+      if (truncated) return
     }
   }
 
   walk(entry)
-  return { paths, truncated }
+  return { paths, steps, truncated }
 }
 
-function highestSetBit(vector: number[]): number {
-  for (let word = vector.length - 1; word >= 0; word--) {
-    const value = vector[word]
-    if (value !== 0) {
-      return word * 32 + (31 - Math.clz32(value))
-    }
+function gcd(a: bigint, b: bigint): bigint {
+  let x = a < ZERO ? -a : a
+  let y = b < ZERO ? -b : b
+  while (y !== ZERO) {
+    const t = x % y
+    x = y
+    y = t
   }
-  return -1
+  return x
 }
 
-function selectIndependentPaths(
+export function selectIndependentPaths(
   paths: number[][],
   edgeCount: number,
+  limit: number = Number.POSITIVE_INFINITY,
 ): number[][] {
-  const wordCount = Math.max(1, Math.ceil(edgeCount / 32))
-  const basis = new Map<number, number[]>()
+  const basis = new Map<number, bigint[]>()
   const selected: number[][] = []
 
   for (const path of paths) {
-    const vector = new Array<number>(wordCount).fill(0)
-    for (const edgeIndex of path) {
-      vector[edgeIndex >> 5] ^= 1 << (edgeIndex & 31)
-    }
+    if (selected.length >= limit) break
 
-    let pivot = highestSetBit(vector)
-    while (pivot >= 0 && basis.has(pivot)) {
-      const other = basis.get(pivot)!
-      for (let word = 0; word < wordCount; word++) {
-        vector[word] ^= other[word]
+    let vector: bigint[] = new Array<bigint>(edgeCount).fill(ZERO)
+    for (const edgeIndex of path) vector[edgeIndex] += ONE
+
+    for (;;) {
+      const pivot = vector.findIndex((value) => value !== ZERO)
+      if (pivot === -1) break
+
+      const row = basis.get(pivot)
+      if (!row) {
+        basis.set(pivot, vector)
+        selected.push(path)
+        break
       }
-      pivot = highestSetBit(vector)
-    }
 
-    if (pivot >= 0) {
-      basis.set(pivot, vector)
-      selected.push(path)
+      const a = row[pivot]
+      const b = vector[pivot]
+      let divisor = ZERO
+      const next = vector.map((value, column) => {
+        const combined = value * a - row[column] * b
+        divisor = gcd(divisor, combined)
+        return combined
+      })
+      vector = divisor > ONE ? next.map((value) => value / divisor) : next
     }
   }
 
   return selected
 }
 
-function buildTestCase(
-  index: number,
-  nodeSequence: string[],
-): SuggestedTestCase {
+function buildTestCase(index: number, nodeSequence: string[]): SuggestedTestCase {
   return {
     id: `CP-${String(index + 1).padStart(2, '0')}`,
     path: nodeSequence.join(' -> '),
@@ -240,22 +324,30 @@ function buildTestCase(
   }
 }
 
+function describeNodes(nodes: string[]): string {
+  const shown = nodes.slice(0, 6).join(', ')
+  return nodes.length > 6 ? `${shown} y ${nodes.length - 6} más` : shown
+}
+
 export function analyzeBasisPath(input: BasisPathInput): BasisPathOutcome {
   try {
     const { edges, nodes } = parseEdges(input.edges)
     const nodeSet = new Set(nodes)
 
     const adjacency = new Map<string, Adjacency[]>()
+    const reverse = new Map<string, Adjacency[]>()
     const indegree = new Map<string, number>()
     const outdegree = new Map<string, number>()
     for (const node of nodes) {
       adjacency.set(node, [])
+      reverse.set(node, [])
       indegree.set(node, 0)
       outdegree.set(node, 0)
     }
 
     edges.forEach((edge, edgeIndex) => {
       adjacency.get(edge.from)!.push({ to: edge.to, edgeIndex })
+      reverse.get(edge.to)!.push({ to: edge.from, edgeIndex })
       outdegree.set(edge.from, outdegree.get(edge.from)! + 1)
       indegree.set(edge.to, indegree.get(edge.to)! + 1)
     })
@@ -279,27 +371,64 @@ export function analyzeBasisPath(input: BasisPathInput): BasisPathOutcome {
       )
     }
 
+    const reachableFromEntry = bfs(entry, adjacency, exit)
+    const unreachable = nodes.filter((node) => !reachableFromEntry.has(node))
+    if (unreachable.length > 0) {
+      throw new BasisPathError(
+        `Hay nodos que no se alcanzan desde "${entry}": ${describeNodes(unreachable)}. Revisa la dirección de las aristas.`,
+      )
+    }
+
+    const reachesExit = bfs(exit, reverse, '')
+    const dead = nodes.filter((node) => !reachesExit.has(node))
+    if (dead.length > 0) {
+      throw new BasisPathError(
+        `Hay nodos desde los que no se llega a "${exit}": ${describeNodes(dead)}. Cada nodo debe tener un camino hacia la salida.`,
+      )
+    }
+
     const nodeCount = nodes.length
     const edgeCount = edges.length
     const cyclomaticComplexity = edgeCount - nodeCount + 2 * componentCount
 
-    const { paths: enumeratedPaths, truncated } = enumeratePaths(
+    const byLength = (a: number[], b: number[]) => a.length - b.length
+
+    let candidates = shortestWalksThroughEachEdge(
+      edges,
       adjacency,
+      reverse,
       entry,
       exit,
-      MAX_PATHS,
+    ).sort(byLength)
+    let selected = selectIndependentPaths(
+      candidates,
+      edgeCount,
+      cyclomaticComplexity,
     )
+    let stepsUsed = 0
+    let truncated = false
 
-    if (enumeratedPaths.length === 0) {
+    if (selected.length < cyclomaticComplexity) {
+      const enumerated = enumeratePaths(adjacency, entry, exit)
+      stepsUsed += enumerated.steps
+      truncated = enumerated.truncated
+      const seen = new Set<string>()
+      candidates = [...candidates, ...enumerated.paths]
+        .filter((path) => {
+          const key = path.join(',')
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        .sort(byLength)
+      selected = selectIndependentPaths(candidates, edgeCount, cyclomaticComplexity)
+    }
+
+    if (selected.length === 0) {
       throw new BasisPathError(
         `No existe un camino de "${entry}" a "${exit}". Revisa la dirección de las aristas.`,
       )
     }
-
-    const orderedPaths = [...enumeratedPaths].sort(
-      (a, b) => a.length - b.length,
-    )
-    const selected = selectIndependentPaths(orderedPaths, edgeCount)
 
     const basicPaths: BasicPath[] = selected.map((path, index) => {
       const edgeSequence = path.map((edgeIndex) => {
@@ -312,6 +441,7 @@ export function analyzeBasisPath(input: BasisPathInput): BasisPathOutcome {
         index: index + 1,
         nodeSequence,
         edgeSequence,
+        edgeIndices: path,
         length: path.length,
         testCase: buildTestCase(index, nodeSequence),
       }
@@ -320,15 +450,20 @@ export function analyzeBasisPath(input: BasisPathInput): BasisPathOutcome {
     return {
       ok: true,
       result: {
+        nodes,
+        edges,
         nodeCount,
         edgeCount,
         componentCount,
         cyclomaticComplexity,
         entry,
         exit,
-        totalPaths: enumeratedPaths.length,
+        candidatesExplored: candidates.length,
+        stepsUsed,
         truncated,
+        rank: selected.length,
         expectedPathCount: cyclomaticComplexity,
+        complete: selected.length === cyclomaticComplexity,
         paths: basicPaths,
       },
     }

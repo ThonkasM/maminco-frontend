@@ -1,5 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { useResetOnChange } from '@/hooks/useResetOnChange'
+import { useState } from 'react'
 import {
     Button,
     Dialog,
@@ -30,9 +32,11 @@ export function TableStatusModal({
 }: TableStatusModalProps) {
     const [newStatus, setNewStatus] = useState<TableStatus>(table.status)
 
-    useEffect(() => {
-        setNewStatus(table.status)
-    }, [table])
+    useResetOnChange(
+        table,
+        () => setNewStatus(table.status),
+        () => true,
+    )
 
     return (
         <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>

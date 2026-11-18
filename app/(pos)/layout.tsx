@@ -8,9 +8,10 @@ import { useMode } from '@/components/providers/ModeContext'
 import AdminGuard from '@/features/auth/components/AdminGuard'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { POS_ROLES } from '@/lib/types/enums'
 
-const POS_ROLES = ['ADMINISTRATOR', 'MANAGER', 'CASHIER', 'WAITER']
 
 function PosLayoutContent({ children }: { children: React.ReactNode }) {
     const router = useRouter()
@@ -29,35 +30,37 @@ function PosLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <AdminGuard allowedRoles={POS_ROLES}>
+        <AdminGuard allowedRoles={[...POS_ROLES]}>
             <div className="h-screen bg-background flex flex-col">
                 {/* Header */}
-                <header className="bg-surface border-b border-border sticky top-0 z-40 shrink-0">
+                <header className="sticky top-0 z-40 shrink-0 border-b-[3px] border-brand-leaf bg-nav text-nav-foreground">
                     <div className="px-6 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Image
-                                src="/maminco-logo.png"
+                                src="/maminco-logo-128.png"
                                 alt=""
                                 width={32}
                                 height={32}
                                 className="size-8 shrink-0 rounded-md"
                             />
-                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            <h1 className="font-display text-2xl font-normal uppercase tracking-wide text-nav-foreground">
                                 Maminco POS
                             </h1>
-                            <Badge variant="brand">Modo POS</Badge>
+                            <Badge variant="brand" className="border-brand-yellow/40 bg-brand-yellow/15 text-brand-yellow">Modo POS</Badge>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="text-sm text-muted-foreground hidden sm:block text-right">
-                                <p className="font-medium text-foreground">{user?.name}</p>
+                            <div className="text-sm text-nav-foreground/70 hidden sm:block text-right">
+                                <p className="font-medium text-nav-foreground">{user?.name}</p>
                                 <p className="text-xs">{user?.role}</p>
                             </div>
 
-                            <div className="flex items-center gap-2 border-l border-border pl-3">
+                            <div className="flex items-center gap-2 border-l border-nav-foreground/20 pl-3">
+                                <NotificationBell tone="dark" />
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    className="border-nav-foreground/30 text-nav-foreground hover:bg-nav-foreground/10 hover:text-nav-foreground"
                                     onClick={handleToggleMode}
                                     title="Cambiar a Modo Administrador"
                                 >
@@ -65,7 +68,7 @@ function PosLayoutContent({ children }: { children: React.ReactNode }) {
                                     Admin
                                 </Button>
 
-                                <ThemeToggle />
+                                <ThemeToggle className="text-nav-foreground hover:bg-nav-foreground/10 hover:text-nav-foreground focus-visible:ring-offset-nav" />
 
                                 <Button
                                     variant="ghost"

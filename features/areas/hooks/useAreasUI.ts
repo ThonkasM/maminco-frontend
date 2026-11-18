@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { AreaResponse, CreateAreaPayload } from '@/features/areas/api'
+import { AreaResponse } from '@/features/areas/api'
 
 interface UseAreasUIReturn {
-    // Estado de modales
     showModal: boolean
     editingArea: AreaResponse | undefined
     showDeleteModal: boolean
@@ -17,7 +16,6 @@ interface UseAreasUIReturn {
     handleCloseModal: () => void
     handleDeleteClick: (area: AreaResponse) => void
 
-    // Setters para handlers de CRUD
     setSubmitting: (value: boolean) => void
     setDeleteSubmitting: (value: boolean) => void
     setShowDeleteModal: (value: boolean) => void

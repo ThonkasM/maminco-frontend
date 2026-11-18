@@ -7,6 +7,7 @@ import {
     getFeatureFlags,
     updateFeatureFlag,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = {
     all: ['features'] as const,
@@ -16,19 +17,16 @@ const KEYS = {
 export function useFeatureFlags() {
     return useQuery({
         queryKey: KEYS.all,
+        staleTime: STALE_TIME.reference,
         queryFn: ({ signal }) => getFeatureFlags(signal),
     })
 }
 
-/**
- * Evalúa una sola flag (`key -> enabled`) usando `GET /api/features/evaluate`.
- * Si la flag no existe, `enabled` es `false`.
- */
 export function useFeatureFlag(key: string) {
     const query = useQuery({
         queryKey: KEYS.evaluate,
         queryFn: ({ signal }) => getFeatureFlagEvaluation(signal),
-        staleTime: 60_000,
+        staleTime: STALE_TIME.reference,
     })
 
     return {
@@ -45,8 +43,9 @@ export function useUpdateFeatureFlag() {
         onSuccess: async (flag) => {
             toast.success(
                 flag.enabled
-                    ? `Activado: ${flag.name}`
-                    : `Desactivado: ${flag.name}`,
+                    ? `«${flag.name}» ya está disponible para el equipo.`
+                    : `«${flag.name}» quedó apagada para todos.`,
+                flag.enabled ? 'Función activada' : 'Función desactivada',
             )
             await queryClient.invalidateQueries({ queryKey: KEYS.all })
             await queryClient.invalidateQueries({ queryKey: KEYS.evaluate })

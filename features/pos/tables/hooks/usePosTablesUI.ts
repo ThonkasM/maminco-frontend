@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
-interface UseMesasNegocioUIReturn {
-    // Estado
+interface UsePosTablesUIReturn {
     selectedAreaId: string
     isLoading: boolean
 
@@ -9,7 +8,6 @@ interface UseMesasNegocioUIReturn {
     handleSelectArea: (areaId: string) => void
     setIsLoading: (loading: boolean) => void
 
-    // Setters para comunicación con componente padre
     setSelectedAreaId: (areaId: string) => void
 }
 
@@ -20,7 +18,7 @@ interface UseMesasNegocioUIReturn {
  * - Estado de carga de la página
  * - Handlers de interacción con botones de área
  */
-export function usePosTablesUI(): UseMesasNegocioUIReturn {
+export function usePosTablesUI(): UsePosTablesUIReturn {
     const [selectedAreaId, setSelectedAreaId] = useState<string>('')
     const [isLoading, setIsLoading] = useState(true)
 

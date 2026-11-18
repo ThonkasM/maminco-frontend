@@ -1,5 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+
+import { useResetOnChange } from '@/hooks/useResetOnChange'
+import { useState } from 'react'
 import {
     Button,
     Dialog,
@@ -30,11 +32,10 @@ export function ResetPasswordModal({
     const [error, setError] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
-    useEffect(() => {
-        if (!isOpen) return
+    useResetOnChange(isOpen, () => {
         setPassword('')
         setError('')
-    }, [isOpen])
+    })
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()

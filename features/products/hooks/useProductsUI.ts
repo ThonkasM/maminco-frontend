@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ProductResponse } from '@/features/products/api'
 
 interface UseProductsUIReturn {
-    // Estado de modales
     showModal: boolean
     editingProduct: ProductResponse | undefined
     showDeleteModal: boolean
@@ -17,7 +16,6 @@ interface UseProductsUIReturn {
     handleCloseModal: () => void
     handleDeleteClick: (product: ProductResponse) => void
 
-    // Setters para handlers de CRUD
     setSubmitting: (value: boolean) => void
     setDeleteSubmitting: (value: boolean) => void
     setShowDeleteModal: (value: boolean) => void

@@ -3,6 +3,7 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Badge, Button, DataTable } from '@/components/ui'
+import { ProductImage } from '@/components/shared/ProductImage'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { PaginatedProductsResponse, ProductResponse } from '../api'
 
@@ -20,6 +21,12 @@ export function ProductsTable({
     getCategoryName,
 }: ProductsTableProps) {
     const columns: ColumnDef<ProductResponse>[] = [
+        {
+            id: 'image',
+            header: '',
+            enableSorting: false,
+            cell: ({ row }) => <ProductImage image={row.original.image} alt={row.original.name} size={40} />,
+        },
         {
             accessorKey: 'name',
             header: 'Nombre',

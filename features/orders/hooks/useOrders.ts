@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getTables, type TableResponse } from '@/features/tables/api'
@@ -14,6 +14,7 @@ import {
     removeOrderItem,
     type OrderStatus,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = {
     all: ['orders'] as const,
@@ -33,6 +34,7 @@ export function useOrders() {
             ...KEYS.all,
             { page, statusFilter, tableFilter, serviceTypeFilter },
         ],
+        placeholderData: keepPreviousData,
         queryFn: ({ signal }) =>
             getOrders(
                 page,
@@ -50,11 +52,13 @@ export function useOrders() {
 
     const tablesQuery = useQuery({
         queryKey: KEYS.tables,
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) => getTables(1, 1000, undefined, signal),
     })
 
     const productsQuery = useQuery({
         queryKey: KEYS.products,
+        staleTime: STALE_TIME.catalog,
         queryFn: ({ signal }) =>
             getProducts(1, 1000, undefined, undefined, signal),
     })

@@ -1,6 +1,8 @@
 import { apiFetch } from '@/lib/http/client'
 
-export type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'CASHIER' | 'WAITER' | 'COOK'
+import type { UserRole } from '@/lib/types/enums'
+
+export type { UserRole }
 
 export interface CreateUserPayload {
     email: string

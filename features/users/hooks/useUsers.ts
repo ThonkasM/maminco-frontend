@@ -1,6 +1,6 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/shared/ToastProvider'
 import { getErrorMessage } from '@/lib/utils/errors'
 import {
@@ -12,6 +12,7 @@ import {
     type CreateUserPayload,
     type UpdateUserPayload,
 } from '../api'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 
 const KEYS = { all: ['users'] as const }
 
@@ -22,11 +23,14 @@ export function useUsers() {
 
     const query = useQuery({
         queryKey: [...KEYS.all, { page, search }],
+        placeholderData: keepPreviousData,
+        staleTime: STALE_TIME.list,
         queryFn: ({ signal }) => getUsers(page, 10, search || undefined, signal),
     })
 
     const emailsQuery = useQuery({
         queryKey: [...KEYS.all, 'emails'],
+        staleTime: STALE_TIME.list,
         queryFn: ({ signal }) => getUsers(1, 1000, undefined, signal),
     })
 

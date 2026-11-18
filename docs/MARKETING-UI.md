@@ -17,27 +17,33 @@ representa; si se simplifica, se marca como vista ilustrativa.
 | Ruta | `app/(marketing)/page.tsx` |
 | Layout | `app/(marketing)/layout.tsx` → `Navbar` + `<main>` + `Footer` |
 | Chrome | `components/layout/marketing/Navbar.tsx`, `.../Footer.tsx` |
-| Secciones | `components/marketing/{ContactSection,FaqSection,Chatbot}.tsx` |
+| Secciones | `components/marketing/{Hero,ModuleMarquee,BeforeAfter,StatsBand,RolesSection,PricingSection,FaqSection,ContactSection,Chatbot}.tsx` |
 | Mockups | `components/marketing/{AppFrame,LiveAppPreview,FeaturesBento,StepsShowcase}.tsx` |
+| Primitivos de marketing | `components/marketing/{SectionHeading,LinkButton,Reveal,CountUp,SpotlightCard}.tsx` |
 | Helper de dinero | `components/marketing/formatBs.ts` |
 
-Anclas que el `Navbar` espera que existan: `#productos`, `#caracteristicas`, `#cocina`, `#planes`,
-`#faq`, `#contacto` (más `#como-funciona`, `#equipo` usadas desde la página).
+Anclas que el `Navbar` espera que existan: `#productos`, `#como-funciona`, `#roles`, `#cocina`,
+`#planes`, `#faq` (más `#contacto` para los CTA). Se conservan `#caracteristicas` (ancla oculta) y
+`#equipo` (tarjeta del fundador dentro de `#contacto`) por compatibilidad con enlaces existentes.
 
 > `docs/files/` conserva los archivos originales de la propuesta. **No es fuente de verdad**; la
 > fuente de verdad son las rutas de la tabla.
 
 Estructura de la página (orden actual):
-1. Hero (`bg-brand-mesh`) + `LiveAppPreview`.
-2. `#productos` + ancla oculta `#caracteristicas` + `FeaturesBento`.
-3. `#como-funciona` + `StepsShowcase`.
-4. Banda de datos clave (`bg-brand-green`).
-5. `#planes`.
-6. `FaqSection` (`#faq`).
-7. `#equipo`.
-8. `ContactSection` (`#contacto`).
-9. CTA final.
-10. `Chatbot`.
+1. `Hero` (`bg-brand-mesh` + `bg-grid`) + `LiveAppPreview` con dos tarjetas flotantes decorativas.
+2. `ModuleMarquee`: módulos del producto (no logos de clientes).
+3. `BeforeAfter`: problema → solución.
+4. `#productos` + ancla oculta `#caracteristicas` + `FeaturesBento` (incluye `#cocina`).
+5. `StatsBand` (`bg-primary`, contadores animados).
+6. `#como-funciona` + `StepsShowcase` (autoavance).
+7. `RolesSection` (`#roles`): pestañas por rol, alineadas con los `@Roles` del backend.
+8. `PricingSection` (`#planes`).
+9. `FaqSection` (`#faq`): filtro por categoría + botón que abre el `Chatbot`.
+10. `ContactSection` (`#contacto`, incluye `#equipo`): reemplaza el antiguo CTA final.
+11. `Chatbot`.
+
+Regla de contenido: **no inventar prueba social** (logos, testimonios, métricas de clientes ni SLAs).
+Solo datos del producto o de los planes.
 
 ---
 
@@ -50,7 +56,9 @@ Estructura de la página (orden actual):
 | `LiveAppPreview` | `'use client'` | Intervalo de animación + `useState`. |
 | `StepsShowcase` | `'use client'` | Pestañas + `useState`. |
 | `Chatbot`, `Navbar` | `'use client'` | Interacción. |
-| Secciones de página | Server | Contenido. |
+| `Hero`, `ModuleMarquee`, `BeforeAfter`, `StatsBand`, `PricingSection` | Server | Contenido; el movimiento viene de hojas cliente o CSS. |
+| `Reveal`, `CountUp`, `SpotlightCard` | `'use client'` | IntersectionObserver / puntero. |
+| `RolesSection`, `FaqSection`, `ContactSection` | `'use client'` | Pestañas, filtro, formulario. |
 
 Regla: el estado vive en la hoja cliente más pequeña posible; no convertir una sección entera en
 cliente solo por un mockup.
@@ -69,6 +77,16 @@ cliente solo por un mockup.
 - **Movimiento reducido.** Respetar `prefers-reduced-motion`:
   - CSS: variantes `motion-reduce:animate-none` / `motion-reduce:transition-none`.
   - JS: `window.matchMedia('(prefers-reduced-motion: reduce)')` antes de arrancar el intervalo.
+- **Movimiento de marketing** (`app/globals.css`, bloque "Marketing motion primitives"): todo
+  vive dentro de `@media (prefers-reduced-motion: no-preference)`; con movimiento reducido el
+  contenido es estático y visible.
+  - `animate-enter`: entrada solo CSS para el hero (no espera a la hidratación; protege el LCP).
+  - `Reveal` + `.reveal`: aparición al hacer scroll, una sola vez, con `delay` para escalonar.
+  - `CountUp`: SSR muestra el valor final; anima desde 0 solo al entrar en pantalla.
+  - `animate-marquee`, `animate-float`, `animate-ping-soft`, `animate-progress`.
+  - Utilidades de fondo: `bg-grid`, `mask-radial`, `mask-fade-x`, `mask-fade-y`.
+- **Chatbot** se abre desde cualquier sección con
+  `window.dispatchEvent(new Event(OPEN_CHATBOT_EVENT))`.
 - **Mockups decorativos** llevan `role="img"` + `aria-label` (o `aria-hidden`) y no exponen contenido
   interactivo falso.
 
@@ -79,10 +97,11 @@ cliente solo por un mockup.
 - **Tokens semánticos, nunca paleta cruda.** Fondo `bg-background`/`bg-surface-muted`, texto
   `text-foreground`/`text-muted-foreground`, bordes `border-border`, acento de marca `bg-accent`,
   estados `bg-success`, `bg-warning`, `bg-danger`.
-- **Radios:** marketing usa `round-full` (`shape="pill"`); dentro de la app, cuadrado (`rounded-md`).
+- **Radios:** CTAs de marketing `rounded-full` (`shape="pill"`); tarjetas de marketing
+  `rounded-2xl`; dentro de la app, cuadrado (`rounded-md`).
 - **Iconos:** `lucide-react`. Sin emoji.
 - **Primitivos:** `Button`, `Badge`, `Card` de `components/ui`.
-- **CTA como enlace:** `LinkButton` en `app/(marketing)/page.tsx` aplica `buttonVariants` sobre
+- **CTA como enlace:** `LinkButton` (`components/marketing/LinkButton.tsx`) aplica `buttonVariants` sobre
   `<Link>`. **Nunca** anidar `<Button>` dentro de `<a>`/`<Link>` (HTML inválido). Patrón de
   referencia: `app/unauthorized/page.tsx`.
 - **`AppFrame`** es el marco tipo ventana de navegador (semáforos + URL en `font-mono`) para los

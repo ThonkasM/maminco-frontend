@@ -1,4 +1,5 @@
 'use client'
+import { STALE_TIME } from '@/lib/query/staleTimes'
 import { useQuery } from '@tanstack/react-query'
 import { getActiveCategories } from '@/features/categories/api'
 import { getAvailableProducts } from '@/features/products/api'
@@ -14,14 +15,14 @@ export function usePosCatalog() {
     const categoriesQuery = useQuery({
         queryKey: ['pos', 'categories'],
         queryFn: ({ signal }) => getActiveCategories(signal),
-        staleTime: 60_000,
+        staleTime: STALE_TIME.catalog,
     })
 
     const productsQuery = useQuery({
         queryKey: ['pos', 'products'],
         queryFn: ({ signal }) =>
             getAvailableProducts(undefined, undefined, 500, signal),
-        staleTime: 60_000,
+        staleTime: STALE_TIME.catalog,
     })
 
     return {

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { CategoryResponse } from '@/features/categories/api'
 
 interface UseCategoriesUIReturn {
-    // Estado de modales
     showModal: boolean
     editingCategory: CategoryResponse | undefined
     showDeleteModal: boolean
@@ -17,7 +16,6 @@ interface UseCategoriesUIReturn {
     handleCloseModal: () => void
     handleDeleteClick: (category: CategoryResponse) => void
 
-    // Setters para handlers de CRUD
     setSubmitting: (value: boolean) => void
     setDeleteSubmitting: (value: boolean) => void
     setShowDeleteModal: (value: boolean) => void

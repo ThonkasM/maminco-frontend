@@ -25,10 +25,6 @@ function toCartItems(order: OrderResponseDto | null): CartItem[] {
     }))
 }
 
-/**
- * Estado local (optimista) del carrito. Conserva el orden local de los items
- * al sincronizar con el servidor y evita parpadeos ante cambios locales recientes.
- */
 export function useCart() {
     const [cartItems, setCartItems] = useState<CartItem[]>([])
     const lastLocalChangeRef = useRef<{ productId: string; timestamp: number } | null>(
