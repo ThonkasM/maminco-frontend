@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
@@ -13,7 +13,9 @@ import {
 } from '@/lib/types/enums'
 import { STALE_TIME } from '@/lib/query/staleTimes'
 
-const contract = readFileSync(resolve(__dirname, '../../contratos.md'), 'utf8')
+// contratos.md lives in the workspace folder, outside this repository: the check is skipped where it is absent (e.g. CI).
+const contractPath = resolve(__dirname, '../../contratos.md')
+const contract = existsSync(contractPath) ? readFileSync(contractPath, 'utf8') : ''
 
 function contractEnum(name: string): string[] {
     const line = contract.split('\n').find((l) => l.trim().startsWith(`${name} `))
@@ -21,7 +23,7 @@ function contractEnum(name: string): string[] {
     return line.split('=')[1].split('|').map((v) => v.trim())
 }
 
-describe('enums vs contratos.md', () => {
+describe.skipIf(contract === '')('enums vs contratos.md', () => {
     it('UserRole matches', () => {
         expect([...USER_ROLES]).toEqual(contractEnum('UserRole'))
     })
