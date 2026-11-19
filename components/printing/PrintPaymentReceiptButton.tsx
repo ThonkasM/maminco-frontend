@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { ReceiptText } from 'lucide-react'
 import { Button, Spinner } from '@/components/ui'
 import { toast } from '@/components/shared/ToastProvider'
-import { printPaymentReceipt } from '@/features/printing/api'
+import { printReceiptTicket } from '@/features/printing/usb-print'
 import { getErrorMessage } from '@/lib/utils/errors'
 
 interface PrintPaymentReceiptButtonProps {
@@ -24,7 +24,7 @@ export function PrintPaymentReceiptButton({
         try {
             setLoading(true)
 
-            const data = await printPaymentReceipt(orderId)
+            const data = await printReceiptTicket(orderId)
             if (data.success) {
                 toast.success(data.message)
             } else {

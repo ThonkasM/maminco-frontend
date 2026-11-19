@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Printer } from 'lucide-react'
 import { Button, Spinner } from '@/components/ui'
 import { toast } from '@/components/shared/ToastProvider'
-import { printOrder } from '@/features/printing/api'
+import { printOrderTicket } from '@/features/printing/usb-print'
 import { getErrorMessage } from '@/lib/utils/errors'
 
 interface PrintOrderButtonProps {
@@ -24,7 +24,7 @@ export function PrintOrderButton({
         try {
             setLoading(true)
 
-            const data = await printOrder(orderId)
+            const data = await printOrderTicket(orderId)
             if (data.success) {
                 toast.success(data.message)
             } else {

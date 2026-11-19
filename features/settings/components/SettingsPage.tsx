@@ -1,15 +1,17 @@
 'use client'
 import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CalendarCheck, Clock, Server } from 'lucide-react'
+import { CalendarCheck, Clock, Printer, Server } from 'lucide-react'
 import { Button, Skeleton } from '@/components/ui'
 import { ClosurePanel } from '@/features/closures/components/ClosurePanel'
 import { ShiftsPanel } from '@/features/shifts/components/ShiftsPanel'
+import { PrinterPanel } from '@/features/printing/components/PrinterPanel'
 import { SystemPanel } from '@/features/system/components/SettingsPage'
 
 const TABS = [
     { id: 'shifts', label: 'Turnos', icon: Clock },
     { id: 'closure', label: 'Cierre de día', icon: CalendarCheck },
+    { id: 'printer', label: 'Impresora', icon: Printer },
     { id: 'system', label: 'Sistema', icon: Server },
 ] as const
 
@@ -25,7 +27,7 @@ function SettingsTabs() {
         <div className="space-y-6">
             <div>
                 <h2 className="font-display text-3xl font-normal uppercase tracking-wide text-foreground">Configuración</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Turnos de trabajo, cierre de día y estado del sistema.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Turnos de trabajo, cierre de día, impresora y estado del sistema.</p>
             </div>
 
             <div role="tablist" aria-label="Secciones de configuración" className="flex flex-wrap gap-2 border-b border-border pb-3">
@@ -50,6 +52,7 @@ function SettingsTabs() {
             <div role="tabpanel">
                 {active === 'shifts' && <ShiftsPanel />}
                 {active === 'closure' && <ClosurePanel />}
+                {active === 'printer' && <PrinterPanel />}
                 {active === 'system' && <SystemPanel />}
             </div>
         </div>

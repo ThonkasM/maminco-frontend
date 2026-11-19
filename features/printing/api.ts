@@ -33,3 +33,28 @@ export function printPaymentReceipt(orderId: string): Promise<PrintResult> {
         `/api/printing/payment-receipt/${encodeURIComponent(orderId)}`,
     )
 }
+
+interface RenderedTicket extends PrintResult {
+    data?: string
+}
+
+async function fetchRenderedTicket(path: string): Promise<RenderedTicket> {
+    const response = await fetch(path, { headers: { Accept: 'application/json' } })
+    if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as { error?: string }
+        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`)
+    }
+    return (await response.json()) as RenderedTicket
+}
+
+export function fetchOrderTicket(orderId: string): Promise<RenderedTicket> {
+    return fetchRenderedTicket(`/api/printing/escpos/order/${encodeURIComponent(orderId)}`)
+}
+
+export function fetchPaymentReceiptTicket(orderId: string): Promise<RenderedTicket> {
+    return fetchRenderedTicket(`/api/printing/escpos/payment-receipt/${encodeURIComponent(orderId)}`)
+}
+
+export function fetchTestTicket(): Promise<RenderedTicket> {
+    return fetchRenderedTicket('/api/printing/escpos/test')
+}
