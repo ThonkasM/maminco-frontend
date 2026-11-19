@@ -28,12 +28,19 @@ const FOOTER_LINKS = [
       { href: '/#faq', label: 'Preguntas frecuentes' },
     ],
   },
+  {
+    title: 'Legal',
+    links: [
+      { href: '/terminos', label: 'Términos y condiciones' },
+      { href: '/privacidad', label: 'Política de privacidad' },
+    ],
+  },
 ]
 
 export function Footer() {
   return (
     <footer className="dark relative overflow-hidden border-t-4 border-brand-leaf bg-wood-ink text-foreground">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-5">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-6">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2">
             <Image src="/maminco-logo-128.png" alt="" width={32} height={32} className="size-8" />
