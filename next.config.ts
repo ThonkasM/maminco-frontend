@@ -26,6 +26,7 @@ export function buildContentSecurityPolicy(): string {
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     `connect-src ${Array.from(new Set(connect)).join(" ")}${isDev ? " ws: http:" : ""}`,
+    `frame-src ${Array.from(new Set(["'self'", ...origin(process.env.NEXT_PUBLIC_API_URL).slice(0, 1), "https://*.s3.amazonaws.com", "https://*.s3.us-east-1.amazonaws.com"])).join(" ")}`,
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
     "object-src 'none'",

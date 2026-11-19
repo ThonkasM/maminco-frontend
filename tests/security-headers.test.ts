@@ -15,6 +15,12 @@ describe('Content-Security-Policy', () => {
     expect(csp).not.toContain("'unsafe-eval'")
   })
 
+  it('allows framing the presigned S3 documents used by the repository preview', () => {
+    expect(csp).toMatch(/frame-src [^;]*'self'/)
+    expect(csp).toContain('https://*.s3.us-east-1.amazonaws.com')
+    expect(csp).toContain('https://*.s3.amazonaws.com')
+  })
+
   it('allows the API and socket origins configured at build time', () => {
     expect(csp).toMatch(/connect-src [^;]*'self'/)
   })
