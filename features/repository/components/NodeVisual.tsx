@@ -39,10 +39,12 @@ interface NodeVisualProps {
     /** Fill the whole tile (thumbnail covers it) instead of a rounded icon box. */
     cover?: boolean
     className?: string
+    /** Overlay the system-protected lock on the icon (the list view shows its own lock instead). */
+    showLock?: boolean
 }
 
 /** Type icon, or a lazily loaded thumbnail for image files only. */
-export function NodeVisual({ node, size, cover, className }: NodeVisualProps) {
+export function NodeVisual({ node, size, cover, className, showLock = true }: NodeVisualProps) {
     const kind = fileKind(node.name, node.kind, node.mimeType)
     const [ref, seen] = useInView<HTMLDivElement>()
     const [failed, setFailed] = useState(false)
@@ -63,7 +65,7 @@ export function NodeVisual({ node, size, cover, className }: NodeVisualProps) {
             ) : (
                 <NodeIcon kind={kind} className="rounded-xl" size={Math.round(size * (cover ? 0.55 : 1))} />
             )}
-            {node.system && (
+            {node.system && showLock && (
                 <span className="absolute bottom-1 right-1 flex size-5 items-center justify-center rounded-full bg-surface text-muted-foreground shadow-card" title="Protegido por el sistema">
                     <Lock className="size-3" aria-label="Protegido por el sistema" />
                 </span>

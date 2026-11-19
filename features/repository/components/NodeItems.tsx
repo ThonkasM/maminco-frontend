@@ -132,7 +132,7 @@ export function NodeRow({ node, handlers, trash }: { node: RepositoryNode; handl
                 {selectable ? <Checkbox node={node} checked={selected} selecting={handlers.selecting} onToggle={handlers.onToggle} /> : <Lock className="size-4 text-muted-foreground" aria-label="Protegido por el sistema" />}
             </span>
             <div className="flex min-w-0 items-center gap-3">
-                <NodeVisual node={node} size={32} />
+                <NodeVisual node={node} size={32} showLock={false} />
                 <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{node.name}</p>
                     <p className="truncate text-xs text-muted-foreground md:hidden">
