@@ -29,8 +29,8 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         .sort((a, b) => a.name.localeCompare(b.name))
 
     return (
-        <div className="flex h-full flex-col overflow-hidden bg-surface">
-            <div className="shrink-0 border-b border-border bg-surface-muted p-4">
+        <div className="flex flex-col overflow-hidden bg-surface md:h-full">
+            <div className="hidden shrink-0 border-b border-border bg-surface-muted p-4 md:block">
                 <div className="mb-1 flex items-center gap-2">
                     <Grid3x3 className="size-4 text-muted-foreground" />
                     <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
@@ -43,7 +43,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                 </p>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto p-4">
+            <div className="flex gap-2 overflow-x-auto p-2 md:flex-1 md:flex-col md:overflow-y-auto md:overflow-x-hidden md:p-4">
                 {activeCategories.length === 0 ? (
                     <EmptyState
                         icon={<Grid3x3 />}
@@ -61,7 +61,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                             }
                             onClick={() => !loading && onSelectCategory(category.id)}
                             disabled={loading}
-                            className="h-auto w-full justify-start p-3 text-left"
+                            className="h-auto shrink-0 justify-start p-3 text-left md:w-full"
                         >
                             <span className="text-sm font-semibold">
                                 {category.name}

@@ -20,9 +20,10 @@ export default function ModeToggleButton() {
             size="sm"
             onClick={handleToggleMode}
             title="Cambiar a Modo Negocio"
+            aria-label="Cambiar a Modo Negocio"
         >
             <Store />
-            Comercio
+            <span className="hidden sm:inline">Comercio</span>
         </Button>
     )
 }

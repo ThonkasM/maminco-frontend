@@ -4,13 +4,14 @@ import { paymentMethodLabel } from '@/lib/utils/paymentMethod'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Plus, UtensilsCrossed } from 'lucide-react'
+import { ArrowLeft, Plus, ReceiptText, ShoppingBag, UtensilsCrossed } from 'lucide-react'
 import { Button, EmptyState, Spinner } from '@/components/ui'
 import { toast } from '@/components/shared/ToastProvider'
 import { useConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { formatCurrency } from '@/lib/utils/currency'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { cn } from '@/lib/utils/cn'
 import {
     getPaymentMethods,
     type PaymentMethodResponseDto as PaymentMethodDto,
@@ -115,6 +116,8 @@ export function PosOrderPage() {
         : []
 
     const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0)
+    const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+    const [mobileView, setMobileView] = useState<'catalog' | 'order'>('catalog')
 
     const productQuantities = useMemo(() => {
         const map: Record<string, number> = {}
@@ -242,10 +245,17 @@ export function PosOrderPage() {
         (method) => method.id === selectedPaymentMethod,
     )
 
+    const view = order ? mobileView : 'order'
+
     return (
         <div className="flex h-full w-full flex-col overflow-hidden bg-background">
-            <div className="flex flex-1 overflow-hidden">
-                <div className="flex w-2/5 min-w-0 flex-col overflow-hidden border-r border-border bg-surface">
+            <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+                <div
+                    className={cn(
+                        'min-w-0 flex-col overflow-hidden border-border bg-surface md:flex md:w-2/5 md:border-r',
+                        view === 'order' ? 'flex flex-1' : 'hidden',
+                    )}
+                >
                     <div className="shrink-0 border-b border-border bg-surface-muted px-4 py-3">
                         <div className="mb-2 flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
@@ -309,7 +319,10 @@ export function PosOrderPage() {
                                 orderId={order.id}
                                 orderNumber={order.orderNumber}
                                 onCancelOrder={handleCancelOrderWithConfirm}
-                                onStartPayment={handleOpenPaymentModal}
+                                onStartPayment={() => {
+                                    handleOpenPaymentModal()
+                                    setMobileView('catalog')
+                                }}
                                 onFinalizePayment={handleFinalizePay}
                             />
                         </>
@@ -330,7 +343,12 @@ export function PosOrderPage() {
                     )}
                 </div>
 
-                <div className="flex w-1/6 min-w-0 flex-col overflow-hidden border-r border-border bg-surface-muted">
+                <div
+                    className={cn(
+                        'min-w-0 flex-col overflow-hidden border-b border-border bg-surface-muted md:flex md:w-1/6 md:border-b-0 md:border-r',
+                        view === 'catalog' ? 'flex shrink-0' : 'hidden',
+                    )}
+                >
                     {paymentMode ? (
                         <PaymentMethodSelector
                             methods={paymentMethods}
@@ -346,7 +364,12 @@ export function PosOrderPage() {
                     )}
                 </div>
 
-                <div className="min-w-0 flex-1 overflow-hidden bg-surface">
+                <div
+                    className={cn(
+                        'min-w-0 overflow-hidden bg-surface md:block md:flex-1',
+                        view === 'catalog' ? 'block flex-1' : 'hidden',
+                    )}
+                >
                     {paymentMode ? (
                         selectedMethod ? (
                             <>
@@ -425,6 +448,25 @@ export function PosOrderPage() {
                     )}
                 </div>
             </div>
+
+            {order && (
+                <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border bg-surface p-2 md:hidden">
+                    <Button
+                        variant={view === 'catalog' ? 'primary' : 'secondary'}
+                        onClick={() => setMobileView('catalog')}
+                    >
+                        <ShoppingBag />
+                        {paymentMode ? 'Cobro' : 'Productos'}
+                    </Button>
+                    <Button
+                        variant={view === 'order' ? 'primary' : 'secondary'}
+                        onClick={() => setMobileView('order')}
+                    >
+                        <ReceiptText />
+                        Orden ({itemCount}) · {formatCurrency(subtotal)}
+                    </Button>
+                </div>
+            )}
 
             {ConfirmDialogComponent}
             <VoiceDock tableNumber={table?.number} areaId={table?.areaId ?? undefined} />

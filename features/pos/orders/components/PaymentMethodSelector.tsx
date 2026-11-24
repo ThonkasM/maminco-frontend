@@ -42,8 +42,8 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     const activePaymentMethods = methods.filter((method) => method.isActive)
 
     return (
-        <div className="flex h-full flex-col overflow-hidden bg-surface">
-            <div className="shrink-0 border-b border-border bg-surface-muted p-4">
+        <div className="flex flex-col overflow-hidden bg-surface md:h-full">
+            <div className="hidden shrink-0 border-b border-border bg-surface-muted p-4 md:block">
                 <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
                     Métodos de pago
                 </h3>
@@ -53,7 +53,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                 </p>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            <div className="flex gap-2 overflow-x-auto p-2 md:flex-1 md:flex-col md:gap-3 md:overflow-y-auto md:overflow-x-hidden md:p-4">
                 {activePaymentMethods.length === 0 ? (
                     <EmptyState
                         icon={<CreditCard />}
@@ -71,7 +71,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                             }
                             onClick={() => !loading && onSelectMethod(method.id)}
                             disabled={loading}
-                            className="h-auto w-full justify-start gap-3 p-4"
+                            className="h-auto shrink-0 justify-start gap-3 p-3 md:w-full md:p-4"
                         >
                             {getPaymentIcon(method.code)}
                             <span className="text-sm font-semibold">

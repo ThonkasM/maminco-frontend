@@ -367,9 +367,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           )}
         >
           {/* Top Bar */}
-          <div className="bg-surface border-b border-border p-4 sm:p-6 sticky top-0 z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="bg-surface border-b border-border p-3 sm:p-6 sticky top-0 z-10">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <button
                   onClick={toggleSidebar}
                   className="inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-surface-muted transition-colors"
@@ -394,7 +394,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span className="hidden 2xl:inline">Panel Administrativo</span>
                 </h1>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-3">
                 <p className="hidden whitespace-nowrap text-sm text-muted-foreground sm:block">
                   <span className="2xl:hidden">{todayShort}</span>
                   <span className="hidden 2xl:inline">{today}</span>
@@ -422,9 +422,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   size="sm"
                   className="text-danger hover:bg-danger/10 hover:text-danger"
                   onClick={handleLogout}
+                  aria-label="Salir"
                 >
                   <LogOut />
-                  Salir
+                  <span className="hidden sm:inline">Salir</span>
                 </Button>
               </div>
             </div>

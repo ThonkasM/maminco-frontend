@@ -26,13 +26,13 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
 }) => {
     return (
         <div className="flex h-full w-full flex-col overflow-hidden bg-surface">
-            <div className="shrink-0 border-b border-border bg-surface-muted p-4">
+            <div className="hidden shrink-0 border-b border-border bg-surface-muted p-4 md:block">
                 <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
                     Productos
                 </h3>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-3 md:p-4">
                 {products.length === 0 ? (
                     <EmptyState
                         icon={<LayoutGrid />}
@@ -48,7 +48,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                                     key={product.id}
                                     variant="secondary"
                                     onClick={() => onAddProduct(product)}
-                                    className="group relative h-auto flex-col items-start justify-start gap-0 whitespace-normal rounded-lg border-2 p-4 text-left transition-all hover:border-primary hover:shadow-elevated active:scale-95"
+                                    className="group relative h-auto flex-col items-start justify-start gap-0 whitespace-normal rounded-lg border-2 p-3 text-left md:p-4 transition-all hover:border-primary hover:shadow-elevated active:scale-95"
                                 >
                                     {quantity > 0 && (
                                         <Badge

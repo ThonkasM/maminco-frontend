@@ -33,7 +33,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function PosTablesPage() {
     const { selectedAreaId, handleSelectArea } = usePosTablesUI()
-    const [sidebarOpen, setSidebarOpen] = useState(true)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
 
     const {
         areas,
@@ -248,9 +248,9 @@ export function PosTablesPage() {
                     </span>
                 </div>
 
-                <div className="p-6">
-                    <div className="mb-8">
-                        <h1 className="mb-2 font-display text-4xl font-normal uppercase tracking-wide text-foreground">
+                <div className="p-4 sm:p-6">
+                    <div className="mb-6 sm:mb-8">
+                        <h1 className="mb-2 font-display text-3xl font-normal sm:text-4xl uppercase tracking-wide text-foreground">
                             Centro de órdenes
                         </h1>
                         <p className="text-muted-foreground">
@@ -272,7 +272,7 @@ export function PosTablesPage() {
                             Mesas
                         </h2>
                         {filteredTables.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
                                 {filteredTables.map((table) => {
                                     const status = getTableStatus(table)
                                     return (

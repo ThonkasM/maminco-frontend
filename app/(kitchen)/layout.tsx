@@ -56,10 +56,10 @@ function KitchenLayoutContent({ children }: { children: React.ReactNode }) {
                                 height={32}
                                 className="size-8 shrink-0 rounded-md"
                             />
-                            <h1 className="font-display text-2xl font-normal uppercase tracking-wide text-nav-foreground">
+                            <h1 className="truncate font-display text-lg font-normal uppercase tracking-wide text-nav-foreground sm:text-2xl">
                                 Maminco Cocina
                             </h1>
-                            <Badge variant="brand" className="border-brand-yellow/40 bg-brand-yellow/15 text-brand-yellow">Cocina</Badge>
+                            <Badge variant="brand" className="hidden border-brand-yellow/40 bg-brand-yellow/15 text-brand-yellow md:inline-flex">Cocina</Badge>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -78,9 +78,10 @@ function KitchenLayoutContent({ children }: { children: React.ReactNode }) {
                                     size="sm"
                                     className="text-danger hover:bg-danger/10 hover:text-danger"
                                     onClick={handleLogout}
+                                    aria-label="Salir"
                                 >
                                     <LogOut />
-                                    Salir
+                                    <span className="hidden sm:inline">Salir</span>
                                 </Button>
                             </div>
                         </div>
